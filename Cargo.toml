@@ -1,0 +1,14 @@
+[package]
+name = "nphysics-ecs-dumb"
+version = "0.1.0"
+authors = ["kel <distransient@protonmail.com>"]
+edition = "2018"
+
+#[features]
+# default = [ "nphysics3d" ]
+
+[dependencies]
+amethyst = { git = "https://github.com/amethyst/amethyst", branch = "master" }
+nphysics3d = "0.9"
+ncollide3d = "0.17"
+nalgebra = "0.16"
