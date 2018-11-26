@@ -248,7 +248,7 @@ impl <'a> System<'a> for Dumb3dPhysicsSystem {
 #[cfg(test)]
 mod tests {
     use amethyst::{GameData, StateData, SimpleState, GameDataBuilder, Application};
-    use amethyst::assets::Handlee
+    use amethyst::assets::Handle;
     use amethyst::prelude::Builder;
     use amethyst::renderer::*;
     use amethyst::core::Transform;
@@ -267,7 +267,7 @@ mod tests {
             // Create a texture for using.
             let texture = data.world.read_resource::<amethyst::assets::Loader>()
                 .load_from_data::<Texture, ()>(
-                    [144.0, 144.0, 144.0, 0.5].into(),
+                    [170.0, 170.0, 255.0, 1.0].into(),
                     (),
                     &data.world.read_resource());
 
@@ -277,11 +277,17 @@ mod tests {
                 (resolution.width(), resolution.height())
             };
 
-            // Add Camera
-            data.world.create_entity()
-                .with(Camera::standard_3d(x, y))
-                .with(Transform::from(Vector3::new(0.0, 0.0, -4.0)))
-                .build();
+            {
+                let mut camera_transform = Transform::from(Vector3::new(0.0, 0.0, -4.0));
+
+                camera_transform.yaw_local(-3.142);
+
+                // Add Camera
+                data.world.create_entity()
+                    .with(Camera::standard_3d(x, y))
+                    .with(camera_transform)
+                    .build();
+            }
 
             // Add Light
             data.world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
@@ -299,6 +305,7 @@ mod tests {
             data.world.create_entity()
                 .with(Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None))
                 .with(texture)
+                .with(GlobalTransform::default())
                 .build();
         }
     }

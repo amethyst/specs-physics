@@ -2,7 +2,7 @@
 
 Don't use. Work in progress. Many things are incomplete!
 
-TODO sheet from rustsim/nphysics#149
+TODO sheet from [this nphysics issue](rustsim/nphysics#149)
 
 - [x] Be able to have something able to simulate one rigid body that falls under gravity. This excludes collision detection, constraint solver, etc.
 - [ ] Add support for forces generators.
