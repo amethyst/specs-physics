@@ -3,7 +3,7 @@ pub extern crate nphysics3d as nphysics;
 pub extern crate ncollide3d as ncollide;
 
 use self::ncollide::events::ContactEvent;
-use self::nphysics::math::{Inertia, Point, Velocity};
+use self::nphysics::math::{Inertia, Point, Velocity, Vector};
 use self::nphysics::object::{Body, BodyHandle, RigidBody};
 use amethyst::ecs::*;
 use amethyst::ecs::prelude::*;
@@ -11,6 +11,9 @@ use amethyst::core::{GlobalTransform, Time};
 use amethyst::core::nalgebra::try_convert;
 use amethyst::core::nalgebra::base::Matrix3;
 use amethyst::shrev::EventChannel;
+
+pub type World = self::nphysics::world::World<f32>;
+pub type Gravity = Vector<f32>;
 
 /// Physics body component for describing (currently) rigid body dynamics.
 pub enum PhysicsBody {
@@ -73,7 +76,7 @@ pub struct Dumb3dPhysicsSystem {
 
 impl <'a> System<'a> for Dumb3dPhysicsSystem {
     type SystemData = (
-        WriteExpect<'a, self::nphysics::world::World<f32>>,
+        WriteExpect<'a, World>,
         Write<'a, EventChannel<ContactEvent>>,
         Read<'a, Time>,
         Entities<'a>,
@@ -231,6 +234,9 @@ impl <'a> System<'a> for Dumb3dPhysicsSystem {
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
 
+        res.entry::<Gravity>().or_insert_with(|| Gravity::new(0.0, -9.80665, 0.0));
+        res.entry::<World>().or_insert_with(|| World::new());
+
         let mut transform_storage: WriteStorage<GlobalTransform> = SystemData::fetch(&res);
         self.transforms_reader_id = Some(transform_storage.register_reader());
 
@@ -242,17 +248,22 @@ impl <'a> System<'a> for Dumb3dPhysicsSystem {
 #[cfg(test)]
 mod tests {
     use amethyst::{GameData, StateData, SimpleState, GameDataBuilder, Application};
+    use amethyst::assets::Handlee
     use amethyst::prelude::Builder;
-    use amethyst::renderer::{PosNormTex, PointLight, Rgba, AmbientColor, DrawShaded, Shape, ScreenDimensions, Light, Camera, Texture};
+    use amethyst::renderer::*;
     use amethyst::core::Transform;
     use amethyst::core::transform::bundle::TransformBundle;
     use amethyst::core::nalgebra::Vector3;
-    use super::Dumb3dPhysicsSystem;
+    use super::*;
 
     struct GameState;
 
     impl<'a, 'b> SimpleState<'a, 'b> for GameState {
         fn on_start(&mut self, data: StateData<GameData>) {
+            data.world.register::<PhysicsBody>();
+            data.world.register::<MeshData>();
+            data.world.register::<Handle<Texture>>();
+
             // Create a texture for using.
             let texture = data.world.read_resource::<amethyst::assets::Loader>()
                 .load_from_data::<Texture, ()>(
@@ -269,7 +280,8 @@ mod tests {
             // Add Camera
             data.world.create_entity()
                 .with(Camera::standard_3d(x, y))
-                .with(Transform::from(Vector3::new(0.0, 0.0, -4.0)));
+                .with(Transform::from(Vector3::new(0.0, 0.0, -4.0)))
+                .build();
 
             // Add Light
             data.world.add_resource(AmbientColor(Rgba::from([0.01; 3])));

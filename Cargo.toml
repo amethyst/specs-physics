@@ -8,7 +8,11 @@ edition = "2018"
 # default = [ "nphysics3d" ]
 
 [dependencies]
-amethyst = { git = "https://github.com/amethyst/amethyst", branch = "master" }
 nphysics3d = "0.9"
 ncollide3d = "0.17"
 nalgebra = "0.16"
+
+[dependencies.amethyst]
+git = "https://github.com/amethyst/amethyst"
+branch = "master"
+features = ["nightly"]
