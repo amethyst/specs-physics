@@ -275,11 +275,11 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use amethyst::assets::Handle;
+    use amethyst::assets::{Handle, Loader};
     use amethyst::core::nalgebra::Vector3;
     use amethyst::core::transform::bundle::TransformBundle;
     use amethyst::core::Transform;
-    use amethyst::prelude::Builder;
+    use amethyst::prelude::*;
     use amethyst::renderer::*;
     use amethyst::{Application, GameData, GameDataBuilder, SimpleState, StateData};
 
@@ -294,12 +294,17 @@ mod tests {
             // Create a texture for using.
             let texture = data
                 .world
-                .read_resource::<amethyst::assets::Loader>()
+                .read_resource::<Loader>()
                 .load_from_data::<Texture, ()>(
                     [170.0, 170.0, 255.0, 1.0].into(),
                     (),
                     &data.world.read_resource(),
                 );
+
+            let material = Material {
+                albedo: texture,
+                ..data.world.read_resource::<MaterialDefaults>().0.clone()
+            };
 
             // Get resolution of the screen.
             let (x, y) = {
@@ -307,21 +312,17 @@ mod tests {
                 (resolution.width(), resolution.height())
             };
 
-            {
-                let mut camera_transform = Transform::from(Vector3::new(0.0, 0.0, -4.0));
+            let camera_transform = Transform::from(Vector3::new(0.0, 0.0, 0.0));
 
-                camera_transform.yaw_local(-3.142);
-
-                // Add Camera
-                data.world
-                    .create_entity()
-                    .with(Camera::standard_3d(x, y))
-                    .with(camera_transform)
-                    .build();
-            }
+            // Add Camera
+            data.world
+                .create_entity()
+                .with(Camera::standard_3d(x, y))
+                .with(camera_transform)
+                .build();
 
             // Add Light
-            data.world.add_resource(AmbientColor(Rgba::from([0.01; 3])));
+            data.world.add_resource(AmbientColor(Rgba::from([0.5; 3])));
             data.world
                 .create_entity()
                 .with(Light::Point(PointLight {
@@ -333,11 +334,17 @@ mod tests {
                 .with(Transform::from(Vector3::new(2.0, 2.0, -2.0)))
                 .build();
 
+            let sphere_shape = Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None);
+            let sphere_handle: MeshHandle = 
+                data.world.read_resource::<Loader>()
+                .load_from_data(sphere_shape, (), &data.world.read_resource());
+
             // Add Sphere (todo: add many, add rigidbodies and colliders)
             data.world
                 .create_entity()
-                .with(Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None))
-                .with(texture)
+                .with(sphere_handle)
+                .with(material)
+                .with(Transform::from(Vector3::new(0.0, 0.0, -10.0)))
                 .with(GlobalTransform::default())
                 .build();
         }
@@ -347,16 +354,19 @@ mod tests {
     fn app() -> amethyst::Result<()> {
         amethyst::start_logger(Default::default());
 
-        let game_data = GameDataBuilder::default()
-            .with_basic_renderer(
-                "./resources/display.ron",
-                DrawShaded::<PosNormTex>::new(),
-                false,
-            )?
-            .with_bundle(TransformBundle::new())?
-            .with(Dumb3dPhysicsSystem::default(), "physics", &[]);
+        let display_config = DisplayConfig::load("./resources/display.ron");
+        let pipe = Pipeline::build().with_stage(
+            Stage::with_backbuffer()
+                .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)
+                .with_pass(DrawShaded::<PosNormTex>::new()),
+        );
 
-        let mut application = Application::new("./", GameState, game_data);
+        let game_data = GameDataBuilder::default()
+            .with_bundle(TransformBundle::new())?
+            .with(Dumb3dPhysicsSystem::default(), "physics", &[])
+            .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
+
+        let application = Application::new("./", GameState, game_data);
 
         assert_eq!(application.is_ok(), true);
 
