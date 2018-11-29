@@ -1,13 +1,15 @@
 extern crate amethyst;
 pub extern crate ncollide3d as ncollide;
 pub extern crate nphysics3d as nphysics;
+extern crate num_traits;
 
 use self::ncollide::events::ContactEvent;
 use self::nphysics::math::{Inertia, Point, Vector, Velocity};
 use self::nphysics::object::{Body, BodyHandle, RigidBody};
 use amethyst::core::nalgebra::base::Matrix3;
 use amethyst::core::nalgebra::try_convert;
-use amethyst::core::{GlobalTransform, Time};
+use amethyst::core::nalgebra::Vector3;
+use amethyst::core::{GlobalTransform, Time, Transform};
 use amethyst::ecs::prelude::*;
 use amethyst::ecs::*;
 use amethyst::shrev::EventChannel;
@@ -96,6 +98,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
         Entities<'a>,
         WriteStorage<'a, GlobalTransform>,
         WriteStorage<'a, PhysicsBody>,
+        ReadStorage<'a, Transform>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -106,6 +109,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
             entities,
             mut transforms,
             mut physics_bodies,
+            locals,
         ) = data;
 
         // Clear bitsets
@@ -150,6 +154,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                     }
                     ComponentEvent::Inserted(id) => {
                         self.inserted_physics_bodies.add(*id);
+                        println!("I'm in!");
                     }
                     ComponentEvent::Removed(id) => {
                         physical_world.remove_bodies(&[physics_bodies
@@ -175,8 +180,10 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
             .join()
         {
             if self.inserted_transforms.contains(id) || self.inserted_physics_bodies.contains(id) {
+                println!("heya I'm new here!");
                 match body {
                     PhysicsBody::RigidBody(ref mut rigid_body) => {
+                        // Just inserted. Remove old one and insert new.
                         if rigid_body.handle.is_some()
                             && physical_world
                                 .rigid_body(rigid_body.handle.unwrap())
@@ -207,6 +214,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
             } else if self.modified_transforms.contains(id)
                 || self.modified_physics_bodies.contains(id)
             {
+                println!("oh shit, I'm changed!");
                 match body {
                     PhysicsBody::RigidBody(ref mut rigid_body) => {
                         let mut physical_body = physical_world
@@ -237,7 +245,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
         //contact_events.iter_write(physical_world.contact_events());
 
         // Apply the updated values of the simulated world to our Components
-        for (mut transform, mut body) in (&mut transforms, &mut physics_bodies).join() {
+        for (mut transform, mut body, local) in (&mut transforms, &mut physics_bodies, locals.maybe()).join() {
             let updated_body = physical_world.body(body.handle().unwrap());
 
             if updated_body.is_ground() || !updated_body.is_active() || updated_body.is_static() {
@@ -249,7 +257,11 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                     PhysicsBody::RigidBody(ref mut rigid_body),
                     Body::RigidBody(ref updated_rigid_body),
                 ) => {
-                    updated_rigid_body.position();
+                    println!("super power: change mehhh! new pos: {:?}", updated_rigid_body.position());
+
+                    // TODO: Might get rid of the scale!!!
+                    transform.0 = updated_rigid_body.position().to_homogeneous().prepend_nonuniform_scaling(local.map(|tr| tr.scale()).unwrap_or(&Vector3::new(1.0, 1.0, 1.0)));
+
                     rigid_body.velocity = *updated_rigid_body.velocity();
                     let inertia = updated_rigid_body.inertia();
                     rigid_body.mass = inertia.linear;
@@ -268,6 +280,14 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                 _ => {}
             };
         }
+
+        // Now that we changed them all, let's remove all those pesky events that were generated.
+        transforms
+                .channel()
+                .read(&mut self.transforms_reader_id.as_mut().unwrap()).for_each(|_|());
+        physics_bodies
+                .channel()
+                .read(&mut self.physics_bodies_reader_id.as_mut().unwrap()).for_each(|_|());
     }
 
     // TODO: resources need set up here. Including initializing the physics world.
@@ -296,6 +316,7 @@ mod tests {
     use amethyst::prelude::*;
     use amethyst::renderer::*;
     use amethyst::{Application, GameData, GameDataBuilder, SimpleState, StateData};
+    use num_traits::identities::One;
 
     struct GameState;
 
@@ -360,7 +381,11 @@ mod tests {
                 .with(material)
                 .with(Transform::from(Vector3::new(0.0, 0.0, -10.0)))
                 .with(GlobalTransform::default())
-                .with(PhysicsBody::new_rigidbody_with_velocity(Velocity::linear(0.0, 2.0, 0.0), 10.0, Matrix3::identity(), Point::zero()))
+                .with(PhysicsBody::new_rigidbody_with_velocity(
+                    Velocity::linear(0.0, 2.0, 0.0),
+                    10.0,
+                    Matrix3::one(),
+                    Point::new(0.0, 0.0, 0.0)))
                 .build();
         }
     }
