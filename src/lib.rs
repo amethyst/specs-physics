@@ -15,7 +15,7 @@ use amethyst::ecs::*;
 use amethyst::shrev::EventChannel;
 
 pub type World = self::nphysics::world::World<f32>;
-pub type Gravity = Vector<f32>;
+pub type Gravity = self::nphysics::math::Vector<f32>;
 
 /// Physics body component for describing (currently) rigid body dynamics.
 pub enum PhysicsBody {
@@ -99,6 +99,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
         WriteStorage<'a, GlobalTransform>,
         WriteStorage<'a, PhysicsBody>,
         ReadStorage<'a, Transform>,
+        ReadExpect<'a, Gravity>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -110,6 +111,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
             mut transforms,
             mut physics_bodies,
             locals,
+            gravity,
         ) = data;
 
         // Clear bitsets
@@ -235,6 +237,9 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                 }
             }
         }
+
+        use std::ops::Deref;
+        physical_world.set_gravity(*gravity.deref());
 
         // Simulate world using the current time frame
         physical_world.set_timestep(time.delta_seconds());
@@ -382,7 +387,7 @@ mod tests {
                 .with(Transform::from(Vector3::new(0.0, 0.0, -10.0)))
                 .with(GlobalTransform::default())
                 .with(PhysicsBody::new_rigidbody_with_velocity(
-                    Velocity::linear(0.0, 2.0, 0.0),
+                    Velocity::linear(0.0, 10.0, 0.0),
                     10.0,
                     Matrix3::one(),
                     Point::new(0.0, 0.0, 0.0)))
