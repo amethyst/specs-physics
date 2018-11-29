@@ -50,6 +50,20 @@ pub struct PhysicsGround {
 }
 
 impl PhysicsBody {
+    pub fn new_rigidbody(mass: f32, angular_mass: Matrix3<f32>, center_of_mass: Point<f32>) -> Self {
+        PhysicsBody::new_rigidbody_with_velocity(Velocity::<f32>::zero(), mass, angular_mass, center_of_mass)
+    }
+
+    pub fn new_rigidbody_with_velocity(velocity: Velocity<f32>, mass: f32, angular_mass: Matrix3<f32>, center_of_mass: Point<f32>) -> Self {
+        PhysicsBody::RigidBody(RigidPhysicsBody {
+            handle: None,
+            velocity,
+            mass,
+            angular_mass,
+            center_of_mass,
+        })
+    }
+
     fn handle(&self) -> Option<BodyHandle> {
         match self {
             PhysicsBody::RigidBody(x) => x.handle,
@@ -276,7 +290,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
 mod tests {
     use super::*;
     use amethyst::assets::{Handle, Loader};
-    use amethyst::core::nalgebra::Vector3;
+    use amethyst::core::nalgebra::{MatrixN, Vector3};
     use amethyst::core::transform::bundle::TransformBundle;
     use amethyst::core::Transform;
     use amethyst::prelude::*;
@@ -346,6 +360,7 @@ mod tests {
                 .with(material)
                 .with(Transform::from(Vector3::new(0.0, 0.0, -10.0)))
                 .with(GlobalTransform::default())
+                .with(PhysicsBody::new_rigidbody_with_velocity(Velocity::linear(0.0, 2.0, 0.0), 10.0, Matrix3::identity(), Point::zero()))
                 .build();
         }
     }
