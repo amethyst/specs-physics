@@ -11,6 +11,7 @@ edition = "2018"
 nphysics3d = "0.9"
 ncollide3d = "0.17"
 nalgebra = "0.16"
+num-traits = "0.2"
 
 [dependencies.amethyst]
 git = "https://github.com/amethyst/amethyst"
