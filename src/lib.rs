@@ -52,11 +52,25 @@ pub struct PhysicsGround {
 }
 
 impl PhysicsBody {
-    pub fn new_rigidbody(mass: f32, angular_mass: Matrix3<f32>, center_of_mass: Point<f32>) -> Self {
-        PhysicsBody::new_rigidbody_with_velocity(Velocity::<f32>::zero(), mass, angular_mass, center_of_mass)
+    pub fn new_rigidbody(
+        mass: f32,
+        angular_mass: Matrix3<f32>,
+        center_of_mass: Point<f32>,
+    ) -> Self {
+        PhysicsBody::new_rigidbody_with_velocity(
+            Velocity::<f32>::zero(),
+            mass,
+            angular_mass,
+            center_of_mass,
+        )
     }
 
-    pub fn new_rigidbody_with_velocity(velocity: Velocity<f32>, mass: f32, angular_mass: Matrix3<f32>, center_of_mass: Point<f32>) -> Self {
+    pub fn new_rigidbody_with_velocity(
+        velocity: Velocity<f32>,
+        mass: f32,
+        angular_mass: Matrix3<f32>,
+        center_of_mass: Point<f32>,
+    ) -> Self {
         PhysicsBody::RigidBody(RigidPhysicsBody {
             handle: None,
             velocity,
@@ -238,8 +252,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
             }
         }
 
-        use std::ops::Deref;
-        physical_world.set_gravity(*gravity.deref());
+        physical_world.set_gravity(*gravity);
 
         // Simulate world using the current time frame
         physical_world.set_timestep(time.delta_seconds());
@@ -250,7 +263,9 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
         //contact_events.iter_write(physical_world.contact_events());
 
         // Apply the updated values of the simulated world to our Components
-        for (mut transform, mut body, local) in (&mut transforms, &mut physics_bodies, locals.maybe()).join() {
+        for (mut transform, mut body, local) in
+            (&mut transforms, &mut physics_bodies, locals.maybe()).join()
+        {
             let updated_body = physical_world.body(body.handle().unwrap());
 
             if updated_body.is_ground() || !updated_body.is_active() || updated_body.is_static() {
@@ -262,10 +277,20 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                     PhysicsBody::RigidBody(ref mut rigid_body),
                     Body::RigidBody(ref updated_rigid_body),
                 ) => {
-                    println!("super power: change mehhh! new pos: {:?}", updated_rigid_body.position());
+                    println!(
+                        "super power: change mehhh! new pos: {:?}",
+                        updated_rigid_body.position()
+                    );
 
                     // TODO: Might get rid of the scale!!!
-                    transform.0 = updated_rigid_body.position().to_homogeneous().prepend_nonuniform_scaling(local.map(|tr| tr.scale()).unwrap_or(&Vector3::new(1.0, 1.0, 1.0)));
+                    transform.0 = updated_rigid_body
+                        .position()
+                        .to_homogeneous()
+                        .prepend_nonuniform_scaling(
+                            local
+                                .map(|tr| tr.scale())
+                                .unwrap_or(&Vector3::new(1.0, 1.0, 1.0)),
+                        );
 
                     rigid_body.velocity = *updated_rigid_body.velocity();
                     let inertia = updated_rigid_body.inertia();
@@ -288,11 +313,13 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
 
         // Now that we changed them all, let's remove all those pesky events that were generated.
         transforms
-                .channel()
-                .read(&mut self.transforms_reader_id.as_mut().unwrap()).for_each(|_|());
+            .channel()
+            .read(&mut self.transforms_reader_id.as_mut().unwrap())
+            .for_each(|_| ());
         physics_bodies
-                .channel()
-                .read(&mut self.physics_bodies_reader_id.as_mut().unwrap()).for_each(|_|());
+            .channel()
+            .read(&mut self.physics_bodies_reader_id.as_mut().unwrap())
+            .for_each(|_| ());
     }
 
     // TODO: resources need set up here. Including initializing the physics world.
@@ -375,9 +402,11 @@ mod tests {
                 .build();
 
             let sphere_shape = Shape::Sphere(32, 32).generate::<Vec<PosNormTex>>(None);
-            let sphere_handle: MeshHandle = 
-                data.world.read_resource::<Loader>()
-                .load_from_data(sphere_shape, (), &data.world.read_resource());
+            let sphere_handle: MeshHandle = data.world.read_resource::<Loader>().load_from_data(
+                sphere_shape,
+                (),
+                &data.world.read_resource(),
+            );
 
             // Add Sphere (todo: add many, add rigidbodies and colliders)
             data.world
@@ -390,7 +419,8 @@ mod tests {
                     Velocity::linear(0.0, 10.0, 0.0),
                     10.0,
                     Matrix3::one(),
-                    Point::new(0.0, 0.0, 0.0)))
+                    Point::new(0.0, 0.0, 0.0),
+                ))
                 .build();
         }
     }
