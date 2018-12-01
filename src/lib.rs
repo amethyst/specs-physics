@@ -4,14 +4,13 @@ pub extern crate nphysics3d as nphysics;
 extern crate num_traits;
 
 use self::ncollide::events::ContactEvent;
-use self::nphysics::math::{Inertia, Point, Vector, Velocity};
-use self::nphysics::object::{Body, BodyHandle, RigidBody};
+use self::nphysics::math::{Inertia, Point, Velocity};
+use self::nphysics::object::{Body, BodyHandle};
 use amethyst::core::nalgebra::base::Matrix3;
 use amethyst::core::nalgebra::try_convert;
 use amethyst::core::nalgebra::Vector3;
 use amethyst::core::{GlobalTransform, Time, Transform};
 use amethyst::ecs::prelude::*;
-use amethyst::ecs::*;
 use amethyst::shrev::EventChannel;
 
 pub type World = self::nphysics::world::World<f32>;
@@ -119,7 +118,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (
             mut physical_world,
-            mut contact_events,
+            _contact_events,
             time,
             entities,
             mut transforms,
@@ -184,9 +183,9 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
         }
 
         // Update simulation world with the value of Components flagged as changed
-        for (entity, mut transform, mut body, id) in (
+        for (_entity, transform, mut body, id) in (
             &entities,
-            &mut transforms,
+            &transforms,
             &mut physics_bodies,
             &self.modified_transforms
                 | &self.inserted_transforms
@@ -214,16 +213,16 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                             rigid_body.center_of_mass,
                         ));
 
-                        let mut physical_body = physical_world
+                        let physical_body = physical_world
                             .rigid_body_mut(rigid_body.handle.unwrap())
                             .unwrap();
 
                         physical_body.set_velocity(rigid_body.velocity);
                     }
-                    PhysicsBody::Multibody(x) => {
+                    PhysicsBody::Multibody(_) => {
                         // TODO
                     }
-                    PhysicsBody::Ground(x) => {
+                    PhysicsBody::Ground(_) => {
                         // TODO
                     }
                 }
@@ -233,7 +232,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                 println!("oh shit, I'm changed!");
                 match body {
                     PhysicsBody::RigidBody(ref mut rigid_body) => {
-                        let mut physical_body = physical_world
+                        let physical_body = physical_world
                             .rigid_body_mut(rigid_body.handle.unwrap())
                             .unwrap();
 
@@ -242,10 +241,10 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
 
                         // if you changed the mass properties at all... too bad!
                     }
-                    PhysicsBody::Multibody(x) => {
+                    PhysicsBody::Multibody(_) => {
                         // TODO
                     }
-                    PhysicsBody::Ground(x) => {
+                    PhysicsBody::Ground(_) => {
                         // TODO
                     }
                 }
@@ -298,14 +297,14 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                     rigid_body.angular_mass = inertia.angular;
                     rigid_body.center_of_mass = updated_rigid_body.center_of_mass();
                 }
-                (PhysicsBody::Multibody(multibody), Body::Multibody(updated_multibody)) => {
-                    match updated_multibody.links().next() {
-                        Some(link) => link.position(),
-                        None => continue,
-                    };
+                (PhysicsBody::Multibody(_multibody), Body::Multibody(_updated_multibody)) => {
+                    // match updated_multibody.links().next() {
+                    //    Some(link) => link.position(),
+                    //    None => continue,
+                    // };
                 }
-                (PhysicsBody::Ground(ground), Body::Ground(updated_ground)) => {
-                    updated_ground.position();
+                (PhysicsBody::Ground(_ground), Body::Ground(_updated_ground)) => {
+                    // updated_ground.position();
                 }
                 _ => {}
             };
@@ -328,7 +327,7 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
 
         res.entry::<Gravity>()
             .or_insert_with(|| Gravity::new(0.0, -9.80665, 0.0));
-        res.entry::<World>().or_insert_with(|| World::new());
+        res.entry::<World>().or_insert_with(World::new);
 
         let mut transform_storage: WriteStorage<GlobalTransform> = SystemData::fetch(&res);
         self.transforms_reader_id = Some(transform_storage.register_reader());
