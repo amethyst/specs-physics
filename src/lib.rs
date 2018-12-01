@@ -20,7 +20,6 @@ pub type Gravity = self::nphysics::math::Vector<f32>;
 pub enum PhysicsBody {
     RigidBody(RigidPhysicsBody),
     Multibody(PhysicsMultibody),
-    Ground(PhysicsGround),
 }
 
 impl Component for PhysicsBody {
@@ -42,11 +41,6 @@ pub struct RigidPhysicsBody {
 
 /// Multipart physics body, for use in `PhysicsBody` Component. Not implemented yet.
 pub struct PhysicsMultibody {
-    handle: Option<BodyHandle>,
-}
-
-/// Nphysics ground physics body, for use in `PhysicsBody` Not implemented yet.
-pub struct PhysicsGround {
     handle: Option<BodyHandle>,
 }
 
@@ -83,7 +77,6 @@ impl PhysicsBody {
         match self {
             PhysicsBody::RigidBody(x) => x.handle,
             PhysicsBody::Multibody(x) => x.handle,
-            PhysicsBody::Ground(x) => x.handle,
         }
     }
 }
@@ -222,9 +215,6 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                     PhysicsBody::Multibody(_) => {
                         // TODO
                     }
-                    PhysicsBody::Ground(_) => {
-                        // TODO
-                    }
                 }
             } else if self.modified_transforms.contains(id)
                 || self.modified_physics_bodies.contains(id)
@@ -242,9 +232,6 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                         // if you changed the mass properties at all... too bad!
                     }
                     PhysicsBody::Multibody(_) => {
-                        // TODO
-                    }
-                    PhysicsBody::Ground(_) => {
                         // TODO
                     }
                 }
@@ -303,10 +290,9 @@ impl<'a> System<'a> for Dumb3dPhysicsSystem {
                     //    None => continue,
                     // };
                 }
-                (PhysicsBody::Ground(_ground), Body::Ground(_updated_ground)) => {
-                    // updated_ground.position();
+                _ => {
+                    println!("Unexpected body component and nphysics body pair.")
                 }
-                _ => {}
             };
         }
 
