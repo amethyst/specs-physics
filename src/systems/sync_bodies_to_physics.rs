@@ -1,14 +1,13 @@
 use crate::bodies::DynamicBody;
 use crate::World;
 use amethyst::core::GlobalTransform;
-use amethyst::ecs::storage::ComponentEvent;
+use amethyst::ecs::storage::{ComponentEvent, MaskedStorage, GenericReadStorage};
 use amethyst::ecs::{
-    BitSet, Entities, Join, ReaderId, Resources, System, SystemData, Write, WriteExpect,
-    WriteStorage,
+    BitSet, Component, Entities, Join, ReadStorage, ReaderId, Resources, Storage, System,
+    SystemData, Tracked, WriteExpect, WriteStorage,
 };
-use amethyst::shrev::EventChannel;
+use core::ops::Deref;
 use nalgebra::try_convert;
-use ncollide3d::events::ContactEvent;
 use nphysics3d::math::Inertia;
 
 #[derive(Default)]
@@ -26,15 +25,13 @@ impl SyncBodiesToPhysicsSystem {
 impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
     type SystemData = (
         WriteExpect<'a, World>,
-        Write<'a, EventChannel<ContactEvent>>,
         Entities<'a>,
-        WriteStorage<'a, GlobalTransform>,
+        ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DynamicBody>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut physical_world, _contact_events, entities, mut transforms, mut physics_bodies) =
-            data;
+        let (mut physical_world, entities, transforms, mut physics_bodies) = data;
 
         let mut inserted_transforms = BitSet::new();
         let mut modified_transforms = BitSet::new();
@@ -42,55 +39,29 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
         let mut modified_physics_bodies = BitSet::new();
 
         // Get change flag events for transforms, removing deleted ones from the physics world.
-        {
-            let events = transforms
-                .channel()
-                .read(&mut self.transforms_reader_id.as_mut().unwrap());
-            for event in events {
-                match event {
-                    ComponentEvent::Modified(id) => {
-                        modified_transforms.add(*id);
-                    }
-                    ComponentEvent::Inserted(id) => {
-                        inserted_transforms.add(*id);
-                    }
-                    ComponentEvent::Removed(id) => {
-                        physical_world.remove_bodies(&[physics_bodies
-                            .get(entities.entity(*id))
-                            .unwrap()
-                            .handle()
-                            .unwrap()]);
-                    }
-                };
-            }
-        }
+        iterate_events(
+            &transforms,
+            self.transforms_reader_id.as_mut().unwrap(),
+            &mut inserted_transforms,
+            &mut modified_transforms,
+            &mut physical_world,
+            &entities,
+            &physics_bodies,
+        );
 
         // Get change flag events for physics bodies, removing deleted ones from the physics world.
-        {
-            let events = physics_bodies
-                .channel()
-                .read(&mut self.physics_bodies_reader_id.as_mut().unwrap());
-            for event in events {
-                match event {
-                    ComponentEvent::Modified(id) => {
-                        modified_physics_bodies.add(*id);
-                    }
-                    ComponentEvent::Inserted(id) => {
-                        inserted_physics_bodies.add(*id);
-                        println!("I'm in!");
-                    }
-                    ComponentEvent::Removed(id) => {
-                        physical_world.remove_bodies(&[physics_bodies
-                            .get(entities.entity(*id))
-                            .unwrap()
-                            .handle()
-                            .unwrap()]);
-                    }
-                };
-            }
-        }
+        iterate_events(
+            &physics_bodies,
+            self.physics_bodies_reader_id.as_mut().unwrap(),
+            &mut inserted_physics_bodies,
+            &mut modified_physics_bodies,
+            &mut physical_world,
+            &entities,
+            &physics_bodies,
+        );
 
         // Update simulation world with the value of Components flagged as changed
+        #[allow(unused_mut)]
         for (_entity, transform, mut body, id) in (
             &entities,
             &transforms,
@@ -160,5 +131,46 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
 
         let mut physics_body_storage: WriteStorage<DynamicBody> = SystemData::fetch(&res);
         self.physics_bodies_reader_id = Some(physics_body_storage.register_reader());
+    }
+}
+
+fn iterate_events<'a, T, D, S>(
+    tracked_storage: &Storage<T, D>,
+    reader: &mut ReaderId<ComponentEvent>,
+    inserted: &mut BitSet,
+    modified: &mut BitSet,
+    world: &mut World,
+    entities: &Entities,
+    bodies: &S
+) where
+    T: Component,
+    T::Storage: Tracked,
+    D: Deref<Target = MaskedStorage<T>>,
+    S: GenericReadStorage<Component=DynamicBody>,
+{
+    let events = tracked_storage.channel().read(reader);
+
+    for event in events {
+        match event {
+            ComponentEvent::Modified(id) => { modified.add(*id); },
+            ComponentEvent::Inserted(id) => { inserted.add(*id); },
+            ComponentEvent::Removed(id) => {
+                match bodies.get(entities.entity(*id)) {
+                    Some(body) => {
+                        match body.handle() {
+                            Some(handle) => {
+                                world.remove_bodies(&[handle]);
+                            }
+                            None => {
+                                // TODO: Log missing handle
+                            }
+                        };
+                    }
+                    None => {
+                        // TODO: Log missing body
+                    }
+                };
+            }
+        };
     }
 }
