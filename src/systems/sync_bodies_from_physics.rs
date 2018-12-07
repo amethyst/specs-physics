@@ -1,7 +1,7 @@
 use crate::bodies::DynamicBody;
 use crate::World;
 use amethyst::core::{GlobalTransform, Transform};
-use amethyst::ecs::{Join, ReadStorage, System, Write, WriteExpect, WriteStorage};
+use amethyst::ecs::{Join, ReadStorage, System, Write, ReadExpect, WriteStorage};
 use amethyst::shrev::EventChannel;
 use nalgebra::Vector3;
 use ncollide3d::events::ContactEvent;
@@ -18,7 +18,7 @@ impl SyncBodiesFromPhysicsSystem {
 
 impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
     type SystemData = (
-        WriteExpect<'a, World>,
+        ReadExpect<'a, World>,
         Write<'a, EventChannel<ContactEvent>>,
         WriteStorage<'a, GlobalTransform>,
         WriteStorage<'a, DynamicBody>,
@@ -27,7 +27,7 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
 
     fn run(&mut self, data: Self::SystemData) {
         let (
-            mut physical_world,
+            physical_world,
             _contact_events,
             mut global_transforms,
             mut physics_bodies,
@@ -35,6 +35,7 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
         ) = data;
 
         // Apply the updated values of the simulated world to our Components
+        #[allow(unused_mut)]
         for (mut global_transform, mut body, local_transform) in (
             &mut global_transforms,
             &mut physics_bodies,

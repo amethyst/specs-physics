@@ -35,3 +35,5 @@ Investigating:
 - [ ] Constraint-based Joints
 - [ ] Kinematics
 - [ ] Body Activation & Sleeping.
+
+Also, implement logging using the log crate.
