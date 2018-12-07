@@ -7,7 +7,7 @@ use nphysics3d::math::{Force, Point, Vector, Velocity};
 use nphysics3d::object::{BodyHandle, BodySet};
 use nphysics3d::solver::IntegrationParameters;
 
-pub trait ForceGenerators {
+pub trait ForceGenerators: Default + Send + Sync {
     type LocalForceGenerators: LocalForceGenerators;
     type LinkedForceGenerators: LinkedForceGenerators;
 }
@@ -23,6 +23,7 @@ pub trait LinkedForceGenerators:
     fn affected_bodies(&self) -> DynamicsBodyRelations; // TODO this signature is definitely wrong.
 }
 
+#[derive(Default)]
 pub struct DefaultForceGenerators;
 
 impl ForceGenerators for DefaultForceGenerators {

@@ -56,7 +56,7 @@ impl Component for DynamicBody {
 /// Currently only the velocity is read and updated at runtime.
 /// The properties of mass are only written at physics body creation time.
 pub struct RigidPhysicsBody {
-    pub handle: Option<BodyHandle>,
+    pub(crate) handle: Option<BodyHandle>,
     pub velocity: Velocity<f32>,
 
     // TODO: update these in the physics system below.
