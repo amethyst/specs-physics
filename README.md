@@ -10,9 +10,12 @@ both amethyst and plain specs interfaces to be exposed, also behind configuratio
 
 I'll update this as I go along.
 
-1. `SyncBodiestoPhysicsSystem` - Apply FlaggedStorage changes to nphysics world
-1. `PhysicsStepperSystem` - Step physics simulation
-1. `SyncSynchronize changes back to components from nphysics world
+1.
+    - `"sync_force_generators_to_physics_system"` - Synchronize changes to force generators to physics world
+    - `"sync_bodies_to_physics_system"` - Synchronize changes to dynamics bodies to physics world
+    - `"sync_gravity_to_physics_system"` - Update gravity of physics world from resource
+1. `"physics_stepper_system"` - Step physics world simulation
+1. `"sync_bodies_from_physics_system"` - Synchronize physics world changes back to components
 
 
 ## Current Roadmap
