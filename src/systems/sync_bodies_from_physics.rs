@@ -1,11 +1,18 @@
+use nphysics3d::object::ColliderHandle;
+use crate::colliders::Collider;
 use crate::bodies::DynamicBody;
-use crate::World;
+use crate::PhysicsWorld;
 use amethyst::core::{GlobalTransform, Transform};
-use amethyst::ecs::{Join, ReadStorage, System, Write, ReadExpect, WriteStorage};
+use amethyst::ecs::{Join, ReadStorage, System, Write, ReadExpect, WriteStorage, Entity, Entities};
+use amethyst::ecs::world::EntitiesRes;
 use amethyst::shrev::EventChannel;
 use nalgebra::Vector3;
-use ncollide3d::events::ContactEvent;
+use ncollide3d::events::{ContactEvent, ProximityEvent};
 use nphysics3d::object::Body;
+
+// Might want to replace by better types.
+pub type EntityContactEvent = (Entity, Entity, ContactEvent);
+pub type EntityProximityEvent = (Entity, Entity, ProximityEvent);
 
 #[derive(Default)]
 pub struct SyncBodiesFromPhysicsSystem;
@@ -18,20 +25,26 @@ impl SyncBodiesFromPhysicsSystem {
 
 impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
     type SystemData = (
-        ReadExpect<'a, World>,
-        Write<'a, EventChannel<ContactEvent>>,
+        Entities<'a>,
+        ReadExpect<'a, PhysicsWorld>,
+        Write<'a, EventChannel<EntityContactEvent>>,
+        Write<'a, EventChannel<EntityProximityEvent>>,
         WriteStorage<'a, GlobalTransform>,
         WriteStorage<'a, DynamicBody>,
         ReadStorage<'a, Transform>,
+        ReadStorage<'a, Collider>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         let (
+            entities,
             physical_world,
-            _contact_events,
+            mut contact_events,
+            mut proximity_events,
             mut global_transforms,
             mut physics_bodies,
             local_transforms,
+            colliders,
         ) = data;
 
         // Apply the updated values of the simulated world to our Components
@@ -85,6 +98,25 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
             };
         }
 
+        let collision_world = physical_world.collision_world();
+
+        contact_events.iter_write(collision_world.contact_events().iter().cloned().map(|ev| {
+            let (handle1, handle2) = match ev {
+                ContactEvent::Started(h1, h2) => (h1, h2),
+                ContactEvent::Stopped(h1, h2) => (h1, h2),
+            };
+
+            let e1 = entity_from_handle(&entities, &colliders, &handle1).expect("Failed to find entity for collider.");
+            let e2 = entity_from_handle(&entities, &colliders, &handle2).expect("Failed to find entity for collider.");
+            (e1, e2, ev)
+        }));
+
+        proximity_events.iter_write(collision_world.proximity_events().iter().cloned().map(|ev| {
+            let e1 = entity_from_handle(&entities, &colliders, &ev.collider1).expect("Failed to find entity for collider.");
+            let e2 = entity_from_handle(&entities, &colliders, &ev.collider2).expect("Failed to find entity for collider.");
+            (e1, e2, ev)
+        }));
+
         // TODO: reader id from other system?
         // Now that we changed them all, let's remove all those pesky events that were generated.
         // global_transforms
@@ -96,4 +128,8 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
         //     .read(&mut self.physics_bodies_reader_id.as_mut().unwrap())
         //     .for_each(|_| ());
     }
+}
+
+pub fn entity_from_handle(entities: &EntitiesRes, colliders: &ReadStorage<Collider>, handle: &ColliderHandle) -> Option<Entity> {
+    (&*entities, colliders).join().find(|(_, c)| c.handle.expect("Collider has no handle and wasn't removed.") == *handle).map(|(e, _)| e)
 }

@@ -1,4 +1,4 @@
-use crate::{Gravity, World};
+use crate::{Gravity, PhysicsWorld};
 use amethyst::ecs::{ReadExpect, Resources, System, SystemData, WriteExpect};
 
 #[derive(Default)]
@@ -11,7 +11,7 @@ impl SyncGravityToPhysicsSystem {
 }
 
 impl<'a> System<'a> for SyncGravityToPhysicsSystem {
-    type SystemData = (WriteExpect<'a, World>, ReadExpect<'a, Gravity>);
+    type SystemData = (WriteExpect<'a, PhysicsWorld>, ReadExpect<'a, Gravity>);
 
     fn run(&mut self, (mut world, gravity): Self::SystemData) {
         world.set_gravity(*gravity);
@@ -23,6 +23,6 @@ impl<'a> System<'a> for SyncGravityToPhysicsSystem {
         res.entry::<Gravity>()
             .or_insert_with(|| Gravity::new(0.0, -9.80665, 0.0));
 
-        res.entry::<World>().or_insert_with(World::new);
+        res.entry::<PhysicsWorld>().or_insert_with(PhysicsWorld::new);
     }
 }

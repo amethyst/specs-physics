@@ -1,4 +1,4 @@
-use crate::World;
+use crate::PhysicsWorld;
 use amethyst::core::Time;
 use amethyst::ecs::{Read, System, WriteExpect};
 
@@ -13,7 +13,7 @@ impl PhysicsStepperSystem {
 }
 
 impl<'a> System<'a> for PhysicsStepperSystem {
-    type SystemData = (WriteExpect<'a, World>, Read<'a, Time>);
+    type SystemData = (WriteExpect<'a, PhysicsWorld>, Read<'a, Time>);
 
     fn run(&mut self, (mut physical_world, time): Self::SystemData) {
         // Simulate world using the current time frame

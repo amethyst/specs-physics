@@ -6,6 +6,7 @@ use nphysics3d::object::BodyHandle;
 use std::collections::HashMap;
 
 /// Physics body component for describing (currently) rigid body dynamics.
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum DynamicBody {
     RigidBody(RigidPhysicsBody),
     Multibody(PhysicsMultibody),
@@ -56,7 +57,10 @@ impl Component for DynamicBody {
 /// Rigid physics body, for use in `PhysicsBody` Component.
 /// Currently only the velocity is read and updated at runtime.
 /// The properties of mass are only written at physics body creation time.
+#[derive(Serialize, Deserialize, Clone, Debug, new)]
 pub struct RigidPhysicsBody {
+    #[serde(skip)]
+    #[new(default)]
     pub(crate) handle: Option<BodyHandle>,
     pub velocity: Velocity<f32>,
 
@@ -69,7 +73,9 @@ pub struct RigidPhysicsBody {
 }
 
 /// Multipart physics body, for use in `PhysicsBody` Component. Not implemented yet.
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PhysicsMultibody {
+    #[serde(skip)]
     pub handle: Option<BodyHandle>,
 }
 
