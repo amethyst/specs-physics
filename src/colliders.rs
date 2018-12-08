@@ -31,11 +31,12 @@ impl ColliderType {
     }
 }
 
-#[derive(new, Clone, Builder)]
+#[derive(new, Clone, Builder, Debug)]
 #[builder(pattern = "owned")]
 pub struct Collider {
     #[new(default)]
     //#[serde(skip)]
+    #[builder(default)]
     pub(crate) handle: Option<ColliderHandle>,
     /// Warning: Changing the margin after inserting the entity will have no effect.
     pub margin: f32,

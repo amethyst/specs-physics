@@ -8,7 +8,7 @@ use amethyst::ecs::{
 };
 use core::ops::Deref;
 use nalgebra::try_convert;
-use nphysics3d::math::{Inertia, Force, Isometry};
+use nphysics3d::math::{Force, Inertia, Isometry};
 
 #[derive(Default)]
 pub struct SyncBodiesToPhysicsSystem {
@@ -115,19 +115,17 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
                 trace!("Detected changed dynamics body with id {}", id);
                 match body {
                     DynamicBody::RigidBody(ref mut rigid_body) => {
-                        match physical_world.rigid_body_mut(rigid_body.handle.unwrap()) {
-                            Some(physical_body) => {
+                        if let Some(physical_body) = physical_world.rigid_body_mut(rigid_body.handle.unwrap()) {
                                 let position: Isometry<f32> = try_convert(transform.0).unwrap();
-                                trace!("Updating rigid body in physics world with isometry: {}", position);
+                                trace!(
+                                    "Updating rigid body in physics world with isometry: {}",
+                                    position
+                                );
                                 physical_body.set_position(position);
                                 physical_body.set_velocity(rigid_body.velocity);
                                 physical_body.apply_force(&rigid_body.external_forces);
 
                                 // if you changed the mass properties at all... too bad!
-                            },
-                            None => {
-
-                            }
                         }
                     }
                     DynamicBody::Multibody(_) => {
@@ -150,7 +148,7 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
     }
 }
 
-fn iterate_events<'a, T, D, S>(
+fn iterate_events<T, D, S>(
     tracked_storage: &Storage<T, D>,
     reader: &mut ReaderId<ComponentEvent>,
     inserted: &mut BitSet,
