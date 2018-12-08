@@ -51,7 +51,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for PhysicsBundle<'c> {
         builder.add(
             SyncCollidersToPhysicsSystem::new(),
             SYNC_COLLIDERS_TO_PHYSICS_SYSTEM,
-            &[],
+            &[SYNC_BODIES_TO_PHYSICS_SYSTEM],
         );
 
         builder.add(

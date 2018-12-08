@@ -1,7 +1,7 @@
 use crate::bodies::DynamicBody;
 use crate::Collider;
 use crate::PhysicsWorld;
-use amethyst::core::GlobalTransform;
+use amethyst::core::Transform;
 use amethyst::ecs::storage::{ComponentEvent, GenericReadStorage, MaskedStorage};
 use amethyst::ecs::{
     BitSet, Component, Entities, Join, ReadStorage, ReaderId, Resources, Storage, System,
@@ -20,7 +20,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
     type SystemData = (
         WriteExpect<'a, PhysicsWorld>,
         Entities<'a>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, DynamicBody>,
         WriteStorage<'a, Collider>,
     );
@@ -32,7 +32,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
         let mut modified_colliders = BitSet::new();
 
         iterate_events(
-            &transforms,
+            &colliders,
             self.colliders_reader_id.as_mut().unwrap(),
             &mut inserted_colliders,
             &mut modified_colliders,
@@ -41,46 +41,47 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
             &colliders,
         );
 
-        for (entity, mut collider, id) in (
+        for (entity, mut collider, id, tr) in (
             &entities,
             &mut colliders,
             &inserted_colliders | &modified_colliders,
+            &transforms,
         )
             .join()
         {
             if inserted_colliders.contains(id) {
-                trace!("Detected inserted collider with id {}", id);
-
+                println!("Detected inserted collider with id {:?}", id);
                 // Just inserted. Remove old one and insert new.
-                if let Some(handle) = collider.handle {
-                    if physical_world.collider(handle).is_some() {
-                        trace!("Removing collider marked as inserted that already exists with handle: {:?}", handle);
-
-                        physical_world.remove_colliders(&[handle]);
-                    }
+                if collider.handle.is_some()
+                    && physical_world.collider(collider.handle.unwrap()).is_some()
+                {
+                    physical_world.remove_colliders(&[collider.handle.unwrap()]);
                 }
 
                 let parent = if let Some(rb) = rigid_bodies.get(entity) {
-                    trace!("Attaching inserted collider to rigid body: {}", entity);
+                    trace!("Attaching inserted collider to rigid body: {:?}", entity);
 
                     rb.handle().expect(
                         "You should normally have a body handle at this point. This is a bug.",
                     )
                 } else {
-                    trace!("Attaching inserted collider to ground.");
-
                     BodyHandle::ground()
+                };
+                let position = if parent.is_ground() {
+                    tr.isometry() * collider.offset_from_parent
+                } else {
+                    collider.offset_from_parent
                 };
 
                 collider.handle = Some(physical_world.add_collider(
                     collider.margin,
                     collider.shape.clone(),
                     parent,
-                    collider.offset_from_parent,
+                    position,
                     collider.physics_material.clone(),
                 ));
 
-                trace!("Inserted collider to world with values: {}", collider);
+                trace!("Inserted collider to world with values: {:?}", collider);
 
                 let prediction = physical_world.prediction();
                 let angular_prediction = physical_world.angular_prediction();
@@ -91,15 +92,15 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                     .collision_object_mut(collider.handle.unwrap())
                     .unwrap();
 
-                let collider_handle = collider_object.handle().clone();
-
-                collision_world.set_collision_group(collider_handle, collider.collision_group);
-
                 collider_object.set_query_type(collider.query_type.to_geometric_query_type(
                     collider.margin,
                     prediction,
                     angular_prediction,
                 ));
+
+                let collider_handle = collider_object.handle();
+
+                collision_world.set_collision_group(collider_handle, collider.collision_group);
             } else if modified_colliders.contains(id) || modified_colliders.contains(id) {
                 println!("Detected changed collider with id {:?}", id);
 
@@ -110,8 +111,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                 let collider_handle = collision_world
                     .collision_object(collider.handle.unwrap())
                     .unwrap()
-                    .handle()
-                    .clone();
+                    .handle();
 
                 collision_world.set_collision_group(collider_handle, collider.collision_group);
                 collision_world.set_shape(collider_handle, collider.shape.clone());
@@ -119,8 +119,26 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                 let collider_object = collision_world
                     .collision_object_mut(collider.handle.unwrap())
                     .unwrap();
-                //collider_handle.set_shape(collider_handle.shape);
-                collider_object.set_position(collider.offset_from_parent.clone());
+
+                let parent = if let Some(rb) = rigid_bodies.get(entity) {
+                    trace!("Updating collider to rigid body: {:?}", entity);
+
+                    rb.handle().expect(
+                        "You should normally have a body handle at this point. This is a bug.",
+                    )
+                } else {
+                    trace!("Updating collider to ground.");
+
+                    BodyHandle::ground()
+                };
+
+                let position = if parent.is_ground() {
+                    tr.isometry() * collider.offset_from_parent
+                } else {
+                    collider.offset_from_parent
+                };
+
+                collider_object.set_position(position);
                 collider_object.set_query_type(collider.query_type.to_geometric_query_type(
                     collider.margin,
                     prediction,
@@ -131,6 +149,11 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                     .set_material(collider.physics_material.clone());
             }
         }
+
+        colliders
+            .channel()
+            .read(&mut self.colliders_reader_id.as_mut().unwrap())
+            .for_each(|_| ());
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -141,7 +164,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
     }
 }
 
-fn iterate_events<'a, T, D, S>(
+fn iterate_events<T, D, S>(
     tracked_storage: &Storage<T, D>,
     reader: &mut ReaderId<ComponentEvent>,
     inserted: &mut BitSet,
