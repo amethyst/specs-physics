@@ -6,8 +6,9 @@ mod sync_gravity_to_physics;
 use amethyst::core::bundle::{Result, SystemBundle};
 use amethyst::core::specs::DispatcherBuilder;
 
+use crate::colliders::SyncCollidersToPhysicsSystem;
 pub use self::physics_stepper::PhysicsStepperSystem;
-pub use self::sync_bodies_from_physics::SyncBodiesFromPhysicsSystem;
+pub use self::sync_bodies_from_physics::*;
 pub use self::sync_bodies_to_physics::SyncBodiesToPhysicsSystem;
 pub use self::sync_gravity_to_physics::SyncGravityToPhysicsSystem;
 
@@ -16,6 +17,7 @@ pub use self::sync_gravity_to_physics::SyncGravityToPhysicsSystem;
 
 pub const SYNC_BODIES_TO_PHYSICS_SYSTEM: &str = "sync_bodies_to_physics_system";
 pub const SYNC_GRAVITY_TO_PHYSICS_SYSTEM: &str = "sync_gravity_to_physics_system";
+pub const SYNC_COLLIDERS_TO_PHYSICS_SYSTEM: &str = "sync_colliders_to_physics_system";
 pub const PHYSICS_STEPPER_SYSTEM: &str = "physics_stepper_system";
 pub const SYNC_BODIES_FROM_PHYSICS_SYSTEM: &str = "sync_bodies_from_physics_system";
 
@@ -49,11 +51,18 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for PhysicsBundle<'c> {
         );
 
         builder.add(
+            SyncCollidersToPhysicsSystem::new(),
+            SYNC_COLLIDERS_TO_PHYSICS_SYSTEM,
+            &[],
+        );
+
+        builder.add(
             PhysicsStepperSystem::new(),
             PHYSICS_STEPPER_SYSTEM,
             &[
                 SYNC_BODIES_TO_PHYSICS_SYSTEM,
                 SYNC_GRAVITY_TO_PHYSICS_SYSTEM,
+                SYNC_COLLIDERS_TO_PHYSICS_SYSTEM,
             ],
         );
 

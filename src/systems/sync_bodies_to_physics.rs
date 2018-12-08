@@ -1,5 +1,5 @@
 use crate::bodies::DynamicBody;
-use crate::World;
+use crate::PhysicsWorld;
 use amethyst::core::GlobalTransform;
 use amethyst::ecs::storage::{ComponentEvent, MaskedStorage, GenericReadStorage};
 use amethyst::ecs::{
@@ -24,7 +24,7 @@ impl SyncBodiesToPhysicsSystem {
 
 impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
     type SystemData = (
-        WriteExpect<'a, World>,
+        WriteExpect<'a, PhysicsWorld>,
         Entities<'a>,
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DynamicBody>,
@@ -141,7 +141,7 @@ fn iterate_events<'a, T, D, S>(
     reader: &mut ReaderId<ComponentEvent>,
     inserted: &mut BitSet,
     modified: &mut BitSet,
-    world: &mut World,
+    world: &mut PhysicsWorld,
     entities: &Entities,
     bodies: &S
 ) where
