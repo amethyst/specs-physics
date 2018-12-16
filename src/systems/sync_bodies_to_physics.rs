@@ -97,6 +97,7 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
                             .unwrap();
 
                         physical_body.set_velocity(rigid_body.velocity);
+                        physical_body.apply_force(&rigid_body.external_forces);
                     }
                     DynamicBody::Multibody(_) => {
                         // TODO
@@ -112,6 +113,7 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
 
                         physical_body.set_position(try_convert(transform.0).unwrap());
                         physical_body.set_velocity(rigid_body.velocity);
+                        physical_body.apply_force(&rigid_body.external_forces);
 
                         // if you changed the mass properties at all... too bad!
                     }

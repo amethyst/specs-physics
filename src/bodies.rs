@@ -1,7 +1,7 @@
 use amethyst::ecs::world::Index;
 use amethyst::ecs::{Component, FlaggedStorage};
 use nalgebra::Matrix3;
-use nphysics3d::math::{Point, Velocity};
+use nphysics3d::math::{Point, Velocity, Force};
 use nphysics3d::object::BodyHandle;
 use std::collections::HashMap;
 
@@ -37,6 +37,7 @@ impl DynamicBody {
             mass,
             angular_mass,
             center_of_mass,
+            external_forces: Force::<f32>::zero(),
         })
     }
 
@@ -63,6 +64,8 @@ pub struct RigidPhysicsBody {
     pub mass: f32,
     pub angular_mass: Matrix3<f32>,
     pub center_of_mass: Point<f32>,
+
+    pub external_forces: Force<f32>,
 }
 
 /// Multipart physics body, for use in `PhysicsBody` Component. Not implemented yet.
