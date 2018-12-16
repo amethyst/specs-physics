@@ -9,7 +9,6 @@ use amethyst::renderer::{
 };
 use amethyst::{Application, GameData, GameDataBuilder, SimpleState, StateData};
 use nphysics_ecs_dumb::bodies::DynamicBody;
-use nphysics_ecs_dumb::forces::DefaultForceGenerators;
 use nphysics_ecs_dumb::nphysics::math::{Point, Velocity};
 use nphysics_ecs_dumb::systems::PhysicsBundle;
 use num_traits::identities::One;
@@ -111,7 +110,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            PhysicsBundle::<DefaultForceGenerators>::new().with_dep(&["transform_system"]),
+            PhysicsBundle::new().with_dep(&["transform_system"]),
         )?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
 
