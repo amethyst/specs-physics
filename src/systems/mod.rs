@@ -1,19 +1,17 @@
 mod physics_stepper;
 mod sync_bodies_from_physics;
 mod sync_bodies_to_physics;
+mod sync_colliders_to_physics;
 mod sync_gravity_to_physics;
 
 use amethyst::core::bundle::{Result, SystemBundle};
 use amethyst::core::specs::DispatcherBuilder;
 
-use crate::colliders::SyncCollidersToPhysicsSystem;
 pub use self::physics_stepper::PhysicsStepperSystem;
 pub use self::sync_bodies_from_physics::*;
 pub use self::sync_bodies_to_physics::SyncBodiesToPhysicsSystem;
+pub use self::sync_colliders_to_physics::SyncCollidersToPhysicsSystem;
 pub use self::sync_gravity_to_physics::SyncGravityToPhysicsSystem;
-
-// TODO: Implement contact events, use Entity id's instead of nphysics handles.
-// contact_events.iter_write(physical_world.contact_events());
 
 pub const SYNC_BODIES_TO_PHYSICS_SYSTEM: &str = "sync_bodies_to_physics_system";
 pub const SYNC_GRAVITY_TO_PHYSICS_SYSTEM: &str = "sync_gravity_to_physics_system";

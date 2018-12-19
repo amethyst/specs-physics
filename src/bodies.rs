@@ -1,7 +1,7 @@
 use amethyst::ecs::world::Index;
 use amethyst::ecs::{Component, FlaggedStorage};
 use nalgebra::Matrix3;
-use nphysics3d::math::{Point, Velocity, Force};
+use nphysics3d::math::{Force, Point, Velocity};
 use nphysics3d::object::BodyHandle;
 use std::collections::HashMap;
 

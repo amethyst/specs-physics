@@ -1,7 +1,7 @@
 use crate::bodies::DynamicBody;
 use crate::PhysicsWorld;
 use amethyst::core::GlobalTransform;
-use amethyst::ecs::storage::{ComponentEvent, MaskedStorage, GenericReadStorage};
+use amethyst::ecs::storage::{ComponentEvent, GenericReadStorage, MaskedStorage};
 use amethyst::ecs::{
     BitSet, Component, Entities, Join, ReadStorage, ReaderId, Resources, Storage, System,
     SystemData, Tracked, WriteExpect, WriteStorage,
@@ -143,19 +143,23 @@ fn iterate_events<'a, T, D, S>(
     modified: &mut BitSet,
     world: &mut PhysicsWorld,
     entities: &Entities,
-    bodies: &S
+    bodies: &S,
 ) where
     T: Component,
     T::Storage: Tracked,
     D: Deref<Target = MaskedStorage<T>>,
-    S: GenericReadStorage<Component=DynamicBody>,
+    S: GenericReadStorage<Component = DynamicBody>,
 {
     let events = tracked_storage.channel().read(reader);
 
     for event in events {
         match event {
-            ComponentEvent::Modified(id) => { modified.add(*id); },
-            ComponentEvent::Inserted(id) => { inserted.add(*id); },
+            ComponentEvent::Modified(id) => {
+                modified.add(*id);
+            }
+            ComponentEvent::Inserted(id) => {
+                inserted.add(*id);
+            }
             ComponentEvent::Removed(id) => {
                 match bodies.get(entities.entity(*id)) {
                     Some(body) => {

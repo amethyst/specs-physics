@@ -109,9 +109,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(
-            PhysicsBundle::new().with_dep(&["transform_system"]),
-        )?
+        .with_bundle(PhysicsBundle::new().with_dep(&["transform_system"]))?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
 
     let application = Application::new("./", GameState, game_data);

@@ -23,6 +23,7 @@ impl<'a> System<'a> for SyncGravityToPhysicsSystem {
         res.entry::<Gravity>()
             .or_insert_with(|| Gravity::new(0.0, -9.80665, 0.0));
 
-        res.entry::<PhysicsWorld>().or_insert_with(PhysicsWorld::new);
+        res.entry::<PhysicsWorld>()
+            .or_insert_with(PhysicsWorld::new);
     }
 }

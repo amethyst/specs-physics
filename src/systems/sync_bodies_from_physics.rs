@@ -1,14 +1,14 @@
-use nphysics3d::object::ColliderHandle;
-use crate::colliders::Collider;
 use crate::bodies::DynamicBody;
+use crate::colliders::Collider;
 use crate::PhysicsWorld;
 use amethyst::core::{GlobalTransform, Transform};
-use amethyst::ecs::{Join, ReadStorage, System, Write, ReadExpect, WriteStorage, Entity, Entities};
 use amethyst::ecs::world::EntitiesRes;
+use amethyst::ecs::{Entities, Entity, Join, ReadExpect, ReadStorage, System, Write, WriteStorage};
 use amethyst::shrev::EventChannel;
 use nalgebra::Vector3;
 use ncollide3d::events::{ContactEvent, ProximityEvent};
 use nphysics3d::object::Body;
+use nphysics3d::object::ColliderHandle;
 
 // Might want to replace by better types.
 pub type EntityContactEvent = (Entity, Entity, ContactEvent);
@@ -106,16 +106,26 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
                 ContactEvent::Stopped(h1, h2) => (h1, h2),
             };
 
-            let e1 = entity_from_handle(&entities, &colliders, &handle1).expect("Failed to find entity for collider.");
-            let e2 = entity_from_handle(&entities, &colliders, &handle2).expect("Failed to find entity for collider.");
+            let e1 = entity_from_handle(&entities, &colliders, &handle1)
+                .expect("Failed to find entity for collider.");
+            let e2 = entity_from_handle(&entities, &colliders, &handle2)
+                .expect("Failed to find entity for collider.");
             (e1, e2, ev)
         }));
 
-        proximity_events.iter_write(collision_world.proximity_events().iter().cloned().map(|ev| {
-            let e1 = entity_from_handle(&entities, &colliders, &ev.collider1).expect("Failed to find entity for collider.");
-            let e2 = entity_from_handle(&entities, &colliders, &ev.collider2).expect("Failed to find entity for collider.");
-            (e1, e2, ev)
-        }));
+        proximity_events.iter_write(
+            collision_world
+                .proximity_events()
+                .iter()
+                .cloned()
+                .map(|ev| {
+                    let e1 = entity_from_handle(&entities, &colliders, &ev.collider1)
+                        .expect("Failed to find entity for collider.");
+                    let e2 = entity_from_handle(&entities, &colliders, &ev.collider2)
+                        .expect("Failed to find entity for collider.");
+                    (e1, e2, ev)
+                }),
+        );
 
         // TODO: reader id from other system?
         // Now that we changed them all, let's remove all those pesky events that were generated.
@@ -130,6 +140,17 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
     }
 }
 
-pub fn entity_from_handle(entities: &EntitiesRes, colliders: &ReadStorage<Collider>, handle: &ColliderHandle) -> Option<Entity> {
-    (&*entities, colliders).join().find(|(_, c)| c.handle.expect("Collider has no handle and wasn't removed.") == *handle).map(|(e, _)| e)
+pub fn entity_from_handle(
+    entities: &EntitiesRes,
+    colliders: &ReadStorage<Collider>,
+    handle: &ColliderHandle,
+) -> Option<Entity> {
+    (&*entities, colliders)
+        .join()
+        .find(|(_, c)| {
+            c.handle
+                .expect("Collider has no handle and wasn't removed.")
+                == *handle
+        })
+        .map(|(e, _)| e)
 }

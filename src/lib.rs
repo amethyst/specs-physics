@@ -11,16 +11,16 @@ extern crate derive_new;
 extern crate serde;
 
 pub mod bodies;
-pub mod systems;
 pub mod colliders;
+pub mod systems;
 
 pub use self::bodies::*;
-pub use self::forces::*;
-pub use self::systems::*;
 pub use self::colliders::*;
+pub use self::systems::*;
 
 /// The Physical World containing all physical objects.
 pub type PhysicsWorld = self::nphysics::world::World<f32>;
+
 /// Gravity is a type alias for a Vector of dimension 3.
-/// It represent a constant acceleration affecting all physical objects in the scene.
+/// It represents a constant acceleration affecting all physical objects in the scene.
 pub type Gravity = self::nphysics::math::Vector<f32>;
