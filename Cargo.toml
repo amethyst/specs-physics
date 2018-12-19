@@ -9,8 +9,6 @@ edition = "2018"
 
 [dependencies]
 nphysics3d = { git = "https://github.com/jojolepro/nphysics", branch = "tmp", features = ["serde"] }
-#ncollide3d = "0.17"
-#ncollide3d = { git = "https://github.com/jojolepro/ncollide", branch = "collidegroup", features = ["serde"] }
 ncollide3d = { git = "https://github.com/jojolepro/ncollide", branch = "collidegroup" }
 nalgebra = "0.16"
 num-traits = "0.2"

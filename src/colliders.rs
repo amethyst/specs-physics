@@ -1,11 +1,7 @@
-
-use ncollide::{
-    shape::ShapeHandle,
-    world::GeometricQueryType,
-};
-use nphysics::object::{Material, ColliderHandle};
+use amethyst::ecs::{Component, DenseVecStorage, FlaggedStorage};
 use nalgebra::Isometry3;
-use amethyst::ecs::{Component, FlaggedStorage, DenseVecStorage};
+use ncollide::{shape::ShapeHandle, world::GeometricQueryType};
+use nphysics::object::{ColliderHandle, Material};
 
 #[derive(Clone, Serialize, Deserialize, Debug, new)]
 pub enum ColliderType {
@@ -20,15 +16,22 @@ impl Default for ColliderType {
 }
 
 impl ColliderType {
-    pub fn to_geometric_query_type(&self, margin: f32, prediction: f32, angular_prediction: f32) -> GeometricQueryType<f32> {
+    pub fn to_geometric_query_type(
+        &self,
+        margin: f32,
+        prediction: f32,
+        angular_prediction: f32,
+    ) -> GeometricQueryType<f32> {
         match *self {
-            ColliderType::Collider => GeometricQueryType::Contacts(margin + prediction * 0.5, angular_prediction),
+            ColliderType::Collider => {
+                GeometricQueryType::Contacts(margin + prediction * 0.5, angular_prediction)
+            }
             ColliderType::Trigger => GeometricQueryType::Proximity(prediction * 0.5),
         }
     }
 }
 
-#[derive(new, Clone, Builder/*, Serialize, Deserialize*/)]
+#[derive(new, Clone, Builder)]
 #[builder(pattern = "owned")]
 pub struct Collider {
     #[new(default)]
@@ -60,7 +63,6 @@ impl ColliderBuilder {
         self
     }
 }
-
 
 impl Component for Collider {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
