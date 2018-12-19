@@ -49,19 +49,26 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
             .join()
         {
             if inserted_colliders.contains(id) {
-                println!("Detected inserted collider with id {:?}", id);
+                trace!("Detected inserted collider with id {}", id);
+
                 // Just inserted. Remove old one and insert new.
-                if collider.handle.is_some()
-                    && physical_world.collider(collider.handle.unwrap()).is_some()
-                {
-                    physical_world.remove_colliders(&[collider.handle.unwrap()]);
+                if let Some(handle) = collider.handle {
+                    if physical_world.collider(handle).is_some() {
+                        trace!("Removing collider marked as inserted that already exists with handle: {:?}", handle);
+
+                        physical_world.remove_colliders(&[handle]);
+                    }
                 }
 
                 let parent = if let Some(rb) = rigid_bodies.get(entity) {
+                    trace!("Attaching inserted collider to rigid body: {}", entity);
+
                     rb.handle().expect(
                         "You should normally have a body handle at this point. This is a bug.",
                     )
                 } else {
+                    trace!("Attaching inserted collider to ground.");
+
                     BodyHandle::ground()
                 };
 
@@ -73,20 +80,20 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                     collider.physics_material.clone(),
                 ));
 
+                trace!("Inserted collider to world with values: {}", collider);
+
                 let prediction = physical_world.prediction();
                 let angular_prediction = physical_world.angular_prediction();
 
                 let collision_world = physical_world.collision_world_mut();
-                let collider_handle = collision_world
-                    .collision_object(collider.handle.unwrap())
-                    .unwrap()
-                    .handle()
-                    .clone();
-                collision_world.set_collision_group(collider_handle, collider.collision_group);
 
                 let collider_object = collision_world
                     .collision_object_mut(collider.handle.unwrap())
                     .unwrap();
+
+                let collider_handle = collider_object.handle().clone();
+
+                collision_world.set_collision_group(collider_handle, collider.collision_group);
 
                 collider_object.set_query_type(collider.query_type.to_geometric_query_type(
                     collider.margin,
@@ -163,15 +170,17 @@ fn iterate_events<'a, T, D, S>(
                     Some(collider) => {
                         match collider.handle {
                             Some(handle) => {
+                                trace!("Removing collider with id: {}", id);
+
                                 world.remove_colliders(&[handle]);
                             }
                             None => {
-                                // TODO: Log missing handle
+                                error!("Missing handle in collider: {}", id);
                             }
                         };
                     }
                     None => {
-                        // TODO: Log missing body
+                        error!("Missing collider with id: {}", id);
                     }
                 };
             }

@@ -11,7 +11,6 @@ both amethyst and plain specs interfaces to be exposed, also behind configuratio
 I'll update this as I go along.
 
 1.
-    - `"sync_force_generators_to_physics_system"` - Synchronize changes to force generators to physics world
     - `"sync_bodies_to_physics_system"` - Synchronize changes to dynamics bodies to physics world
     - `"sync_gravity_to_physics_system"` - Update gravity of physics world from resource
 1. `"physics_stepper_system"` - Step physics world simulation
@@ -25,15 +24,15 @@ Full *TODO* sheet can be found in [this nphysics issue](https://github.com/rusts
 Ongoing work:
 
 - [x] RigidBody Components
-- [ ] Force Generator Components
+- [x] External force property
+- [x] `log` based logging
 - [ ] Collider Components
+- [ ] Proximity & Curve-based external force utility
 - [ ] Proximity and Contact EventChannels
+- [ ] Handling Body Activation & Sleeping
 
 Investigating:
 
 - [ ] Multibody-based Component Joints
 - [ ] Constraint-based Joints
 - [ ] Kinematics
-- [ ] Body Activation & Sleeping.
-
-Also, implement logging using the log crate.

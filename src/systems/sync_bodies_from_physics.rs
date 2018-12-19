@@ -47,6 +47,8 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
             colliders,
         ) = data;
 
+        trace!("Synchronizing bodies from physical world.");
+
         // Apply the updated values of the simulated world to our Components
         #[allow(unused_mut)]
         for (mut global_transform, mut body, local_transform) in (
@@ -59,6 +61,7 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
             let updated_body = physical_world.body(body.handle().unwrap());
 
             if updated_body.is_ground() || !updated_body.is_active() || updated_body.is_static() {
+                trace!("Skipping synchronizing data from non-dynamic body: {:?}", updated_body.handle());
                 continue;
             }
 
@@ -67,11 +70,9 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
                     DynamicBody::RigidBody(ref mut rigid_body),
                     Body::RigidBody(ref updated_rigid_body),
                 ) => {
-                    println!(
-                        "super power: change mehhh! new pos: {:?}",
-                        updated_rigid_body.position()
-                    );
+                    trace!("Synchronizing RigidBody from handle: {:?}", updated_rigid_body.handle());
 
+                    trace!("Synchronized RigidBody's updated position: {}", updated_rigid_body.position());
                     // TODO: Might get rid of the scale!!!
                     global_transform.0 = updated_rigid_body
                         .position()
@@ -82,25 +83,32 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
                                 .unwrap_or(&Vector3::new(1.0, 1.0, 1.0)),
                         );
 
+                    trace!("Synchronized RigidBody's updated velocity: {:?}", updated_rigid_body.velocity());
                     rigid_body.velocity = *updated_rigid_body.velocity();
+
+                    trace!("Synchronized RigidBody's updated inertia: {:?}", updated_rigid_body.inertia());
                     let inertia = updated_rigid_body.inertia();
                     rigid_body.mass = inertia.linear;
                     rigid_body.angular_mass = inertia.angular;
+
+                    trace!("Synchronized RigidBody's updated center of mass: {}", updated_rigid_body.center_of_mass());
                     rigid_body.center_of_mass = updated_rigid_body.center_of_mass();
                 }
                 (DynamicBody::Multibody(_multibody), Body::Multibody(_updated_multibody)) => {
-                    // match updated_multibody.links().next() {
-                    //    Some(link) => link.position(),
-                    //    None => continue,
-                    // };
+                    error!("Multibody found; not implemented currently, sorry!")
                 }
-                _ => println!("Unexpected dynamics body pair."),
+                // TODO: Add data to unexpected pair message. Not straightforward.
+                _ => error!("Unexpected dynamics body pair!"),
             };
         }
+
+        trace!("Iterating collision events.");
 
         let collision_world = physical_world.collision_world();
 
         contact_events.iter_write(collision_world.contact_events().iter().cloned().map(|ev| {
+            trace!("Emitting contact event: {}", ev);
+
             let (handle1, handle2) = match ev {
                 ContactEvent::Started(h1, h2) => (h1, h2),
                 ContactEvent::Stopped(h1, h2) => (h1, h2),
@@ -119,6 +127,8 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
                 .iter()
                 .cloned()
                 .map(|ev| {
+                    trace!("Emitting proximity event: {}", ev);
+
                     let e1 = entity_from_handle(&entities, &colliders, &ev.collider1)
                         .expect("Failed to find entity for collider.");
                     let e2 = entity_from_handle(&entities, &colliders, &ev.collider2)

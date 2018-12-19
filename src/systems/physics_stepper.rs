@@ -15,10 +15,15 @@ impl PhysicsStepperSystem {
 impl<'a> System<'a> for PhysicsStepperSystem {
     type SystemData = (WriteExpect<'a, PhysicsWorld>, Read<'a, Time>);
 
+    // Simulate world using the current time frame
+    // TODO: Bound timestep deltas
     fn run(&mut self, (mut physical_world, time): Self::SystemData) {
-        // Simulate world using the current time frame
-        // TODO: Bound timestep deltas
-        physical_world.set_timestep(time.delta_seconds());
+        let delta = time.delta_seconds();
+
+        trace!("Setting timestep with delta: {}", delta);
+        physical_world.set_timestep(delta);
+
+        trace!("Stepping physical world simulation.");
         physical_world.step();
     }
 }
