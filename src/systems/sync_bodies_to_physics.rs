@@ -78,60 +78,47 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
             if inserted_transforms.contains(id) || inserted_physics_bodies.contains(id) {
                 trace!("Detected inserted dynamics body with id {}", id);
 
-                match body {
-                    DynamicBody::RigidBody(ref mut rigid_body) => {
-                        // Just inserted. Remove old one and insert new.
-                        if let Some(handle) = rigid_body.handle {
-                            if physical_world.rigid_body(handle).is_some() {
-                                trace!("Removing body marked as inserted that already exists with handle: {:?}", handle);
-                                physical_world.remove_bodies(&[handle]);
-                            }
-                        }
-
-                        rigid_body.handle = Some(physical_world.add_rigid_body(
-                            try_convert(transform.0).unwrap(),
-                            Inertia::new(rigid_body.mass, rigid_body.angular_mass),
-                            rigid_body.center_of_mass,
-                        ));
-
-                        trace!("Inserted rigid body to world with values: {:?}", rigid_body);
-
-                        let physical_body = physical_world
-                            .rigid_body_mut(rigid_body.handle.unwrap())
-                            .unwrap();
-
-                        physical_body.set_velocity(rigid_body.velocity);
-                        physical_body.apply_force(&rigid_body.external_forces);
-                        rigid_body.external_forces = Force::<f32>::zero();
-
-                        trace!("Velocity and external forces applied, external forces reset to zero, for body with handle: {:?}", rigid_body.handle);
-                    }
-                    DynamicBody::Multibody(_) => {
-                        // TODO
-                        error!("Multibody found; not implemented currently, sorry!")
+                // Just inserted. Remove old one and insert new.
+                if let Some(handle) = body.handle {
+                    if physical_world.rigid_body(handle).is_some() {
+                        trace!("Removing body marked as inserted that already exists with handle: {:?}", handle);
+                        physical_world.remove_bodies(&[handle]);
                     }
                 }
+
+                body.handle = Some(physical_world.add_rigid_body(
+                    try_convert(transform.0).unwrap(),
+                    Inertia::new(body.mass, body.angular_mass),
+                    body.center_of_mass,
+                ));
+
+                trace!("Inserted rigid body to world with values: {:?}", body);
+
+                let physical_body = physical_world.rigid_body_mut(body.handle.unwrap()).unwrap();
+
+                physical_body.set_velocity(body.velocity);
+                physical_body.apply_force(&body.external_forces);
+                body.external_forces = Force::<f32>::zero();
+
+                trace!("Velocity and external forces applied, external forces reset to zero, for body with handle: {:?}", body.handle);
             } else if modified_transforms.contains(id) || modified_physics_bodies.contains(id) {
                 trace!("Detected changed dynamics body with id {}", id);
-                match body {
-                    DynamicBody::RigidBody(ref mut rigid_body) => {
-                        if let Some(physical_body) = physical_world.rigid_body_mut(rigid_body.handle.unwrap()) {
-                                let position: Isometry<f32> = try_convert(transform.0).unwrap();
-                                trace!(
-                                    "Updating rigid body in physics world with isometry: {}",
-                                    position
-                                );
-                                physical_body.set_position(position);
-                                physical_body.set_velocity(rigid_body.velocity);
-                                physical_body.apply_force(&rigid_body.external_forces);
+                match physical_world.rigid_body_mut(body.handle.unwrap()) {
+                    Some(physical_body) => {
+                        let position: Isometry<f32> = try_convert(transform.0).unwrap();
+                        trace!(
+                            "Updating rigid body in physics world with isometry: {}",
+                            position
+                        );
+                        physical_body.set_position(position);
 
-                                // if you changed the mass properties at all... too bad!
-                        }
+                        physical_body.set_velocity(body.velocity);
+                        physical_body.apply_force(&body.external_forces);
+                        body.external_forces = Force::<f32>::zero();
+
+                        // if you changed the mass properties at all... too bad!
                     }
-                    DynamicBody::Multibody(_) => {
-                        // TODO
-                        error!("Multibody found; not implemented currently, sorry!")
-                    }
+                    None => {}
                 }
             }
         }

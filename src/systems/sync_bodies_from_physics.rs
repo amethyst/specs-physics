@@ -59,74 +59,63 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
             .join()
         {
             if let Some(updated_body_handle) = body.handle() {
-                let updated_body = physical_world.body(updated_body_handle);
+                if let Some(updated_body) = physical_world.rigid_body(updated_body_handle) {
+                    if !updated_body.is_active() || updated_body.is_static() {
+                        trace!(
+                            "Skipping synchronizing data from non-dynamic body: {:?}",
+                            updated_body.handle()
+                        );
+                        continue;
+                    }
 
-                if updated_body.is_ground() || !updated_body.is_active() || updated_body.is_static()
-                {
                     trace!(
-                        "Skipping synchronizing data from non-dynamic body: {:?}",
+                        "Synchronizing RigidBody from handle: {:?}",
                         updated_body.handle()
                     );
-                    continue;
+
+                    trace!(
+                        "Synchronized RigidBody's updated position: {:?}",
+                        updated_body.position()
+                    );
+
+                    global_transform.0 = updated_body
+                        .position()
+                        .to_homogeneous()
+                        .prepend_nonuniform_scaling(
+                            &local_transform
+                                .as_ref()
+                                .map(|tr| tr.scale().clone())
+                                .unwrap_or(Vector3::new(1.0, 1.0, 1.0)),
+                        );
+
+                    if let Some(ref mut local_transform) = local_transform {
+                        *local_transform.isometry_mut() = updated_body.position().clone();
+                    }
+
+                    trace!(
+                        "Synchronized RigidBody's updated velocity: {:?}",
+                        updated_body.velocity()
+                    );
+                    body.velocity = *updated_body.velocity();
+
+                    trace!(
+                        "Synchronized RigidBody's updated inertia: {:?}",
+                        updated_body.inertia()
+                    );
+                    let inertia = updated_body.inertia();
+                    body.mass = inertia.linear;
+                    body.angular_mass = inertia.angular;
+
+                    trace!(
+                        "Synchronized RigidBody's updated center of mass: {:?}",
+                        updated_body.center_of_mass()
+                    );
+                    body.center_of_mass = updated_body.center_of_mass();
+                } else {
+                    error!("Found body without pair in physics world!");
                 }
-
-                match (body, updated_body) {
-                    (
-                        DynamicBody::RigidBody(ref mut rigid_body),
-                        Body::RigidBody(ref updated_rigid_body),
-                    ) => {
-                        trace!(
-                            "Synchronizing RigidBody from handle: {:?}",
-                            updated_rigid_body.handle()
-                        );
-
-                        trace!(
-                            "Synchronized RigidBody's updated position: {:?}",
-                            updated_rigid_body.position()
-                        );
-
-                        global_transform.0 = updated_rigid_body
-                            .position()
-                            .to_homogeneous()
-                            .prepend_nonuniform_scaling(
-                                &local_transform
-                                    .as_ref()
-                                    .map(|tr| *tr.scale())
-                                    .unwrap_or_else(|| Vector3::new(1.0, 1.0, 1.0)),
-                            );
-
-                        if let Some(ref mut local_transform) = local_transform {
-                            *local_transform.isometry_mut() = updated_rigid_body.position();
-                        }
-
-                        trace!(
-                            "Synchronized RigidBody's updated velocity: {:?}",
-                            updated_rigid_body.velocity()
-                        );
-                        rigid_body.velocity = *updated_rigid_body.velocity();
-
-                        trace!(
-                            "Synchronized RigidBody's updated inertia: {:?}",
-                            updated_rigid_body.inertia()
-                        );
-                        let inertia = updated_rigid_body.inertia();
-                        rigid_body.mass = inertia.linear;
-                        rigid_body.angular_mass = inertia.angular;
-
-                        trace!(
-                            "Synchronized RigidBody's updated center of mass: {:?}",
-                            updated_rigid_body.center_of_mass()
-                        );
-                        rigid_body.center_of_mass = updated_rigid_body.center_of_mass();
-                    }
-                    (DynamicBody::Multibody(_multibody), Body::Multibody(_updated_multibody)) => {
-                        error!("Multibody found; not implemented currently, sorry!")
-                    }
-                    // TODO: Add data to unexpected pair message. Not straightforward.
-                    _ => error!("Unexpected dynamics body pair!"),
-                };
             } else {
-                warn!("Found body in physics world not registered in the ECS world!");
+                error!("Found body without handle!");
             }
         }
 
