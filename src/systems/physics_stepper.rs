@@ -3,12 +3,21 @@ use amethyst::core::Time;
 use amethyst::ecs::{Read, System, WriteExpect};
 
 /// Simulates a step of the physics world.
-#[derive(Default)]
-pub struct PhysicsStepperSystem;
+pub struct PhysicsStepperSystem {
+    intended_timestep: f32,
+}
+
+impl Default for PhysicsStepperSystem {
+    fn default() -> Self {
+        PhysicsStepperSystem {
+            intended_timestep: 1.0 / 120.0,
+        }
+    }
+}
 
 impl PhysicsStepperSystem {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(intended_timestep: f32) -> Self {
+        PhysicsStepperSystem { intended_timestep }
     }
 }
 
@@ -18,12 +27,16 @@ impl<'a> System<'a> for PhysicsStepperSystem {
     // Simulate world using the current time frame
     // TODO: Bound timestep deltas
     fn run(&mut self, (mut physical_world, time): Self::SystemData) {
-        let delta = time.delta_seconds();
+        if physical_world.timestep() != self.intended_timestep {
+            warn!("Physics world timestep out of sync with intended timestep! Leave me alone!!!");
+            physical_world.set_timestep(self.intended_timestep);
+        }
 
-        trace!("Setting timestep with delta: {}", delta);
-        physical_world.set_timestep(delta);
+        let mut delta = time.delta_seconds();
 
-        trace!("Stepping physical world simulation.");
-        physical_world.step();
+        while delta >= self.intended_timestep {
+            physical_world.step();
+            delta -= self.intended_timestep;
+        }
     }
 }
