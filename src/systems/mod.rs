@@ -55,7 +55,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for PhysicsBundle<'c> {
         );
 
         builder.add(
-            PhysicsStepperSystem::new(),
+            PhysicsStepperSystem::default(),
             PHYSICS_STEPPER_SYSTEM,
             &[
                 SYNC_BODIES_TO_PHYSICS_SYSTEM,
