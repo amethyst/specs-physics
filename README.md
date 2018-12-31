@@ -25,14 +25,14 @@ Full *TODO* sheet can be found in [this nphysics issue](https://github.com/rusts
 Ongoing work:
 
 - [x] RigidBody Components
-- [x] External force property (#3)
-- [x] `log` based logging (#4)
-- [x] Collider Components (#2)
-- [x] Proximity and Contact EventChannels (#2)
-- [ ] Force generator inversion of control (#11)
-- [ ] Handling Body Activation & Sleeping (#9)
-- [ ] Time scale and simulation pausing (#12)
-- [ ] Multibody-based Component Joints (#10)
+- [x] External force property [#3]
+- [x] `log` based logging [#4]
+- [x] Collider Components [#2]
+- [x] Proximity and Contact EventChannels [#2]
+- [ ] Force generator inversion of control [#11]
+- [ ] Handling Body Activation & Sleeping [#9]
+- [ ] Time scale and simulation pausing [#12]
+- [ ] Multibody-based Component Joints [#10]
 
 Investigating:
 
