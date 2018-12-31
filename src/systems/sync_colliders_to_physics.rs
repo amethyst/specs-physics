@@ -50,7 +50,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
             .join()
         {
             if inserted_colliders.contains(id) {
-                println!("Detected inserted collider with id {:?}", id);
+                trace!("Detected inserted collider with id {:?}", id);
                 // Just inserted. Remove old one and insert new.
                 if collider.handle.is_some()
                     && physical_world.collider(collider.handle.unwrap()).is_some()
@@ -102,7 +102,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
 
                 collision_world.set_collision_group(collider_handle, collider.collision_group);
             } else if modified_colliders.contains(id) || modified_colliders.contains(id) {
-                println!("Detected changed collider with id {:?}", id);
+                trace!("Detected changed collider with id {:?}", id);
 
                 let prediction = physical_world.prediction();
                 let angular_prediction = physical_world.angular_prediction();
