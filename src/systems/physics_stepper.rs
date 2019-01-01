@@ -6,6 +6,7 @@ use amethyst::ecs::{Read, System, WriteExpect};
 pub struct PhysicsStepperSystem {
     intended_timestep: f32,
     max_timesteps: i32,
+    time_accumulator: f32,
 }
 
 impl Default for PhysicsStepperSystem {
@@ -13,6 +14,7 @@ impl Default for PhysicsStepperSystem {
         PhysicsStepperSystem {
             intended_timestep: 1.0 / 120.0,
             max_timesteps: 10,
+            time_accumulator: 0.,
         }
     }
 }
@@ -22,6 +24,7 @@ impl PhysicsStepperSystem {
         PhysicsStepperSystem {
             intended_timestep,
             max_timesteps,
+            time_accumulator: 0.,
         }
     }
 }
@@ -36,12 +39,12 @@ impl<'a> System<'a> for PhysicsStepperSystem {
             physical_world.set_timestep(self.intended_timestep);
         }
 
-        let mut delta = time.delta_seconds();
+        self.time_accumulator += time.delta_seconds();
         let mut steps = 0;
 
-        while steps <= self.max_timesteps && delta >= self.intended_timestep {
+        while steps <= self.max_timesteps && self.time_accumulator >= self.intended_timestep {
             physical_world.step();
-            delta -= self.intended_timestep;
+            self.time_accumulator -= self.intended_timestep;
             steps += 1;
         }
     }
