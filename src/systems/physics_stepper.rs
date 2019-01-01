@@ -12,7 +12,7 @@ pub struct PhysicsStepperSystem {
 impl Default for PhysicsStepperSystem {
     fn default() -> Self {
         PhysicsStepperSystem {
-            intended_timestep: 1.0 / 120.0,
+            intended_timestep: 1.0 / 60.0,
             max_timesteps: 10,
             time_accumulator: 0.,
         }
