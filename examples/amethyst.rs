@@ -161,9 +161,16 @@ fn main() -> amethyst::Result<()> {
         dimensions: Some((800, 400)),
         min_dimensions: Some((800, 400)),
         max_dimensions: None,
+        icon: None,
         vsync: true,
         multisampling: 0, // Must be multiple of 2, use 0 to disable
         visibility: true,
+        always_on_top: false,
+        decorations: true,
+        maximized: false,
+        multitouch: true,
+        resizable: true,
+        transparent: false,
     };
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
@@ -182,7 +189,7 @@ fn main() -> amethyst::Result<()> {
                     Duration::from_millis(50),
                     Duration::from_millis(500),
                 )))
-                .with_max_timesteps(20),
+                .with_timestep_iter_limit(20),
         )?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
 
