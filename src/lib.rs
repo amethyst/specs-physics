@@ -16,10 +16,12 @@ extern crate log;
 pub mod bodies;
 pub mod colliders;
 pub mod systems;
+pub mod time_step;
 
 pub use self::bodies::*;
 pub use self::colliders::*;
 pub use self::systems::*;
+pub use self::time_step::*;
 
 /// The Physical World containing all physical objects.
 pub type PhysicsWorld = self::nphysics::world::World<f32>;

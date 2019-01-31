@@ -7,6 +7,8 @@ mod sync_gravity_to_physics;
 use amethyst::core::bundle::{Result, SystemBundle};
 use amethyst::core::specs::DispatcherBuilder;
 
+use crate::time_step::TimeStep;
+
 pub use self::physics_stepper::PhysicsStepperSystem;
 pub use self::sync_bodies_from_physics::*;
 pub use self::sync_bodies_to_physics::SyncBodiesToPhysicsSystem;
@@ -19,9 +21,20 @@ pub const SYNC_COLLIDERS_TO_PHYSICS_SYSTEM: &str = "sync_colliders_to_physics_sy
 pub const PHYSICS_STEPPER_SYSTEM: &str = "physics_stepper_system";
 pub const SYNC_BODIES_FROM_PHYSICS_SYSTEM: &str = "sync_bodies_from_physics_system";
 
-#[derive(Default)]
 pub struct PhysicsBundle<'a> {
     dep: &'a [&'a str],
+    timestep: TimeStep,
+    timestep_iter_limit: i32,
+}
+
+impl Default for PhysicsBundle<'_> {
+    fn default() -> Self {
+        Self {
+            dep: Default::default(),
+            timestep: Default::default(),
+            timestep_iter_limit: 10,
+        }
+    }
 }
 
 impl<'a> PhysicsBundle<'a> {
@@ -31,6 +44,18 @@ impl<'a> PhysicsBundle<'a> {
 
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;
+        self
+    }
+
+    /// Set the timestep to use for the `PhysicsStepperSystem`
+    pub fn with_timestep(mut self, timestep: TimeStep) -> Self {
+        self.timestep = timestep;
+        self
+    }
+
+    /// Set the maximum number of physics timesteps to simulate in a single run of the `PhysicsStepperSystem`
+    pub fn with_timestep_iter_limit(mut self, timestep_iter_limit: i32) -> Self {
+        self.timestep_iter_limit = timestep_iter_limit;
         self
     }
 }
@@ -55,7 +80,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for PhysicsBundle<'c> {
         );
 
         builder.add(
-            PhysicsStepperSystem::default(),
+            PhysicsStepperSystem::new(self.timestep, self.timestep_iter_limit),
             PHYSICS_STEPPER_SYSTEM,
             &[
                 SYNC_BODIES_TO_PHYSICS_SYSTEM,
