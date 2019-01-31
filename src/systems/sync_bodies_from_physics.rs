@@ -7,7 +7,6 @@ use amethyst::ecs::{Entities, Entity, Join, ReadExpect, ReadStorage, System, Wri
 use amethyst::shrev::EventChannel;
 use nalgebra::Vector3;
 use ncollide3d::events::{ContactEvent, ProximityEvent};
-use nphysics3d::object::Body;
 use nphysics3d::object::ColliderHandle;
 
 // Might want to replace by better types.
