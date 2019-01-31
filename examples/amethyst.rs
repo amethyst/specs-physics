@@ -16,6 +16,7 @@ use nphysics_ecs_dumb::nphysics::object::Material as PhysicsMaterial;
 use nphysics_ecs_dumb::nphysics::volumetric::Volumetric;
 use nphysics_ecs_dumb::*;
 use num_traits::identities::One;
+use std::time::Duration;
 
 struct GameState;
 
@@ -172,7 +173,17 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(PhysicsBundle::new().with_dep(&["transform_system"]))?
+        .with_bundle(
+            PhysicsBundle::new()
+                .with_dep(&["transform_system"])
+                .with_timestep(TimeStep::SemiFixed(TimeStepConstraint::new(
+                    vec![1. / 240., 1. / 120., 1. / 60.],
+                    0.4,
+                    Duration::from_millis(50),
+                    Duration::from_millis(500),
+                )))
+                .with_max_timesteps(20),
+        )?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
 
     let application = Application::new("./", GameState, game_data);
