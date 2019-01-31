@@ -4,8 +4,10 @@ mod sync_bodies_to_physics;
 mod sync_colliders_to_physics;
 mod sync_gravity_to_physics;
 
-use amethyst::core::bundle::{Result, SystemBundle};
+use core::result::Result
+use amethyst::core::bundle::SystemBundle;
 use amethyst::core::specs::DispatcherBuilder;
+use amethyst::error::Error;
 
 use crate::time_step::TimeStep;
 
@@ -61,7 +63,7 @@ impl<'a> PhysicsBundle<'a> {
 }
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for PhysicsBundle<'c> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             SyncBodiesToPhysicsSystem::new(),
             SYNC_BODIES_TO_PHYSICS_SYSTEM,
