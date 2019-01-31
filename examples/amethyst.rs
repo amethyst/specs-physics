@@ -8,10 +8,8 @@ use amethyst::renderer::{
     Stage, Texture,
 };
 use amethyst::{Application, GameData, GameDataBuilder, SimpleState, StateData};
-use nalgebra::Isometry3;
-use nphysics_ecs_dumb::ncollide::shape::{Ball, Cuboid, ShapeHandle};
-use nphysics_ecs_dumb::nphysics::math::{Point, Velocity};
-use nphysics_ecs_dumb::nphysics::object::BodyHandle;
+use nphysics_ecs_dumb::ncollide::shape::{Ball, ShapeHandle};
+use nphysics_ecs_dumb::nphysics::math::Velocity;
 use nphysics_ecs_dumb::nphysics::object::Material as PhysicsMaterial;
 use nphysics_ecs_dumb::nphysics::volumetric::Volumetric;
 use nphysics_ecs_dumb::*;
