@@ -83,12 +83,12 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
                         .prepend_nonuniform_scaling(
                             &local_transform
                                 .as_ref()
-                                .map(|tr| tr.scale().clone())
-                                .unwrap_or(Vector3::new(1.0, 1.0, 1.0)),
+                                .map(|tr| *tr.scale())
+                                .unwrap_or_else(|| Vector3::new(1.0, 1.0, 1.0)),
                         );
 
                     if let Some(ref mut local_transform) = local_transform {
-                        *local_transform.isometry_mut() = updated_body.position().clone();
+                        *local_transform.isometry_mut() = updated_body.position();
                     }
 
                     trace!(
