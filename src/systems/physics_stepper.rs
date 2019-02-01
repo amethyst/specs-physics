@@ -2,6 +2,7 @@ use crate::time_step::TimeStep;
 use crate::PhysicsWorld;
 use amethyst::core::Time;
 use amethyst::ecs::{Read, System, WriteExpect};
+use std::f32::EPSILON;
 use std::time::Instant;
 
 /// Falloff factor for calculating the moving average step time.
@@ -91,10 +92,12 @@ impl<'a> System<'a> for PhysicsStepperSystem {
                 timestep
             }
         };
-        if physical_world.timestep() != timestep && !change_timestep {
+
+        if (physical_world.timestep() - timestep).abs() < EPSILON && !change_timestep {
             warn!("Physics world timestep out of sync with intended timestep! Leave me alone!!!");
             change_timestep = true;
         }
+
         if change_timestep {
             // reset average when changing timestep
             self.avg_step_time = None;

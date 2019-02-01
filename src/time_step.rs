@@ -133,7 +133,7 @@ impl TimeStepConstraint {
     ///
     /// Shouldn't be called from outside the `PhysicsStepperSystem`, otherwise bad things may happen.
     pub fn decrease_timestep(&mut self) -> Result<f32, TimeStepChangeError> {
-        if self.current_index <= 0 {
+        if self.current_index == 0 {
             return Err(TimeStepChangeError::MinimumTimestepReached);
         }
         self.current_index -= 1;
@@ -149,7 +149,7 @@ impl TimeStepConstraint {
 
     /// Get next smaller timestep.
     pub fn smaller_timestep(&self) -> Option<f32> {
-        if self.current_index <= 0 {
+        if self.current_index == 0 {
             None
         } else {
             Some(self.time_steps[self.current_index - 1])
