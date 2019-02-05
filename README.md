@@ -20,22 +20,31 @@ I'll update this as I go along.
 
 ## Current Roadmap
 
-Full *TODO* sheet can be found in [this nphysics issue](https://github.com/rustsim/nphysics/issues/149)
+Full *TODO* sheet can be found in [this nphysics issue][todo]
 
 Ongoing work:
 
 - [x] RigidBody Components
-- [x] External force property [#3]
-- [x] `log` based logging [#4]
 - [x] Collider Components [#2]
 - [x] Proximity and Contact EventChannels [#2]
-- [ ] Force generator inversion of control [#11]
+- [x] External force property [#3]
+- [x] `log` based logging [#4]
 - [ ] Handling Body Activation & Sleeping [#9]
-- [ ] Time scale and simulation pausing [#12]
 - [ ] Multibody-based Component Joints [#10]
+- [ ] Force generator inversion of control [#11]
+- [ ] Time scale and simulation pausing [#12]
 
 Investigating:
 
 - [ ] Proximity & Curve-based external force utility
 - [ ] Constraint-based Joints
 - [ ] Kinematics
+
+[todo]: https://github.com/rustsim/nphysics/issues/149
+[#2]: https://github.com/distransient/nphysics-ecs-dumb/pull/2
+[#3]: https://github.com/distransient/nphysics-ecs-dumb/pull/3
+[#4]: https://github.com/distransient/nphysics-ecs-dumb/pull/4
+[#9]: https://github.com/distransient/nphysics-ecs-dumb/issues/9
+[#10]: https://github.com/distransient/nphysics-ecs-dumb/issues/10
+[#11]: https://github.com/distransient/nphysics-ecs-dumb/issues/11
+[#12]: https://github.com/distransient/nphysics-ecs-dumb/issues/12
