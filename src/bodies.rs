@@ -1,7 +1,7 @@
 use amethyst::ecs::{Component, FlaggedStorage};
 use nalgebra::Matrix3;
 use nphysics3d::math::{Force, Point, Velocity};
-use nphysics3d::object::BodyHandle;
+use nphysics3d::object::{BodyHandle, BodyStatus};
 
 /// Rigid physics body, for use in `PhysicsBody` Component.
 /// Currently only the velocity is read and updated at runtime.
@@ -19,6 +19,8 @@ pub struct DynamicBody {
     pub center_of_mass: Point<f32>,
 
     pub external_forces: Force<f32>,
+    #[serde(skip)]
+    pub body_status: BodyStatus,
 }
 
 impl DynamicBody {
@@ -34,6 +36,7 @@ impl DynamicBody {
             angular_mass,
             center_of_mass,
             external_forces: Force::<f32>::zero(),
+            body_status: BodyStatus::Dynamic,
         }
     }
 
@@ -50,6 +53,7 @@ impl DynamicBody {
             angular_mass,
             center_of_mass,
             external_forces: Force::<f32>::zero(),
+            body_status: BodyStatus::Dynamic,
         }
     }
 
