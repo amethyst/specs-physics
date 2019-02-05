@@ -122,36 +122,44 @@ impl<'a> System<'a> for SyncBodiesFromPhysicsSystem {
 
         let collision_world = physical_world.collision_world();
 
-        contact_events.iter_write(collision_world.contact_events().iter().cloned().map(|ev| {
-            trace!("Emitting contact event: {:?}", ev);
+        let contact_ev = collision_world.contact_events().iter().cloned().flat_map(|ev| {
+                trace!("Emitting contact event: {:?}", ev);
 
-            let (handle1, handle2) = match ev {
-                ContactEvent::Started(h1, h2) => (h1, h2),
-                ContactEvent::Stopped(h1, h2) => (h1, h2),
-            };
+                let (handle1, handle2) = match ev {
+                    ContactEvent::Started(h1, h2) => (h1, h2),
+                    ContactEvent::Stopped(h1, h2) => (h1, h2),
+                };
 
-            let e1 = entity_from_handle(&entities, &colliders, handle1)
-                .expect("Failed to find entity for collider.");
-            let e2 = entity_from_handle(&entities, &colliders, handle2)
-                .expect("Failed to find entity for collider.");
-            (e1, e2, ev)
-        }));
+                let e1 = entity_from_handle(&entities, &colliders, handle1);
+                let e2 = entity_from_handle(&entities, &colliders, handle2);
+                if let (Some(e1), Some(e2)) = (e1, e2) {
+                    Some((e1, e2, ev))
+                } else {
+                    error!("Failed to find entity for collider during contact event iteration. Was the entity removed?");
+                    None
+                }
+            }).collect::<Vec<_>>();
 
-        proximity_events.iter_write(
-            collision_world
+        contact_events.iter_write(contact_ev.into_iter());
+
+        let proximity_ev = collision_world
                 .proximity_events()
                 .iter()
                 .cloned()
-                .map(|ev| {
+                .flat_map(|ev| {
                     trace!("Emitting proximity event: {:?}", ev);
 
-                    let e1 = entity_from_handle(&entities, &colliders, ev.collider1)
-                        .expect("Failed to find entity for collider.");
-                    let e2 = entity_from_handle(&entities, &colliders, ev.collider2)
-                        .expect("Failed to find entity for collider.");
-                    (e1, e2, ev)
-                }),
-        );
+                    let e1 = entity_from_handle(&entities, &colliders, ev.collider1);
+                    let e2 = entity_from_handle(&entities, &colliders, ev.collider2);
+                    if let (Some(e1), Some(e2)) = (e1, e2) {
+                        Some((e1, e2, ev))
+                    } else {
+                        error!("Failed to find entity for collider during proximity event iteration. Was the entity removed?");
+                        None
+                    }
+                }).collect::<Vec<_>>();
+
+        proximity_events.iter_write(proximity_ev.into_iter());
     }
 }
 
