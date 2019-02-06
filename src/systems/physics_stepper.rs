@@ -93,7 +93,7 @@ impl<'a> System<'a> for PhysicsStepperSystem {
             }
         };
 
-        if (physical_world.timestep() - timestep).abs() < EPSILON && !change_timestep {
+        if (physical_world.timestep() - timestep).abs() > EPSILON && !change_timestep {
             warn!("Physics world timestep out of sync with intended timestep! Leave me alone!!!");
             change_timestep = true;
         }
@@ -139,5 +139,9 @@ impl<'a> System<'a> for PhysicsStepperSystem {
             // - Game itself is running slow, not leaving enough time for physics
             warn!("Physics running slow!");
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        let mut physical_world = res.fetch_mut(
     }
 }
