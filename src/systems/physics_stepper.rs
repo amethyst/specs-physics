@@ -140,8 +140,4 @@ impl<'a> System<'a> for PhysicsStepperSystem {
             warn!("Physics running slow!");
         }
     }
-
-    fn setup(&mut self, res: &mut Resources) {
-        let mut physical_world = res.fetch_mut(
-    }
 }
