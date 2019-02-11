@@ -1,7 +1,7 @@
 use crate::time_step::TimeStep;
 use crate::PhysicsWorld;
 use amethyst::core::Time;
-use amethyst::ecs::{Read, System, WriteExpect};
+use amethyst::ecs::{Read, System, WriteExpect, Write};
 use std::f32::EPSILON;
 use std::time::Instant;
 
@@ -13,7 +13,6 @@ const TIME_STEP_DECREASE_HYSTERESIS: f32 = 1.5;
 
 /// Simulates a step of the physics world.
 pub struct PhysicsStepperSystem {
-    intended_timestep: TimeStep,
     timestep_iter_limit: i32,
     time_accumulator: f32,
     avg_step_time: Option<f32>,
@@ -22,7 +21,6 @@ pub struct PhysicsStepperSystem {
 impl Default for PhysicsStepperSystem {
     fn default() -> Self {
         PhysicsStepperSystem {
-            intended_timestep: TimeStep::Fixed(1. / 120.),
             timestep_iter_limit: 10,
             time_accumulator: 0.,
             avg_step_time: None,
@@ -31,9 +29,8 @@ impl Default for PhysicsStepperSystem {
 }
 
 impl PhysicsStepperSystem {
-    pub fn new(intended_timestep: TimeStep, timestep_iter_limit: i32) -> Self {
+    pub fn new(timestep_iter_limit: i32) -> Self {
         PhysicsStepperSystem {
-            intended_timestep,
             timestep_iter_limit,
             time_accumulator: 0.,
             avg_step_time: None,
@@ -42,11 +39,11 @@ impl PhysicsStepperSystem {
 }
 
 impl<'a> System<'a> for PhysicsStepperSystem {
-    type SystemData = (WriteExpect<'a, PhysicsWorld>, Read<'a, Time>);
+    type SystemData = (WriteExpect<'a, PhysicsWorld>, Read<'a, Time>, Write<'a, TimeStep>);
 
     // Simulate world using the current time frame
-    fn run(&mut self, (mut physical_world, time): Self::SystemData) {
-        let (timestep, mut change_timestep) = match &mut self.intended_timestep {
+    fn run(&mut self, (mut physical_world, time, mut intended_timestep): Self::SystemData) {
+        let (timestep, mut change_timestep) = match &mut *intended_timestep {
             TimeStep::Fixed(timestep) => (*timestep, false),
             TimeStep::SemiFixed(constraint) => {
                 let mut timestep = (constraint.current_timestep(), false);
@@ -94,11 +91,12 @@ impl<'a> System<'a> for PhysicsStepperSystem {
         };
 
         if (physical_world.timestep() - timestep).abs() > EPSILON && !change_timestep {
-            warn!("Physics world timestep out of sync with intended timestep! Leave me alone!!!");
+            warn!("Physics world timestep out of sync with intended timestep! Physics timestep: {}, Requested timestep: {}", physical_world.timestep(), timestep);
             change_timestep = true;
         }
 
         if change_timestep {
+            trace!("Changing physics timestep to {}", timestep);
             // reset average when changing timestep
             self.avg_step_time = None;
             physical_world.set_timestep(timestep);
@@ -110,6 +108,7 @@ impl<'a> System<'a> for PhysicsStepperSystem {
         while steps <= self.timestep_iter_limit && self.time_accumulator >= timestep {
             let physics_time = Instant::now();
 
+            trace!("Stepping physics system. Step: {}, Timestep: {}, Time accumulator: {}", steps, timestep, self.time_accumulator);
             physical_world.step();
 
             let physics_time = physics_time.elapsed();

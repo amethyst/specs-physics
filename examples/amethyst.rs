@@ -1,13 +1,15 @@
 use amethyst::assets::{Handle, Loader};
 use amethyst::core::nalgebra::{Matrix3, Vector3};
 use amethyst::core::specs::world::Builder;
+use amethyst::core::specs::Join;
 use amethyst::core::{GlobalTransform, Transform, TransformBundle};
 use amethyst::renderer::{
     AmbientColor, Camera, DisplayConfig, DrawShaded, Light, Material, MaterialDefaults, MeshData,
     MeshHandle, Pipeline, PointLight, PosNormTex, RenderBundle, Rgba, ScreenDimensions, Shape,
-    Stage, Texture,
+    Stage, Texture, VirtualKeyCode,
 };
-use amethyst::{Application, GameData, GameDataBuilder, SimpleState, StateData};
+use amethyst::input::{is_close_requested, is_key_down};
+use amethyst::{Application, GameData, GameDataBuilder, SimpleState, StateData, StateEvent, SimpleTrans, Trans};
 use nphysics_ecs_dumb::ncollide::shape::{Ball, ShapeHandle};
 use nphysics_ecs_dumb::nphysics::math::Velocity;
 use nphysics_ecs_dumb::nphysics::object::Material as PhysicsMaterial;
@@ -45,7 +47,7 @@ impl SimpleState for GameState {
             (resolution.width(), resolution.height())
         };
 
-        let camera_transform = Transform::from(Vector3::new(0.0, 0.0, 0.0));
+        let camera_transform = Transform::from(Vector3::new(0.0, 5.0, 5.0));
 
         // Add Camera
         data.world
@@ -81,7 +83,7 @@ impl SimpleState for GameState {
             .create_entity()
             .with(sphere_handle.clone())
             .with(material.clone())
-            .with(Transform::from(Vector3::new(0.0, 3.0, -10.0)))
+            .with(Transform::from(Vector3::new(0.0, 15.0, -10.0)))
             .with(GlobalTransform::default())
             .with(DynamicBody::new_rigidbody_with_velocity(
                 Velocity::linear(0.0, 1.0, 0.0),
@@ -148,6 +150,45 @@ impl SimpleState for GameState {
             material.clone(),
         );*/
     }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        if let StateEvent::Window(event) = &event {
+            // Exit if user hits Escape or closes the window
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                return Trans::Quit;
+            }
+
+            // 
+            if is_key_down(&event, VirtualKeyCode::T) {
+                *data.world.write_resource::<TimeStep>() = TimeStep::Fixed(1./120.);
+                println!("Setting timestep to 1./120.");
+            }
+
+            if is_key_down(&event, VirtualKeyCode::Y) {
+                *data.world.write_resource::<TimeStep>() = TimeStep::Fixed(1./60.);
+                println!("Setting timestep to 1./60.");
+            }
+
+            if is_key_down(&event, VirtualKeyCode::S) {
+                *data.world.write_resource::<TimeStep>() = TimeStep::SemiFixed(TimeStepConstraint::new(
+                    vec![1. / 240., 1. / 120., 1. / 60.],
+                    0.4,
+                    Duration::from_millis(50),
+                    Duration::from_millis(500),
+                ))
+            }
+
+            // Reset the example
+            if is_key_down(&event, VirtualKeyCode::Space) {
+                *(&mut data.world.write_storage::<Transform>(), &data.world.read_storage::<DynamicBody>()).join().next().unwrap().0.translation_mut() = Vector3::new(0.0, 15.0, -10.0);
+            }
+        }
+        Trans::None
+    }
 }
 
 fn main() -> amethyst::Result<()> {
@@ -181,12 +222,6 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             PhysicsBundle::new()
                 .with_dep(&["transform_system"])
-                .with_timestep(TimeStep::SemiFixed(TimeStepConstraint::new(
-                    vec![1. / 240., 1. / 120., 1. / 60.],
-                    0.4,
-                    Duration::from_millis(50),
-                    Duration::from_millis(500),
-                )))
                 .with_timestep_iter_limit(20),
         )?
         .with_bundle(RenderBundle::new(pipe, Some(display_config)))?;
