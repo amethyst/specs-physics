@@ -8,7 +8,8 @@ use amethyst::ecs::{
     SystemData, Tracked, WriteExpect, WriteStorage,
 };
 use core::ops::Deref;
-use nphysics::object::BodyHandle;
+use nphysics::material::MaterialHandle;
+use nphysics::object::{BodyHandle, BodyPartHandle, ColliderDesc};
 
 #[derive(Default, new)]
 pub struct SyncCollidersToPhysicsSystem {
@@ -61,7 +62,7 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                 let parent = if let Some(rb) = rigid_bodies.get(entity) {
                     trace!("Attaching inserted collider to rigid body: {:?}", entity);
 
-                    rb.handle().expect(
+                    rb.handle.expect(
                         "You should normally have a body handle at this point. This is a bug.",
                     )
                 } else {
@@ -73,51 +74,64 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                     collider.offset_from_parent
                 };
 
-                collider.handle = Some(physical_world.add_collider(
-                    collider.margin,
-                    collider.shape.clone(),
-                    parent,
-                    position,
-                    collider.physics_material.clone(),
-                ));
-
-                trace!("Inserted collider to world with values: {:?}", collider);
+                //trace!("Inserted collider to world with values: {:?}", collider);
 
                 let prediction = physical_world.prediction();
-                let angular_prediction = physical_world.angular_prediction();
+                let angular_prediction = 0.09;
 
-                let collision_world = physical_world.collision_world_mut();
+                let parent_part_handle = physical_world
+                    .rigid_body(parent)
+                    .map(|body| body.part_handle())
+                    .unwrap_or_else(BodyPartHandle::ground);
+
+                collider.handle = Some(
+                    ColliderDesc::new(collider.shape.clone())
+                        .user_data(entity)
+                        .margin(collider.margin)
+                        .position(position)
+                        .material(MaterialHandle::new(collider.physics_material))
+                        .build_with_parent(parent_part_handle, &mut physical_world)
+                        .unwrap()
+                        .handle(),
+                );
+
+                let collision_world = physical_world.collider_world_mut();
+
+                collision_world.as_collider_world_mut().set_query_type(
+                    collider.handle.unwrap(),
+                    collider.query_type.to_geometric_query_type(
+                        collider.margin,
+                        prediction,
+                        angular_prediction,
+                    ),
+                );
 
                 let collider_object = collision_world
-                    .collision_object_mut(collider.handle.unwrap())
+                    .collider_mut(collider.handle.unwrap())
                     .unwrap();
-
-                collider_object.set_query_type(collider.query_type.to_geometric_query_type(
-                    collider.margin,
-                    prediction,
-                    angular_prediction,
-                ));
 
                 let collider_handle = collider_object.handle();
 
-                collision_world.set_collision_group(collider_handle, collider.collision_group);
+                collision_world.set_collision_groups(collider_handle, collider.collision_group);
             } else if modified_colliders.contains(id) || modified_colliders.contains(id) {
                 trace!("Detected changed collider with id {:?}", id);
 
                 let prediction = physical_world.prediction();
-                let angular_prediction = physical_world.angular_prediction();
+                let angular_prediction = 0.09;
 
-                let collision_world = physical_world.collision_world_mut();
+                let collision_world = physical_world.collider_world_mut();
                 let collider_handle = collision_world
-                    .collision_object(collider.handle.unwrap())
+                    .collider(collider.handle.unwrap())
                     .unwrap()
                     .handle();
 
-                collision_world.set_collision_group(collider_handle, collider.collision_group);
-                collision_world.set_shape(collider_handle, collider.shape.clone());
+                collision_world.set_collision_groups(collider_handle, collider.collision_group);
+                collision_world
+                    .as_collider_world_mut()
+                    .set_shape(collider_handle, collider.shape.clone());
 
                 let collider_object = collision_world
-                    .collision_object_mut(collider.handle.unwrap())
+                    .collider_mut(collider.handle.unwrap())
                     .unwrap();
 
                 let parent = if let Some(rb) = rigid_bodies.get(entity) {
@@ -139,14 +153,20 @@ impl<'a> System<'a> for SyncCollidersToPhysicsSystem {
                 };
 
                 collider_object.set_position(position);
-                collider_object.set_query_type(collider.query_type.to_geometric_query_type(
-                    collider.margin,
-                    prediction,
-                    angular_prediction,
-                ));
-                collider_object
-                    .data_mut()
-                    .set_material(collider.physics_material.clone());
+
+                collision_world.as_collider_world_mut().set_query_type(
+                    collider.handle.unwrap(),
+                    collider.query_type.to_geometric_query_type(
+                        collider.margin,
+                        prediction,
+                        angular_prediction,
+                    ),
+                );
+
+                // TODO: Material changes & more complex mats than BasicMaterial
+                /*collider_object
+                .user_data_mut()
+                .set_material(collider.physics_material.clone());*/
             }
         }
 

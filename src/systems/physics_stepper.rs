@@ -1,9 +1,16 @@
 use crate::time_step::TimeStep;
 use crate::PhysicsWorld;
 use amethyst::core::Time;
-use amethyst::ecs::{Read, System, WriteExpect, Write};
+use amethyst::ecs::{Entity, Read, System, Write, WriteExpect};
+use amethyst::shrev::EventChannel;
+use ncollide3d::events::{ContactEvent, ProximityEvent};
 use std::f32::EPSILON;
 use std::time::Instant;
+
+// TODO: why is this here
+// Might want to replace by better types.
+pub type EntityContactEvent = (Entity, Entity, ContactEvent);
+pub type EntityProximityEvent = (Entity, Entity, ProximityEvent);
 
 /// Falloff factor for calculating the moving average step time.
 const AVERAGE_STEP_TIME_FALLOFF: f32 = 0.33;
@@ -39,10 +46,24 @@ impl PhysicsStepperSystem {
 }
 
 impl<'a> System<'a> for PhysicsStepperSystem {
-    type SystemData = (WriteExpect<'a, PhysicsWorld>, Read<'a, Time>, Write<'a, TimeStep>);
+    type SystemData = (
+        WriteExpect<'a, PhysicsWorld>,
+        Read<'a, Time>,
+        Write<'a, TimeStep>,
+        Write<'a, EventChannel<EntityContactEvent>>,
+        Write<'a, EventChannel<EntityProximityEvent>>,
+    );
 
     // Simulate world using the current time frame
-    fn run(&mut self, (mut physical_world, time, mut intended_timestep): Self::SystemData) {
+    fn run(&mut self, data: Self::SystemData) {
+        let (
+            mut physical_world,
+            time,
+            mut intended_timestep,
+            mut contact_events,
+            mut proximity_events,
+        ) = data;
+
         let (timestep, mut change_timestep) = match &mut *intended_timestep {
             TimeStep::Fixed(timestep) => (*timestep, false),
             TimeStep::SemiFixed(constraint) => {
@@ -108,8 +129,74 @@ impl<'a> System<'a> for PhysicsStepperSystem {
         while steps <= self.timestep_iter_limit && self.time_accumulator >= timestep {
             let physics_time = Instant::now();
 
-            trace!("Stepping physics system. Step: {}, Timestep: {}, Time accumulator: {}", steps, timestep, self.time_accumulator);
+            trace!(
+                "Stepping physics system. Step: {}, Timestep: {}, Time accumulator: {}",
+                steps,
+                timestep,
+                self.time_accumulator
+            );
+
             physical_world.step();
+
+            trace!("iterating collision events.");
+
+            let collision_world = physical_world.collider_world();
+
+            let contact_ev = collision_world.contact_events().iter().cloned().flat_map(|ev| {
+                    trace!("Emitting contact event: {:?}", ev);
+
+                    let (handle1, handle2) = match ev {
+                        ContactEvent::Started(h1, h2) => (h1, h2),
+                        ContactEvent::Stopped(h1, h2) => (h1, h2),
+                    };
+                    let coll1 = physical_world.collider(handle1);
+                    let coll2 = physical_world.collider(handle2);
+                    if let (Some(c1), Some(c2)) = (coll1, coll2) {
+                        // TODO: Check if the data is in fact the one we want. There might be
+                        // user-inserted one.
+                        let e1 = c1.user_data().map(|data| data.downcast_ref::<Entity>().unwrap());
+                        let e2 = c2.user_data().map(|data| data.downcast_ref::<Entity>().unwrap());
+                        if let (Some(e1), Some(e2)) = (e1, e2) {
+                            Some((*e1, *e2, ev))
+                        } else {
+                            error!("Failed to find entity for collider during proximity event iteration. Was the entity removed?");
+                            None
+                        }
+                    } else {
+                        error!("Failed to fetch the rigid body from the physical world using the collider handle of the collision event. Was the entity removed?.");
+                        None
+                    }
+                }).collect::<Vec<_>>();
+
+            contact_events.iter_write(contact_ev.into_iter());
+
+            let proximity_ev = collision_world
+                    .proximity_events()
+                    .iter()
+                    .cloned()
+                    .flat_map(|ev| {
+                        trace!("Emitting proximity event: {:?}", ev);
+                        println!("hello there");
+                        let coll1 = physical_world.collider(ev.collider1);
+                        let coll2 = physical_world.collider(ev.collider2);
+                        if let (Some(c1), Some(c2)) = (coll1, coll2) {
+                            // TODO: Check if the data is in fact the one we want. There might be
+                            // user-inserted one.
+                            let e1 = c1.user_data().map(|data| data.downcast_ref::<Entity>().unwrap());
+                            let e2 = c2.user_data().map(|data| data.downcast_ref::<Entity>().unwrap());
+                            if let (Some(e1), Some(e2)) = (e1, e2) {
+                                Some((*e1, *e2, ev))
+                            } else {
+                                error!("Failed to find entity for collider during proximity event iteration. Was the entity removed?");
+                                None
+                            }
+                        } else {
+                            error!("Failed to fetch the rigid body from the physical world using the collider handle of the collision event. Was the entity removed?.");
+                            None
+                        }
+                    }).collect::<Vec<_>>();
+
+            proximity_events.iter_write(proximity_ev.into_iter());
 
             let physics_time = physics_time.elapsed();
             let physics_time =

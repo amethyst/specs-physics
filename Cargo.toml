@@ -8,16 +8,14 @@ edition = "2018"
 # default = [ "nphysics3d" ]
 
 [dependencies]
-nphysics3d = { git = "https://github.com/jojolepro/nphysics", branch = "tmp", features = ["serde"] }
-ncollide3d = { git = "https://github.com/jojolepro/ncollide", branch = "collidegroup" }
-nalgebra = "0.16"
 num-traits = "0.2"
 derive-new = "0.5.6"
 derive_builder = "0.7.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "*"
+amethyst = { git = "https://github.com/amethyst/amethyst", branch = "master", features = ["nightly"] }
 
-[dependencies.amethyst]
-git = "https://github.com/amethyst/amethyst"
-branch = "master"
-features = ["nightly"]
+#sertmp = ser branch + ncollide3d override to changes branch
+nphysics3d = { git = "https://github.com/jojolepro/nphysics", branch = "sertmp", features = ["serde"] }
+ncollide3d = { git = "https://github.com/jojolepro/ncollide", branch = "changes" }
+nalgebra = "0.17"
