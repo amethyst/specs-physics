@@ -8,7 +8,10 @@ use amethyst::ecs::{
 };
 use core::ops::Deref;
 use nalgebra::try_convert;
-use nphysics3d::math::{Force, Inertia, Isometry};
+use nalgebra::Isometry3;
+use nphysics3d::math::Isometry;
+
+use nphysics3d::object::{Body, RigidBodyDesc};
 
 #[derive(Default)]
 pub struct SyncBodiesToPhysicsSystem {
@@ -64,7 +67,7 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
 
         // Update simulation world with the value of Components flagged as changed
         #[allow(unused_mut)]
-        for (_entity, transform, mut body, id) in (
+        for (entity, transform, mut body, id) in (
             &entities,
             &transforms,
             &mut physics_bodies,
@@ -86,20 +89,42 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
                     }
                 }
 
-                body.handle = Some(physical_world.add_rigid_body(
+                /*body.handle = Some(physical_world.add_rigid_body(
                     try_convert(transform.0).unwrap(),
                     Inertia::new(body.mass, body.angular_mass),
                     body.center_of_mass,
-                ));
+                ));*/
+
+                let iso: Isometry3<f32> = try_convert(transform.0).unwrap();
+
+                body.handle = Some(
+                    RigidBodyDesc::new()
+                        .position(iso)
+                        //.gravity_enabled(false)
+                        .status(body.body_status)
+                        //.name("my rigid body".to_owned())
+                        .velocity(body.velocity)
+                        //.angular_inertia(3.0)
+                        .mass(1.2)
+                        //.local_inertia(Inertia::new(1.0, 3.0))
+                        .local_center_of_mass(body.center_of_mass)
+                        //.sleep_threshold(None)
+                        //.kinematic_translations(Vector2::new(true, false))
+                        //.kinematic_rotation(true)
+                        .user_data(entity)
+                        .build(&mut physical_world)
+                        .handle(),
+                );
 
                 trace!("Inserted rigid body to world with values: {:?}", body);
 
-                let physical_body = physical_world.rigid_body_mut(body.handle.unwrap()).unwrap();
+                //let physical_body = physical_world.rigid_body_mut(body.handle.unwrap()).unwrap();
 
-                physical_body.set_velocity(body.velocity);
-                physical_body.apply_force(&body.external_forces);
-                body.external_forces = Force::<f32>::zero();
-                physical_body.set_status(body.body_status);
+                //physical_body.set_velocity(body.velocity);
+
+                // TODO
+                //physical_body.apply_force(&body.external_forces);
+                //body.external_forces = Force::<f32>::zero();
 
                 trace!("Velocity and external forces applied, external forces reset to zero, for body with handle: {:?}", body.handle);
             } else if modified_transforms.contains(id) || modified_physics_bodies.contains(id) {
@@ -116,8 +141,11 @@ impl<'a> System<'a> for SyncBodiesToPhysicsSystem {
                             physical_body.set_position(position);
 
                             physical_body.set_velocity(body.velocity);
-                            physical_body.apply_force(&body.external_forces);
-                            body.external_forces = Force::<f32>::zero();
+
+                            // TODO
+                            //physical_body.apply_force(&body.external_forces);
+                            //body.external_forces = Force::<f32>::zero();
+
                             physical_body.set_status(body.body_status);
                         }
                         None => error!(

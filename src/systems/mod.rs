@@ -9,7 +9,7 @@ use amethyst::core::specs::DispatcherBuilder;
 use amethyst::error::Error;
 use core::result::Result;
 
-pub use self::physics_stepper::PhysicsStepperSystem;
+pub use self::physics_stepper::*;
 pub use self::sync_bodies_from_physics::*;
 pub use self::sync_bodies_to_physics::SyncBodiesToPhysicsSystem;
 pub use self::sync_colliders_to_physics::SyncCollidersToPhysicsSystem;
