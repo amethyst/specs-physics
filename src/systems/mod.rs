@@ -5,7 +5,7 @@ mod sync_colliders_to_physics;
 mod sync_gravity_to_physics;
 
 use amethyst::core::bundle::SystemBundle;
-use amethyst::core::specs::DispatcherBuilder;
+use amethyst::core::ecs::DispatcherBuilder;
 use amethyst::error::Error;
 use core::result::Result;
 

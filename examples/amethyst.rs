@@ -1,8 +1,8 @@
 use amethyst::assets::{Handle, Loader};
-use amethyst::core::nalgebra::{Matrix3, Vector3};
+use amethyst::core::math::{Matrix3, Vector3};
 use amethyst::core::shrev::{EventChannel, ReaderId};
-use amethyst::core::specs::world::Builder;
-use amethyst::core::specs::Join;
+use amethyst::core::ecs::world::Builder;
+use amethyst::core::ecs::Join;
 use amethyst::core::{GlobalTransform, Transform, TransformBundle};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::renderer::{
