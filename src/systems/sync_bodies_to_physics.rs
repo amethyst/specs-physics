@@ -1,10 +1,14 @@
 use std::marker::PhantomData;
 
-use nalgebra::{RealField, Vector3};
-use nphysics::{math::Velocity, object::RigidBodyDesc};
+use nalgebra::{Isometry3, RealField, Vector3};
+use nphysics::{
+    math::Velocity,
+    object::{Body, RigidBodyDesc},
+};
 use specs::{
     storage::ComponentEvent,
     world::Index,
+    BitSet,
     Component,
     DenseVecStorage,
     FlaggedStorage,
@@ -79,10 +83,23 @@ where
             }
 
             // handle modified events
-            if modified_positions.contains(id) || modified_physics_bodies.contains(id) {}
+            if modified_positions.contains(id) || modified_physics_bodies.contains(id) {
+                debug!("Modified PhysicsBody with id: {}", id);
+                update_rigid_body::<N, P>(
+                    id,
+                    &position,
+                    &mut physics,
+                    &mut physics_body,
+                    &modified_positions,
+                    &modified_physics_bodies,
+                );
+            }
 
             // handle removed events
-            if removed_positions.contains(id) || removed_physics_bodies.contains(id) {}
+            if removed_positions.contains(id) || removed_physics_bodies.contains(id) {
+                debug!("Removed PhysicsBody with id: {}", id);
+                remove_rigid_body::<N, P>(id, &mut physics);
+            }
         }
     }
 
@@ -166,4 +183,60 @@ fn add_rigid_body<N, P>(
         "Inserted rigid body to world with values: {:?}",
         physics_body
     );
+}
+
+fn update_rigid_body<N, P>(
+    id: Index,
+    position: &P,
+    physics: &mut Physics<N>,
+    physics_body: &mut PhysicsBody<N>,
+    modified_positions: &BitSet,
+    modified_physics_bodies: &BitSet,
+) where
+    N: RealField,
+    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+{
+    let delta_time = physics.world.timestep();
+
+    if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
+        // the PhysicsBody was modified, update everything but the position
+        if modified_physics_bodies.contains(id) {
+            rigid_body.enable_gravity(physics_body.gravity_enabled);
+            rigid_body.set_status(physics_body.body_status);
+            rigid_body.set_velocity(Velocity::linear(
+                physics_body.velocity.x / delta_time,
+                physics_body.velocity.y / delta_time,
+                physics_body.velocity.z / delta_time,
+            ));
+            rigid_body.set_angular_inertia(physics_body.angular_inertia);
+            rigid_body.set_mass(physics_body.mass);
+            rigid_body.set_local_center_of_mass(physics_body.local_center_of_mass.clone());
+        }
+
+        // the Position was modified, update the position directly
+        if modified_positions.contains(id) {
+            rigid_body.set_position(Isometry3::translation(
+                position.position().0,
+                position.position().1,
+                position.position().1,
+            ));
+        }
+
+        trace!(
+            "Updated rigid body in world with values: {:?}",
+            physics_body
+        );
+    }
+}
+
+fn remove_rigid_body<N, P>(id: Index, physics: &mut Physics<N>)
+where
+    N: RealField,
+    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+{
+    if let Some(handle) = physics.body_handles.remove(&id) {
+        // remove body if it still exists in the PhysicsWorld
+        physics.world.remove_bodies(&[handle]);
+        info!("Removed rigid body from world with id: {}", id);
+    }
 }
