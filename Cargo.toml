@@ -4,6 +4,15 @@ version = "0.0.1"
 authors = ["Benjamin Amling <benjamin@amling.net>"]
 repository = "https://github.com/bamling/specs-physics.git"
 homepage = "https://github.com/bamling/specs-physics.git"
+edition = "2018"
 
 [dependencies]
+log = "0.4.6"
+specs = "0.14.3"
+specs-hierarchy = "0.3.1"
+nalgebra = "0.18.0"
+ncollide3d = "0.19.1"
+nphysics3d = "0.11.1"
 
+[dev-dependencies]
+simple_logger = "1.2.0"
