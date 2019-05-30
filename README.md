@@ -1,5 +1,10 @@
 # specs-physics
 
+[![Build Status][bi]][bl]
+
+[bi]: https://travis-ci.com/bamling/specs-physics.svg?branch=master
+[bl]: https://travis-ci.com/bamling/specs-physics
+
 **specs-physics** aims to be an easily usable and extendable [nphysics](https://www.nphysics.org/) physics engine integration for applications and games that utilise the [Specs ECS](https://slide-rs.github.io/specs/).
 
 The dream is to *simply* create `Entity`s with a set of configurable `Component`s and have most of your physics covered, be it collision/proximity detection, velocity and acceleration or gravity.
