@@ -1,0 +1,9 @@
+[package]
+name = "specs-physics"
+version = "0.0.1"
+authors = ["Benjamin Amling <benjamin@amling.net>"]
+repository = "https://github.com/bamling/specs-physics.git"
+homepage = "https://github.com/bamling/specs-physics.git"
+
+[dependencies]
+
