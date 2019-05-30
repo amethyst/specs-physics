@@ -5,6 +5,17 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use crate::math::{Matrix3, Point3, Vector3};
 
+/// An implementation of the `Position` trait is required for the
+/// synchronisation of the position of Specs and nphysics objects.
+///
+/// Initially, it is used to position bodies in the nphysics `World`. Then after
+/// progressing the `World` it is used to synchronise the updated positions back
+/// towards Specs.
+pub trait Position<N: RealField> {
+    fn position(&self) -> (N, N, N);
+    fn set_position(&mut self, x: N, y: N, z: N);
+}
+
 /// The `PhysicsBody` `Component` represents a `PhysicsWorld` `RigidBody` in
 /// Specs and contains all the data required for the synchronisation between
 /// both worlds.
