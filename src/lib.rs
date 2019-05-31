@@ -24,11 +24,11 @@ use self::{
     body::Position,
     math::Vector3,
     systems::{
-        physics_stepper::PhysicsStepperSystem,
-        sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
-        sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
-        sync_gravity_to_physics::SyncGravityToPhysicsSystem,
-        sync_positions_from_physics::SyncPositionsFromPhysicsSystem,
+        PhysicsStepperSystem,
+        SyncBodiesToPhysicsSystem,
+        SyncCollidersToPhysicsSystem,
+        SyncGravityToPhysicsSystem,
+        SyncPositionsFromPhysicsSystem,
     },
 };
 
