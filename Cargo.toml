@@ -17,6 +17,14 @@ nphysics3d = "0.11.1"
 [dev-dependencies]
 simple_logger = "1.2.0"
 
+[features]
+default = ["specs/nightly"]
+
 [[example]]
 name = "basic"
 path = "examples/basic.rs"
+
+[[example]]
+name = "hierarchy"
+path = "examples/hierarchy.rs"
+

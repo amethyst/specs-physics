@@ -242,3 +242,60 @@ where
         info!("Removed rigid body from world with id: {}", id);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{body::BodyStatus, PhysicsBodyBuilder};
+    use specs::{world::Builder, DispatcherBuilder, World};
+
+    struct Pos {
+        x: f32,
+        y: f32,
+        z: f32,
+    }
+
+    impl Component for Pos {
+        type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+    }
+
+    impl Position<f32> for Pos {
+        fn position(&self) -> (f32, f32, f32) {
+            (self.x, self.y, self.z)
+        }
+
+        fn set_position(&mut self, x: f32, y: f32, z: f32) {
+            self.x = x;
+            self.y = y;
+            self.z = z;
+        }
+    }
+
+    #[test]
+    fn add_rigid_body() {
+        let mut world = World::new();
+        let mut dispatcher = DispatcherBuilder::new()
+            .with(
+                SyncBodiesToPhysicsSystem::<f32, Pos>::default(),
+                "sync_bodies_to_physics_system",
+                &[],
+            )
+            .build();
+        dispatcher.setup(&mut world.res);
+
+        world
+            .create_entity()
+            .with(Pos {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            })
+            .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
+            .build();
+        dispatcher.dispatch(&mut world.res);
+
+        let physics = world.read_resource::<Physics<f32>>();
+        assert_eq!(physics.body_handles.len(), 1);
+        assert_eq!(physics.world.bodies().count(), 1);
+    }
+}
