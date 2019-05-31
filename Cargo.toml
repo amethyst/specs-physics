@@ -25,3 +25,7 @@ path = "examples/basic.rs"
 name = "hierarchy"
 path = "examples/hierarchy.rs"
 
+[[example]]
+name = "positions"
+path = "examples/positions.rs"
+
