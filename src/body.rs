@@ -71,7 +71,7 @@ impl<N: RealField> From<BodyStatus> for PhysicsBodyBuilder<N> {
         Self {
             gravity_enabled: false,
             body_status,
-            velocity: Vector3::new(N::zero(), N::zero(), N::zero()),
+            velocity: Vector3::repeat(N::zero()),
             angular_inertia: Matrix3::zeros(),
             mass: N::from_f32(1.2).unwrap(),
             local_center_of_mass: Point3::new(N::zero(), N::zero(), N::zero()),

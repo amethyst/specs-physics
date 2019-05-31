@@ -6,7 +6,7 @@ extern crate nphysics3d as nphysics;
 use std::collections::HashMap;
 
 pub use nalgebra as math;
-use nalgebra::RealField;
+use nalgebra::{RealField, Scalar};
 use nphysics::{
     object::{BodyHandle, ColliderHandle},
     world::World,
@@ -26,6 +26,7 @@ use self::{
     systems::{
         sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
         sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
+        sync_gravity_to_physics::SyncGravityToPhysicsSystem,
     },
 };
 
@@ -54,9 +55,17 @@ impl<N: RealField> Default for Physics<N> {
     }
 }
 
-/// `Gravity` is a type alias for `Vector3<f32>`. It represents a constant
-/// acceleration affecting all physical objects in the scene.
-pub type Gravity<N> = Vector3<N>;
+///// `Gravity` is a type alias for `Vector3`. It represents a constant
+///// acceleration affecting all physical objects in the scene.
+//pub type Gravity<N> = Vector3<N>;
+
+pub struct Gravity<N: RealField + Scalar>(Vector3<N>);
+
+impl<N: RealField + Scalar> Default for Gravity<N> {
+    fn default() -> Self {
+        Self(Vector3::repeat(N::zero()))
+    }
+}
 
 /// The `PhysicsParent` `Component` is used to represent a parent/child
 /// relationship between physics based `Entity`s.
@@ -99,6 +108,15 @@ where
         SyncCollidersToPhysicsSystem::<N, P>::default(),
         "sync_colliders_to_physics_system",
         &["sync_bodies_to_physics_system"],
+    );
+
+    // add SyncGravityToPhysicsSystem; this System can be added at any point in time
+    // as it merely handles the gravity value of the nphysics World, thus it has no
+    // other dependencies
+    dispatcher_builder.add(
+        SyncGravityToPhysicsSystem::<N>::default(),
+        "sync_gravity_to_physics_system",
+        &[],
     );
 
     dispatcher_builder.build()

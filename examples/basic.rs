@@ -54,7 +54,7 @@ fn main() {
             y: 1.0,
             z: 1.0,
         })
-        .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Static).build())
+        .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
         .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0)).build())
         .build();
 
