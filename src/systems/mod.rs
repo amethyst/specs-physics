@@ -9,6 +9,7 @@ use specs::{
 use std::ops::Deref;
 
 pub mod sync_bodies_to_physics;
+pub mod sync_colliders_to_physics;
 
 /// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
 /// and returns the results in a `BitSet`.

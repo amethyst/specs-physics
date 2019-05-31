@@ -23,7 +23,10 @@ use specs_hierarchy::Parent;
 use self::{
     body::Position,
     math::Vector3,
-    systems::sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
+    systems::{
+        sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
+        sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
+    },
 };
 
 pub mod body;
@@ -80,11 +83,23 @@ where
     N: RealField,
     P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
 {
-    DispatcherBuilder::new()
-        .with(
-            SyncBodiesToPhysicsSystem::<N, P>::default(),
-            "sync_bodies_to_physics_system",
-            &[],
-        )
-        .build()
+    let mut dispatcher_builder = DispatcherBuilder::new();
+
+    // add SyncBodiesToPhysicsSystem first since we have to start with bodies;
+    // colliders can exist without a body but in most cases have a body parent
+    dispatcher_builder.add(
+        SyncBodiesToPhysicsSystem::<N, P>::default(),
+        "sync_bodies_to_physics_system",
+        &[],
+    );
+
+    // add SyncCollidersToPhysicsSystem next with SyncBodiesToPhysicsSystem as its
+    // dependency
+    dispatcher_builder.add(
+        SyncCollidersToPhysicsSystem::<N, P>::default(),
+        "sync_colliders_to_physics_system",
+        &["sync_bodies_to_physics_system"],
+    );
+
+    dispatcher_builder.build()
 }
