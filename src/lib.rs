@@ -24,9 +24,11 @@ use self::{
     body::Position,
     math::Vector3,
     systems::{
+        physics_stepper::PhysicsStepperSystem,
         sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
         sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
         sync_gravity_to_physics::SyncGravityToPhysicsSystem,
+        sync_positions_from_physics::SyncPositionsFromPhysicsSystem,
     },
 };
 
@@ -55,10 +57,8 @@ impl<N: RealField> Default for Physics<N> {
     }
 }
 
-///// `Gravity` is a type alias for `Vector3`. It represents a constant
-///// acceleration affecting all physical objects in the scene.
-//pub type Gravity<N> = Vector3<N>;
-
+/// `Gravity` is a newtype for `Vector3`. It represents a constant
+/// acceleration affecting all physical objects in the scene.
 pub struct Gravity<N: RealField + Scalar>(Vector3<N>);
 
 impl<N: RealField + Scalar> Default for Gravity<N> {
@@ -66,6 +66,10 @@ impl<N: RealField + Scalar> Default for Gravity<N> {
         Self(Vector3::repeat(N::zero()))
     }
 }
+
+/// The `TimeStep` is used to set the timestep of the nphysics integration, see
+/// `nphysics::world::World::set_timestep(..)`.
+pub struct TimeStep<N: RealField>(N);
 
 /// The `PhysicsParent` `Component` is used to represent a parent/child
 /// relationship between physics based `Entity`s.
@@ -117,6 +121,28 @@ where
         SyncGravityToPhysicsSystem::<N>::default(),
         "sync_gravity_to_physics_system",
         &[],
+    );
+
+    // add PhysicsStepperSystem after all other Systems that write data to the
+    // nphysics World and has to depend on them; this System is used to progress the
+    // nphysics World for all existing objects
+    dispatcher_builder.add(
+        PhysicsStepperSystem::<N>::default(),
+        "physics_stepper_system",
+        &[
+            "sync_bodies_to_physics_system",
+            "sync_colliders_to_physics_system",
+            "sync_gravity_to_physics_system",
+        ],
+    );
+
+    // add SyncPositionsFromPhysicsSystem last as it handles the
+    // synchronisation between nphysics World bodies and the Position
+    // components; this depends on the PhysicsStepperSystem
+    dispatcher_builder.add(
+        SyncPositionsFromPhysicsSystem::<N, P>::default(),
+        "sync_positions_from_physics_system",
+        &["physics_stepper_system"],
     );
 
     dispatcher_builder.build()
