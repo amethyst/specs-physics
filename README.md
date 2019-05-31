@@ -1,9 +1,17 @@
 # specs-physics
 
-[![Build Status][bi]][bl]
+[![Build Status][bi]][bl] [![Crates.io][ci]][cl] ![MIT/Apache][li] [![Docs.rs][di]][dl]
 
 [bi]: https://travis-ci.com/bamling/specs-physics.svg?branch=master
 [bl]: https://travis-ci.com/bamling/specs-physics
+
+[ci]: https://img.shields.io/crates/v/specs-physics.svg
+[cl]: https://crates.io/crates/specs-physics/
+
+[li]: https://img.shields.io/crates/l/specs-physics.svg
+
+[di]: https://docs.rs/specs-physics/badge.svg
+[dl]: https://docs.rs/specs-physics/
 
 **specs-physics** aims to be an easily usable and extendable [nphysics](https://www.nphysics.org/) physics engine integration for applications and games that utilise the [Specs ECS](https://slide-rs.github.io/specs/).
 
