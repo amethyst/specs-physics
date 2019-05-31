@@ -6,8 +6,12 @@ use specs_physics::{
     body::{BodyStatus, Position},
     dispatcher,
     PhysicsBodyBuilder,
+    PhysicsColliderBuilder,
+    Shape,
 };
 
+/// `Pos` struct for synchronisation of the position between the ECS and
+/// nphysics; this has to implement both `Component` and `Position`
 struct Pos {
     x: f32,
     y: f32,
@@ -51,6 +55,7 @@ fn main() {
             z: 1.0,
         })
         .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Static).build())
+        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0)).build())
         .build();
 
     // execute the dispatcher

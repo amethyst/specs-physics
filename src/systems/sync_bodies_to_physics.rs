@@ -29,6 +29,8 @@ use crate::{
 
 use super::iterate_component_events;
 
+/// The `SyncBodiesToPhysicsSystem` handles the synchronisation of `PhysicsBody`
+/// `Component`s into the physics `World`.
 pub struct SyncBodiesToPhysicsSystem<N, P> {
     positions_reader_id: Option<ReaderId<ComponentEvent>>,
     physics_bodies_reader_id: Option<ReaderId<ComponentEvent>>,
