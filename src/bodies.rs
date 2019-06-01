@@ -42,7 +42,7 @@ impl<N: RealField> Component for PhysicsBody<N> {
 ///
 /// ```rust
 /// use specs_physics::{
-///     body::BodyStatus,
+///     bodies::BodyStatus,
 ///     math::{Matrix3, Point3, Vector3},
 ///     PhysicsBodyBuilder,
 /// };

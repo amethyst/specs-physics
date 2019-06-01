@@ -18,7 +18,7 @@ use std::marker::PhantomData;
 
 use nphysics::object::{BodyPartHandle, ColliderDesc};
 
-use crate::{body::Position, collider::PhysicsCollider, Physics, PhysicsParent};
+use crate::{bodies::Position, colliders::PhysicsCollider, Physics, PhysicsParent};
 
 use super::iterate_component_events;
 
@@ -260,7 +260,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{collider::Shape, PhysicsColliderBuilder};
+    use crate::{colliders::Shape, PhysicsColliderBuilder};
     use specs::{world::Builder, DispatcherBuilder, World};
 
     struct Pos {
@@ -297,6 +297,8 @@ mod tests {
             .build();
         dispatcher.setup(&mut world.res);
 
+        // create an Entity with the PhysicsCollider component and execute the
+        // dispatcher
         world
             .create_entity()
             .with(Pos {
@@ -308,6 +310,7 @@ mod tests {
             .build();
         dispatcher.dispatch(&mut world.res);
 
+        // fetch the Physics instance and check for new colliders
         let physics = world.read_resource::<Physics<f32>>();
         assert_eq!(physics.collider_handles.len(), 1);
         assert_eq!(physics.world.colliders().count(), 1);

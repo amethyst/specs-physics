@@ -101,13 +101,13 @@ impl<N: RealField> PhysicsCollider<N> {
 ///
 /// ```rust
 /// use specs_physics::{
-///     collider::{
+///     colliders::{
 ///         material::{BasicMaterial, MaterialHandle},
 ///         CollisionGroups,
+///         Shape,
 ///     },
 ///     math::Isometry3,
 ///     PhysicsColliderBuilder,
-///     Shape,
 /// };
 ///
 /// let physics_collider = PhysicsColliderBuilder::from(Shape::Rectangle(10.0, 10.0, 1.0))

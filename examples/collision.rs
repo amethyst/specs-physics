@@ -1,6 +1,8 @@
+#[macro_use]
 extern crate log;
 extern crate simple_logger;
 
+use nalgebra::Vector3;
 use specs::{world::Builder, Component, DenseVecStorage, FlaggedStorage, World};
 use specs_physics::{
     bodies::{BodyStatus, Position},
@@ -8,7 +10,6 @@ use specs_physics::{
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,
-    PhysicsParent,
 };
 
 /// `Pos` struct for synchronisation of the position between the ECS and
@@ -47,24 +48,8 @@ fn main() {
     let mut dispatcher = physics_dispatcher::<f32, Pos>();
     dispatcher.setup(&mut world.res);
 
-    // create an Entity containing the required Components; this Entity will be the
-    // parent
-    let parent = world
-        .create_entity()
-        .with(Pos {
-            x: 1.0,
-            y: 1.0,
-            z: 1.0,
-        })
-        .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
-        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0)).build())
-        .build();
-
-    // create the child Entity; if this Entity has its own PhysicsBody it'll more or
-    // less be its own object in the nphysics World, however if it's just a
-    // PhysicsCollider the parent/child hierarchy will actually take effect and the
-    // collider will be attached to the parent
-    let _child = world
+    // create an Entity with a dynamic PhysicsBody component and a velocity
+    let entity = world
         .create_entity()
         .with(Pos {
             x: 1.0,
@@ -72,13 +57,33 @@ fn main() {
             z: 1.0,
         })
         .with(
-            PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0))
-                .sensor(true)
+            PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic)
+                .velocity(Vector3::new(1.0, 0.0, 0.0))
                 .build(),
         )
-        .with(PhysicsParent { entity: parent })
+        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(2.0, 2.0, 1.0)).build())
+        .build();
+
+    // create an Entity with a static PhysicsBody component right next to the first
+    // one
+    world
+        .create_entity()
+        .with(Pos {
+            x: 3.0,
+            y: 1.0,
+            z: 1.0,
+        })
+        .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Static).build())
+        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(2.0, 2.0, 1.0)).build())
         .build();
 
     // execute the dispatcher
     dispatcher.dispatch(&world.res);
+
+    // fetch the Pos resource for the Entity with the dynamic body; the position
+    // should still be approx. there same
+    let positions = world.read_storage::<Pos>();
+    let pos = positions.get(entity).unwrap();
+
+    info!("updated position: x={}, y={}, z={},", pos.x, pos.y, pos.z);
 }

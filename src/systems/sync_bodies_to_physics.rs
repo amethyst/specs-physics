@@ -23,7 +23,7 @@ use specs::{
 };
 
 use crate::{
-    body::{PhysicsBody, Position},
+    bodies::{PhysicsBody, Position},
     Physics,
 };
 
@@ -246,7 +246,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{body::BodyStatus, PhysicsBodyBuilder};
+    use crate::{bodies::BodyStatus, PhysicsBodyBuilder};
     use specs::{world::Builder, DispatcherBuilder, World};
 
     struct Pos {
@@ -283,6 +283,7 @@ mod tests {
             .build();
         dispatcher.setup(&mut world.res);
 
+        // create an Entity with the PhysicsBody component and execute the dispatcher
         world
             .create_entity()
             .with(Pos {
@@ -294,6 +295,7 @@ mod tests {
             .build();
         dispatcher.dispatch(&mut world.res);
 
+        // fetch the Physics instance and check for new bodies
         let physics = world.read_resource::<Physics<f32>>();
         assert_eq!(physics.body_handles.len(), 1);
         assert_eq!(physics.world.bodies().count(), 1);

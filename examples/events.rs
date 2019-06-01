@@ -1,14 +1,16 @@
+#[macro_use]
 extern crate log;
 extern crate simple_logger;
 
+use nalgebra::Vector3;
 use specs::{world::Builder, Component, DenseVecStorage, FlaggedStorage, World};
 use specs_physics::{
     bodies::{BodyStatus, Position},
     colliders::Shape,
+    events::ContactEvents,
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,
-    PhysicsParent,
 };
 
 /// `Pos` struct for synchronisation of the position between the ECS and
@@ -46,25 +48,10 @@ fn main() {
     // the convenience function you can add all required Systems by hand
     let mut dispatcher = physics_dispatcher::<f32, Pos>();
     dispatcher.setup(&mut world.res);
+    let mut contact_event_reader = world.res.fetch_mut::<ContactEvents>().register_reader();
 
-    // create an Entity containing the required Components; this Entity will be the
-    // parent
-    let parent = world
-        .create_entity()
-        .with(Pos {
-            x: 1.0,
-            y: 1.0,
-            z: 1.0,
-        })
-        .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
-        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0)).build())
-        .build();
-
-    // create the child Entity; if this Entity has its own PhysicsBody it'll more or
-    // less be its own object in the nphysics World, however if it's just a
-    // PhysicsCollider the parent/child hierarchy will actually take effect and the
-    // collider will be attached to the parent
-    let _child = world
+    // create an Entity with a dynamic PhysicsBody component and a velocity
+    world
         .create_entity()
         .with(Pos {
             x: 1.0,
@@ -72,13 +59,32 @@ fn main() {
             z: 1.0,
         })
         .with(
-            PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0))
-                .sensor(true)
+            PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic)
+                .velocity(Vector3::new(1.0, 0.0, 0.0))
                 .build(),
         )
-        .with(PhysicsParent { entity: parent })
+        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(2.0, 2.0, 1.0)).build())
+        .build();
+
+    // create an Entity with a static PhysicsBody component right now to the first
+    // one
+    world
+        .create_entity()
+        .with(Pos {
+            x: 3.0,
+            y: 1.0,
+            z: 1.0,
+        })
+        .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Static).build())
+        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(2.0, 2.0, 1.0)).build())
         .build();
 
     // execute the dispatcher
     dispatcher.dispatch(&world.res);
+
+    // check the ContactEvents channel for events
+    let contact_events = world.read_resource::<ContactEvents>();
+    for contact_event in contact_events.read(&mut contact_event_reader) {
+        info!("Read ContactEvent from channel: {:?}", contact_event);
+    }
 }

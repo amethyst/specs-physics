@@ -34,11 +34,11 @@ All `System`s and `Component`s provided by this crate require between one and tw
 
 `N: RealField` - [nphysics](https://www.nphysics.org/) is built upon [nalgebra](https://nalgebra.org/) and uses various types and structures from this crate. **specs-physics** builds up on this even further and utilises the same structures, which all work with any type that implements `nalgebra::RealField`. `nalgebra::RealField` is by default implemented for various standard types, such as `f32` and`f64`. `nalgebra` is re-exported under `specs_physics::math`.
 
-`P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync` - a more complex type parameter which looks a bit intimidating at first but ultimately just requires a `Component`, that also implements the `specs_physics::body::Position` *trait* and uses a `FlaggedStorage`. This `Position` `Component` is used to initially place a [RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) in the [nphysics](https://www.nphysics.org/) world and later used to synchronise the updated positions of these bodies back into the [Specs](https://slide-rs.github.io/specs/) world.
+`P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync` - a more complex type parameter which looks a bit intimidating at first but ultimately just requires a `Component`, that also implements the `specs_physics::bodies::Position` *trait* and uses a `FlaggedStorage`. This `Position` `Component` is used to initially place a [RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) in the [nphysics](https://www.nphysics.org/) world and later used to synchronise the updated positions of these bodies back into the [Specs](https://slide-rs.github.io/specs/) world.
 
 Example for a `Position` `Component`:
 ```rust
-use specs_physics::body::Position;
+use specs_physics::bodies::Position;
 
 struct Pos {
     x: f32,
@@ -73,7 +73,7 @@ Example:
 
 ```rust
 use specs_physics::{
-    body::BodyStatus,
+    bodies::BodyStatus,
     math::{Matrix3, Point3, Vector3},
     PhysicsBodyBuilder,
 };
@@ -95,7 +95,7 @@ Example:
 
 ```rust
 use specs_physics::{
-    collider::{
+    colliders::{
         material::{BasicMaterial, MaterialHandle},
         CollisionGroups,
     },
