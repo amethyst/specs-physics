@@ -11,17 +11,18 @@ use nphysics::{
     object::{BodyHandle, ColliderHandle},
     world::World,
 };
+pub use shrev;
 use specs::world::Index;
 
 pub use self::{
-    body::{PhysicsBody, PhysicsBodyBuilder},
-    collider::{PhysicsCollider, PhysicsColliderBuilder, Shape},
+    bodies::{PhysicsBody, PhysicsBodyBuilder},
+    colliders::{PhysicsCollider, PhysicsColliderBuilder},
 };
 use specs::{Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity, FlaggedStorage};
 use specs_hierarchy::Parent;
 
 use self::{
-    body::Position,
+    bodies::Position,
     math::Vector3,
     systems::{
         PhysicsStepperSystem,
@@ -32,8 +33,9 @@ use self::{
     },
 };
 
-pub mod body;
-pub mod collider;
+pub mod bodies;
+pub mod colliders;
+pub mod events;
 pub mod systems;
 
 /// The `Physics` `Resource` contains the nphysics `World` and a set of
@@ -41,10 +43,10 @@ pub mod systems;
 /// so we can properly react to removed `Component`s and clean up our `World`
 /// accordingly.
 pub struct Physics<N: RealField> {
-    world: World<N>,
+    pub(crate) world: World<N>,
 
-    body_handles: HashMap<Index, BodyHandle>,
-    collider_handles: HashMap<Index, ColliderHandle>,
+    pub(crate) body_handles: HashMap<Index, BodyHandle>,
+    pub(crate) collider_handles: HashMap<Index, ColliderHandle>,
 }
 
 impl<N: RealField> Default for Physics<N> {

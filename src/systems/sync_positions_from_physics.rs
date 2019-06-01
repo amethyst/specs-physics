@@ -12,7 +12,7 @@ use specs::{
 use std::marker::PhantomData;
 
 use crate::{
-    body::{PhysicsBody, Position},
+    bodies::{PhysicsBody, Position},
     Physics,
 };
 

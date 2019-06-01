@@ -3,11 +3,11 @@ extern crate simple_logger;
 
 use specs::{world::Builder, Component, DenseVecStorage, FlaggedStorage, World};
 use specs_physics::{
-    body::{BodyStatus, Position},
+    bodies::{BodyStatus, Position},
+    colliders::Shape,
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,
-    Shape,
 };
 
 /// `Pos` struct for synchronisation of the position between the ECS and
