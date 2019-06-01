@@ -89,15 +89,26 @@ impl Parent for PhysicsParent {
 }
 
 /// Convenience function for configuring and building a `Dispatcher` with all
-/// required physics related `System`s. This also serves as a blueprint on how
-/// to properly set up the `System`s and have them depend on each other.
-pub fn dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>
+/// required physics related `System`s.
+pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>
 where
     N: RealField,
     P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
 {
     let mut dispatcher_builder = DispatcherBuilder::new();
+    register_physics_systems::<N, P>(&mut dispatcher_builder);
 
+    dispatcher_builder.build()
+}
+
+/// Convenience function for registering all required physics related `System`s
+/// to the given `DispatcherBuilder`. This also serves as a blueprint on how
+///// to properly set up the `System`s and have them depend on each other.
+pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder)
+where
+    N: RealField,
+    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+{
     // add SyncBodiesToPhysicsSystem first since we have to start with bodies;
     // colliders can exist without a body but in most cases have a body parent
     dispatcher_builder.add(
@@ -144,6 +155,4 @@ where
         "sync_positions_from_physics_system",
         &["physics_stepper_system"],
     );
-
-    dispatcher_builder.build()
 }

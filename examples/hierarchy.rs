@@ -4,9 +4,10 @@ extern crate simple_logger;
 use specs::{world::Builder, Component, DenseVecStorage, FlaggedStorage, World};
 use specs_physics::{
     body::{BodyStatus, Position},
-    dispatcher,
+    physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,
+    PhysicsParent,
     Shape,
 };
 
@@ -43,7 +44,7 @@ fn main() {
 
     // create the dispatcher containing all relevant Systems; alternatively to using
     // the convenience function you can add all required Systems by hand
-    let mut dispatcher = dispatcher::<f32, Pos>();
+    let mut dispatcher = physics_dispatcher::<f32, Pos>();
     dispatcher.setup(&mut world.res);
 
     // create an Entity containing the required Components; this Entity will be the
@@ -75,6 +76,7 @@ fn main() {
                 .sensor(true)
                 .build(),
         )
+        .with(PhysicsParent { entity: parent })
         .build();
 
     // execute the dispatcher

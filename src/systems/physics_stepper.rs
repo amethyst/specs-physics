@@ -19,7 +19,16 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
         // accordingly; this should not be required if the Systems are executed in a
         // fixed interval
         if let Some(time_step) = time_step {
-            physics.world.set_timestep(time_step.0);
+            // only update timestep if it actually differs from the current nphysics World
+            // one; keep in mind that changing the Resource will destabilize the simulation
+            if physics.world.timestep() != time_step.0 {
+                warn!(
+                    "TimeStep and world.timestep() differ, changing worlds timestep from {} to: {:?}",
+                    physics.world.timestep(),
+                    time_step.0
+                );
+                physics.world.set_timestep(time_step.0);
+            }
         }
 
         physics.world.step();
