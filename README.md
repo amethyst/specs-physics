@@ -23,7 +23,7 @@ To use **specs-physics**, add the following dependency to your projects *Cargo.t
 
 ```toml
 [dependencies]
-specs-physics = "0.2.0"
+specs-physics = "0.2.1"
 ```
 
 **specs-physics** defines a set of [Specs](https://slide-rs.github.io/specs/) `System`s and `Component`s to handle the creation, modification and removal of [nphysics](https://www.nphysics.org/) objects ([RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies), [Collider](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders)) and the synchronisation of object positions and global gravity between both worlds.
@@ -164,7 +164,7 @@ let dispatcher = DispatcherBuilder::new()
     .build();
 ```
 
-Alternatively to building your own `Dispatcher`, you can always fall back on the convenience function `specs_physics::dispatcher()`, which returns a configured *default* `Dispatcher` for you.
+Alternatively to building your own `Dispatcher`, you can always fall back on the convenience function `specs_physics::physics_dispatcher()`, which returns a configured *default* `Dispatcher` for you or `specs_physics::register_physics_systems()` which takes a `DispatcherBuilder` as an argument and registers the required `System`s for you .
 
 ### Examples
 
