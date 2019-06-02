@@ -220,7 +220,7 @@ fn update_rigid_body<N, P>(
             rigid_body.set_position(Isometry3::translation(
                 position.position().0,
                 position.position().1,
-                position.position().1,
+                position.position().2
             ));
         }
 
