@@ -48,7 +48,7 @@ where
         let (positions, parent_entities, mut physics, mut physics_colliders) = data;
 
         // collect all ComponentEvents for the Position storage
-        let (inserted_positions, modified_positions, removed_positions) =
+        let (inserted_positions, _, _) =
             iterate_component_events(&positions, self.positions_reader_id.as_mut().unwrap());
 
         // collect all ComponentEvents for the PhysicsCollider storage
@@ -65,8 +65,6 @@ where
             parent_entities.maybe(),
             &mut physics_colliders,
             &inserted_positions
-                | &modified_positions
-                | &removed_positions
                 | &inserted_physics_colliders
                 | &modified_physics_colliders
                 | &removed_physics_colliders,
@@ -86,13 +84,13 @@ where
             }
 
             // handle modified events
-            if modified_positions.contains(id) || modified_physics_colliders.contains(id) {
+            if modified_physics_colliders.contains(id) {
                 debug!("Modified PhysicsCollider with id: {}", id);
                 update_collider::<N, P>(id, &mut physics, &physics_collider);
             }
 
             // handle removed events
-            if removed_positions.contains(id) || removed_physics_colliders.contains(id) {
+            if removed_physics_colliders.contains(id) {
                 debug!("Removed PhysicsCollider with id: {}", id);
                 remove_collider::<N, P>(id, &mut physics);
             }
