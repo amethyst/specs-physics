@@ -176,6 +176,26 @@ I'd appreciate any kind of contribution to this project, be it feature requests,
 
 Please just try to format any code changes according to the [rustfmt.toml](https://github.com/bamling/specs-physics/blob/master/rustfmt.toml) rules. They're not exactly set in stone and I'm open for suggestions, but let's try to keep things tidy!
 
+## Current Roadmap
+
+Full *TODO* sheet can be found in [this nphysics issue][todo]
+
+- [x] RigidBody Components
+- [x] Collider Components
+- [x] Proximity and Contact EventChannels
+- [ ] External force property
+- [x] `log` based logging
+- [ ] Handling Body Activation & Sleeping
+- [ ] Multibody-based Component Joints
+- [ ] Force generator inversion of control
+- [ ] Time scale and simulation pausing
+
+Investigating:
+
+- [ ] Proximity & Curve-based external force utility
+- [ ] Constraint-based Joints
+- [ ] Kinematics
+
 ## License
 
 Distributed under the MIT License. See [LICENSE](https://github.com/bamling/specs-physics/blob/master/LICENSE) for more information.
