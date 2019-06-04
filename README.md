@@ -23,7 +23,7 @@ To use **specs-physics**, add the following dependency to your projects *Cargo.t
 
 ```toml
 [dependencies]
-specs-physics = "0.2.1"
+specs-physics = "0.2.2"
 ```
 
 **specs-physics** defines a set of [Specs](https://slide-rs.github.io/specs/) `System`s and `Component`s to handle the creation, modification and removal of [nphysics](https://www.nphysics.org/) objects ([RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies), [Collider](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders)) and the synchronisation of object positions and global gravity between both worlds.
