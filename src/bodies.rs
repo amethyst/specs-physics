@@ -3,7 +3,7 @@ use nphysics::object::BodyHandle;
 pub use nphysics::object::BodyStatus;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
-use crate::math::{Matrix3, Point3, Vector3};
+use crate::math::{Isometry3, Matrix3, Point3, Vector3};
 
 /// An implementation of the `Position` trait is required for the
 /// synchronisation of the position of Specs and nphysics objects.
@@ -11,9 +11,11 @@ use crate::math::{Matrix3, Point3, Vector3};
 /// Initially, it is used to position bodies in the nphysics `World`. Then after
 /// progressing the `World` it is used to synchronise the updated positions back
 /// towards Specs.
-pub trait Position<N: RealField> {
-    fn position(&self) -> (N, N, N);
-    fn set_position(&mut self, x: N, y: N, z: N);
+pub trait Position<N: RealField>:
+    Component<Storage = FlaggedStorage<Self, DenseVecStorage<Self>>> + Send + Sync
+{
+    fn as_isometry(&self) -> Isometry3<N>;
+    fn set_isometry(&mut self, isometry: &Isometry3<N>);
 }
 
 /// The `PhysicsBody` `Component` represents a `PhysicsWorld` `RigidBody` in

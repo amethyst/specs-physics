@@ -1,10 +1,7 @@
-use nalgebra::{RealField, Vector3};
+use nalgebra::RealField;
 use specs::{
     storage::ComponentEvent,
     world::Index,
-    Component,
-    DenseVecStorage,
-    FlaggedStorage,
     Join,
     ReadStorage,
     ReaderId,
@@ -35,7 +32,7 @@ pub struct SyncCollidersToPhysicsSystem<N, P> {
 impl<'s, N, P> System<'s> for SyncCollidersToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     type SystemData = (
         ReadStorage<'s, P>,
@@ -48,7 +45,7 @@ where
         let (positions, parent_entities, mut physics, mut physics_colliders) = data;
 
         // collect all ComponentEvents for the Position storage
-        let (inserted_positions, _, _) =
+        let (inserted_positions, ..) =
             iterate_component_events(&positions, self.positions_reader_id.as_mut().unwrap());
 
         // collect all ComponentEvents for the PhysicsCollider storage
@@ -118,7 +115,7 @@ where
 impl<N, P> Default for SyncCollidersToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     fn default() -> Self {
         Self {
@@ -138,7 +135,7 @@ fn add_collider<N, P>(
     physics_collider: &mut PhysicsCollider<N>,
 ) where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     // remove already existing colliders for this inserted event
     if let Some(handle) = physics.collider_handles.remove(&id) {
@@ -179,24 +176,19 @@ fn add_collider<N, P>(
     // ended up defaulting to BodyPartHandle::ground(), we'll need to take the
     // Position into consideration
     let translation = if parent_part_handle.is_ground() {
-        let (offset_x, offset_y, offset_z) = (
-            physics_collider.offset_from_parent.translation.vector.x,
-            physics_collider.offset_from_parent.translation.vector.y,
-            physics_collider.offset_from_parent.translation.vector.z,
-        );
-
-        Vector3::new(
-            position.position().0 + offset_x,
-            position.position().1 + offset_y,
-            position.position().2 + offset_z,
-        )
+        // let scale = 1.0; may be added later
+        let mut iso = position.as_isometry();
+        iso.translation.vector +=
+            iso.rotation * physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
+        iso.rotation *= physics_collider.offset_from_parent.rotation;
+        iso
     } else {
-        physics_collider.offset_from_parent.translation.vector
+        physics_collider.offset_from_parent
     };
 
     // create the actual Collider in the nphysics World and fetch its handle
     let handle = ColliderDesc::new(physics_collider.shape_handle())
-        .translation(translation)
+        .position(translation)
         .density(physics_collider.density)
         .material(physics_collider.material.clone())
         .margin(physics_collider.margin)
@@ -221,7 +213,7 @@ fn add_collider<N, P>(
 fn update_collider<N, P>(id: Index, physics: &mut Physics<N>, physics_collider: &PhysicsCollider<N>)
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     debug!("Modified PhysicsCollider with id: {}", id);
     let collider_handle = physics_collider.handle.unwrap();
@@ -239,7 +231,7 @@ where
 fn remove_collider<N, P>(id: Index, physics: &mut Physics<N>)
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     debug!("Removed PhysicsCollider with id: {}", id);
     if let Some(handle) = physics.collider_handles.remove(&id) {
@@ -258,28 +250,36 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{colliders::Shape, PhysicsColliderBuilder};
-    use specs::{world::Builder, DispatcherBuilder, World};
+    use crate::{colliders::Shape, math::Isometry3, PhysicsColliderBuilder};
+    use specs::{
+        world::Builder,
+        Component,
+        DenseVecStorage,
+        DispatcherBuilder,
+        FlaggedStorage,
+        World,
+    };
 
-    struct Pos {
+    struct SimpleTranslation {
         x: f32,
         y: f32,
         z: f32,
     }
 
-    impl Component for Pos {
+    impl Component for SimpleTranslation {
         type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
     }
 
-    impl Position<f32> for Pos {
-        fn position(&self) -> (f32, f32, f32) {
-            (self.x, self.y, self.z)
+    impl Position<f32> for SimpleTranslation {
+        fn as_isometry(&self) -> Isometry3<f32> {
+            Isometry3::translation(self.x, self.y, self.z)
         }
 
-        fn set_position(&mut self, x: f32, y: f32, z: f32) {
-            self.x = x;
-            self.y = y;
-            self.z = z;
+        fn set_isometry(&mut self, isometry: &Isometry3<f32>) {
+            let translation = isometry.translation.vector;
+            self.x = translation.x;
+            self.y = translation.y;
+            self.z = translation.z;
         }
     }
 
@@ -288,7 +288,7 @@ mod tests {
         let mut world = World::new();
         let mut dispatcher = DispatcherBuilder::new()
             .with(
-                SyncCollidersToPhysicsSystem::<f32, Pos>::default(),
+                SyncCollidersToPhysicsSystem::<f32, SimpleTranslation>::default(),
                 "sync_colliders_to_physics_system",
                 &[],
             )
@@ -299,7 +299,7 @@ mod tests {
         // dispatcher
         world
             .create_entity()
-            .with(Pos {
+            .with(SimpleTranslation {
                 x: 1.0,
                 y: 1.0,
                 z: 1.0,
