@@ -1,14 +1,5 @@
-use nalgebra::{Isometry3, RealField};
-use specs::{
-    Component,
-    Join,
-    ReadExpect,
-    ReadStorage,
-    Resources,
-    System,
-    SystemData,
-    WriteStorage,
-};
+use nalgebra::RealField;
+use specs::{Join, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage};
 use std::marker::PhantomData;
 
 use crate::{
@@ -27,7 +18,7 @@ pub struct SyncPositionsFromPhysicsSystem<N, P> {
 impl<'s, N, P> System<'s> for SyncPositionsFromPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Component + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     type SystemData = (
         ReadExpect<'s, Physics<N>>,
@@ -43,13 +34,7 @@ where
             // if a RigidBody exists in the nphysics World we fetch it and update the
             // Position component accordingly
             if let Some(rigid_body) = physics.world.rigid_body(physics_body.handle.unwrap()) {
-                let isometry: &Isometry3<N> = rigid_body.position();
-
-                position.set_position(
-                    isometry.translation.vector.x,
-                    isometry.translation.vector.y,
-                    isometry.translation.vector.z,
-                );
+                position.set_isometry(rigid_body.position());
             }
         }
     }
@@ -66,7 +51,7 @@ where
 impl<N, P> Default for SyncPositionsFromPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Component + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     fn default() -> Self {
         Self {
