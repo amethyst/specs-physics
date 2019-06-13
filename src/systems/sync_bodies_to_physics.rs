@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use nalgebra::{Isometry3, RealField, Vector3};
+use nalgebra::RealField;
 use nphysics::{
     math::Velocity,
     object::{Body, RigidBodyDesc},
@@ -9,9 +9,6 @@ use specs::{
     storage::ComponentEvent,
     world::Index,
     BitSet,
-    Component,
-    DenseVecStorage,
-    FlaggedStorage,
     Join,
     ReadStorage,
     ReaderId,
@@ -42,7 +39,7 @@ pub struct SyncBodiesToPhysicsSystem<N, P> {
 impl<'s, N, P> System<'s> for SyncBodiesToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     type SystemData = (
         ReadStorage<'s, P>,
@@ -125,7 +122,7 @@ where
 impl<N, P> Default for SyncBodiesToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     fn default() -> Self {
         Self {
@@ -144,7 +141,7 @@ fn add_rigid_body<N, P>(
     physics_body: &mut PhysicsBody<N>,
 ) where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     // remove already existing bodies for this inserted component;
     // this technically should never happen but we need to keep the list of body
@@ -159,11 +156,7 @@ fn add_rigid_body<N, P>(
     // create a new RigidBody in the PhysicsWorld and store its
     // handle for later usage
     let handle = RigidBodyDesc::new()
-        .translation(Vector3::new(
-            position.position().0,
-            position.position().1,
-            position.position().2,
-        ))
+        .position(position.as_isometry())
         .gravity_enabled(physics_body.gravity_enabled)
         .status(physics_body.body_status)
         .velocity(Velocity::linear(
@@ -196,7 +189,7 @@ fn update_rigid_body<N, P>(
     modified_physics_bodies: &BitSet,
 ) where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     let delta_time = physics.world.timestep();
 
@@ -217,11 +210,7 @@ fn update_rigid_body<N, P>(
 
         // the Position was modified, update the position directly
         if modified_positions.contains(id) {
-            rigid_body.set_position(Isometry3::translation(
-                position.position().0,
-                position.position().1,
-                position.position().2
-            ));
+            rigid_body.set_position(position.as_isometry());
         }
 
         trace!(
@@ -234,7 +223,7 @@ fn update_rigid_body<N, P>(
 fn remove_rigid_body<N, P>(id: Index, physics: &mut Physics<N>)
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     if let Some(handle) = physics.body_handles.remove(&id) {
         // remove body if it still exists in the PhysicsWorld
@@ -246,28 +235,36 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{bodies::BodyStatus, PhysicsBodyBuilder};
-    use specs::{world::Builder, DispatcherBuilder, World};
+    use crate::{bodies::BodyStatus, math::Isometry3, PhysicsBodyBuilder};
+    use specs::{
+        world::Builder,
+        Component,
+        DenseVecStorage,
+        DispatcherBuilder,
+        FlaggedStorage,
+        World,
+    };
 
-    struct Pos {
+    struct SimpleTranslation {
         x: f32,
         y: f32,
         z: f32,
     }
 
-    impl Component for Pos {
+    impl Component for SimpleTranslation {
         type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
     }
 
-    impl Position<f32> for Pos {
-        fn position(&self) -> (f32, f32, f32) {
-            (self.x, self.y, self.z)
+    impl Position<f32> for SimpleTranslation {
+        fn as_isometry(&self) -> Isometry3<f32> {
+            Isometry3::translation(self.x, self.y, self.z)
         }
 
-        fn set_position(&mut self, x: f32, y: f32, z: f32) {
-            self.x = x;
-            self.y = y;
-            self.z = z;
+        fn set_isometry(&mut self, isometry: &Isometry3<f32>) {
+            let translation = isometry.translation.vector;
+            self.x = translation.x;
+            self.y = translation.y;
+            self.z = translation.z;
         }
     }
 
@@ -276,7 +273,7 @@ mod tests {
         let mut world = World::new();
         let mut dispatcher = DispatcherBuilder::new()
             .with(
-                SyncBodiesToPhysicsSystem::<f32, Pos>::default(),
+                SyncBodiesToPhysicsSystem::<f32, SimpleTranslation>::default(),
                 "sync_bodies_to_physics_system",
                 &[],
             )
@@ -286,7 +283,7 @@ mod tests {
         // create an Entity with the PhysicsBody component and execute the dispatcher
         world
             .create_entity()
-            .with(Pos {
+            .with(SimpleTranslation {
                 x: 1.0,
                 y: 1.0,
                 z: 1.0,

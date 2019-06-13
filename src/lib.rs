@@ -95,7 +95,7 @@ impl Parent for PhysicsParent {
 pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     let mut dispatcher_builder = DispatcherBuilder::new();
     register_physics_systems::<N, P>(&mut dispatcher_builder);
@@ -109,7 +109,7 @@ where
 pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder)
 where
     N: RealField,
-    P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync,
+    P: Position<N>,
 {
     // add SyncBodiesToPhysicsSystem first since we have to start with bodies;
     // colliders can exist without a body but in most cases have a body parent

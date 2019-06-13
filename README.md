@@ -34,31 +34,29 @@ All `System`s and `Component`s provided by this crate require between one and tw
 
 `N: RealField` - [nphysics](https://www.nphysics.org/) is built upon [nalgebra](https://nalgebra.org/) and uses various types and structures from this crate. **specs-physics** builds up on this even further and utilises the same structures, which all work with any type that implements `nalgebra::RealField`. `nalgebra::RealField` is by default implemented for various standard types, such as `f32` and`f64`. `nalgebra` is re-exported under `specs_physics::math`.
 
-`P: Component<Storage = FlaggedStorage<P, DenseVecStorage<P>>> + Position<N> + Send + Sync` - a more complex type parameter which looks a bit intimidating at first but ultimately just requires a `Component`, that also implements the `specs_physics::bodies::Position` *trait* and uses a `FlaggedStorage`. This `Position` `Component` is used to initially place a [RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) in the [nphysics](https://www.nphysics.org/) world and later used to synchronise the updated positions of these bodies back into the [Specs](https://slide-rs.github.io/specs/) world.
+`P: Position<N>` - a type parameter which implements the `specs_physics::bodies::Position` *trait*, requiring also a `Component` implementation with a `FlaggedStorage`. This `Position` `Component` is used to initially place a [RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) in the [nphysics](https://www.nphysics.org/) world and later used to synchronise the updated translation and rotation of these bodies back into the [Specs](https://slide-rs.github.io/specs/) world.
 
-Example for a `Position` `Component`:
+Example for a `Position` `Component`, simply using the "Isometry" type (aka combined translation and rotation structure) directly:
 ```rust
-use specs_physics::bodies::Position;
+use specs::{Component, DenseVecStorage, FlaggedStorage};
+use specs_physics::{
+    bodies::Position,
+    math::Isometry3,
+};
 
-struct Pos {
-    x: f32,
-    y: f32,
-    z: f32,
-}
+struct Position(Isometry3<f32>);
 
-impl Component for Pos {
+impl Component for Position {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-impl Position<f32> for Pos {
-    fn position(&self) -> (f32, f32, f32) {
-        (self.x, self.y, self.z)
+impl Position<f32> for Position {
+    fn as_isometry(&self) -> Isometry3<f32> {
+        self.0
     }
 
-    fn set_position(&mut self, x: f32, y: f32, z: f32) {
-        self.x = x;
-        self.y = y;
-        self.z = z;
+    fn set_isometry(&mut self, isometry: &Isometry3<f32>) {
+        self.0 = isometry;
     }
 }
 ```
