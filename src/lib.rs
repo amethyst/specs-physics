@@ -6,9 +6,11 @@ extern crate nphysics3d as nphysics;
 use std::collections::HashMap;
 
 pub use nalgebra as math;
-use nalgebra::{RealField, Scalar};
 use nphysics::{
+    counters::Counters,
+    material::MaterialsCoefficientsTable,
     object::{BodyHandle, ColliderHandle},
+    solver::IntegrationParameters,
     world::World,
 };
 pub use shrev;
@@ -23,12 +25,12 @@ use specs_hierarchy::Parent;
 
 use self::{
     bodies::Position,
-    math::Vector3,
+    math::{RealField, Vector3},
     systems::{
         PhysicsStepperSystem,
         SyncBodiesToPhysicsSystem,
         SyncCollidersToPhysicsSystem,
-        SyncGravityToPhysicsSystem,
+        SyncParametersToPhysicsSystem,
         SyncPositionsFromPhysicsSystem,
     },
 };
@@ -36,17 +38,67 @@ use self::{
 pub mod bodies;
 pub mod colliders;
 pub mod events;
+pub mod parameters;
 pub mod systems;
 
-/// The `Physics` `Resource` contains the nphysics `World` and a set of
-/// `HashMap`s containing handles to objects of the `World`. These are necessary
-/// so we can properly react to removed `Component`s and clean up our `World`
-/// accordingly.
+/// Resource holding the internal fields where physics computation occurs.
+/// Some inspection methods are exposed to allow debugging.
 pub struct Physics<N: RealField> {
+    /// Core structure where physics computation and synchronization occurs.
+    /// Also contains ColliderWorld.
     pub(crate) world: World<N>,
 
+    /// Hashmap of Entities to internal Physics bodies.
+    /// Necessary for reacting to removed Components.
     pub(crate) body_handles: HashMap<Index, BodyHandle>,
+    /// Hashmap of Entities to internal Collider handles.
+    /// Necessary for reacting to removed Components.
     pub(crate) collider_handles: HashMap<Index, ColliderHandle>,
+}
+
+// Some non-mutating methods for diagnostics and testing
+impl<N: RealField> Physics<N> {
+    /// Creates a new instance of the physics structure.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Reports the internal value for the timestep.
+    /// See also `TimeStep` for setting this value.
+    pub fn timestep(&self) -> N {
+        self.world.timestep()
+    }
+
+    /// Reports the internal value for the gravity.
+    /// See also `Gravity` for setting this value.
+    pub fn gravity(&self) -> &Vector3<N> {
+        self.world.gravity()
+    }
+
+    /// Reports the internal value for prediction distance in collision
+    /// detection. This cannot change and will normally be `0.002m`
+    pub fn prediction(&self) -> N {
+        self.world.prediction()
+    }
+
+    /// Retrieves the performance statistics for the last simulated timestep.
+    /// Profiling is disabled by default.
+    /// See also `PhysicsProfilingEnabled` for enabling performance counters.
+    pub fn performance_counters(&self) -> &Counters {
+        self.world.performance_counters()
+    }
+
+    /// Retrieves the internal parameters for integration.
+    /// See also `PhysicsIntegrationParameters` for setting these parameters.
+    pub fn integration_parameters(&self) -> &IntegrationParameters<N> {
+        self.world.integration_parameters()
+    }
+
+    /// Retrieves the internal lookup table for friction and restitution
+    /// constants. Exposing this for modification is TODO.
+    pub fn materials_coefficients_table(&self) -> &MaterialsCoefficientsTable<N> {
+        self.world.materials_coefficients_table()
+    }
 }
 
 impl<N: RealField> Default for Physics<N> {
@@ -58,20 +110,6 @@ impl<N: RealField> Default for Physics<N> {
         }
     }
 }
-
-/// `Gravity` is a newtype for `Vector3`. It represents a constant
-/// acceleration affecting all physical objects in the scene.
-pub struct Gravity<N: RealField + Scalar>(Vector3<N>);
-
-impl<N: RealField + Scalar> Default for Gravity<N> {
-    fn default() -> Self {
-        Self(Vector3::repeat(N::zero()))
-    }
-}
-
-/// The `TimeStep` is used to set the timestep of the nphysics integration, see
-/// `nphysics::world::World::set_timestep(..)`.
-pub struct TimeStep<N: RealField>(N);
 
 /// The `PhysicsParent` `Component` is used to represent a parent/child
 /// relationship between physics based `Entity`s.
@@ -127,12 +165,12 @@ where
         &["sync_bodies_to_physics_system"],
     );
 
-    // add SyncGravityToPhysicsSystem; this System can be added at any point in time
-    // as it merely handles the gravity value of the nphysics World, thus it has no
-    // other dependencies
+    // add SyncParametersToPhysicsSystem; this System can be added at any point in
+    // time as it merely synchronizes the simulation parameters of the world,
+    // thus it has no other dependencies.
     dispatcher_builder.add(
-        SyncGravityToPhysicsSystem::<N>::default(),
-        "sync_gravity_to_physics_system",
+        SyncParametersToPhysicsSystem::<N>::default(),
+        "sync_parameters_to_physics_system",
         &[],
     );
 
