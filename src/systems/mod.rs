@@ -12,14 +12,14 @@ pub use self::{
     physics_stepper::PhysicsStepperSystem,
     sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
     sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
-    sync_gravity_to_physics::SyncGravityToPhysicsSystem,
+    sync_parameters_to_physics::SyncParametersToPhysicsSystem,
     sync_positions_from_physics::SyncPositionsFromPhysicsSystem,
 };
 
 mod physics_stepper;
 mod sync_bodies_to_physics;
 mod sync_colliders_to_physics;
-mod sync_gravity_to_physics;
+mod sync_parameters_to_physics;
 mod sync_positions_from_physics;
 
 /// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`

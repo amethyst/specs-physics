@@ -16,8 +16,8 @@ use std::marker::PhantomData;
 
 use crate::{
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
+    parameters::TimeStep,
     Physics,
-    TimeStep,
 };
 
 /// The `PhysicsStepperSystem` progresses the nphysics `World`.

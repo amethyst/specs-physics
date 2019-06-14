@@ -201,7 +201,7 @@ fn add_collider<N, P>(
         .unwrap()
         .handle();
 
-    physics_collider.handle = Some(handle.clone());
+    physics_collider.handle = Some(handle);
     physics.collider_handles.insert(id, handle);
 
     info!(
@@ -220,7 +220,7 @@ where
     let collider_world = physics.world.collider_world_mut();
 
     // update collision groups
-    collider_world.set_collision_groups(collider_handle.clone(), physics_collider.collision_groups);
+    collider_world.set_collision_groups(collider_handle, physics_collider.collision_groups);
 
     info!(
         "Updated collider in world with values: {:?}",
