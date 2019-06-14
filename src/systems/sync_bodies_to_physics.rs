@@ -171,7 +171,7 @@ fn add_rigid_body<N, P>(
         .build(&mut physics.world)
         .handle();
 
-    physics_body.handle = Some(handle.clone());
+    physics_body.handle = Some(handle);
     physics.body_handles.insert(id, handle);
 
     info!(
@@ -205,7 +205,7 @@ fn update_rigid_body<N, P>(
             ));
             rigid_body.set_angular_inertia(physics_body.angular_inertia);
             rigid_body.set_mass(physics_body.mass);
-            rigid_body.set_local_center_of_mass(physics_body.local_center_of_mass.clone());
+            rigid_body.set_local_center_of_mass(physics_body.local_center_of_mass);
         }
 
         // the Position was modified, update the position directly
