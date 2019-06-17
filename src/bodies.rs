@@ -1,10 +1,37 @@
-use nalgebra::RealField;
 use nphysics::object::BodyHandle;
 pub use nphysics::object::BodyStatus;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
-use crate::math::{Isometry3, Matrix3, Point3, Vector3};
+use crate::math::{Isometry3, Matrix3, Point3, RealField, Vector3};
 
+pub mod util {
+    use crate::{
+        bodies::Position,
+        math::{Isometry3, RealField},
+    };
+    use specs::{Component, DenseVecStorage, FlaggedStorage};
+
+    pub struct SimplePosition<N: RealField>(pub Isometry3<N>);
+
+    impl<N: RealField> Position<N> for SimplePosition<N> {
+        fn isometry(&self) -> &Isometry3<N> {
+            &self.0
+        }
+
+        fn isometry_mut(&mut self) -> &mut Isometry3<N> {
+            &mut self.0
+        }
+
+        fn set_isometry(&mut self, isometry: &Isometry3<N>) {
+            self.0.rotation = isometry.rotation;
+            self.0.translation = isometry.translation;
+        }
+    }
+
+    impl<N: RealField> Component for SimplePosition<N> {
+        type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+    }
+}
 /// An implementation of the `Position` trait is required for the
 /// synchronisation of the position of Specs and nphysics objects.
 ///
@@ -14,7 +41,8 @@ use crate::math::{Isometry3, Matrix3, Point3, Vector3};
 pub trait Position<N: RealField>:
     Component<Storage = FlaggedStorage<Self, DenseVecStorage<Self>>> + Send + Sync
 {
-    fn as_isometry(&self) -> Isometry3<N>;
+    fn isometry(&self) -> &Isometry3<N>;
+    fn isometry_mut(&mut self) -> &mut Isometry3<N>;
     fn set_isometry(&mut self, isometry: &Isometry3<N>);
 }
 

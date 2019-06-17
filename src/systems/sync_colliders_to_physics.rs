@@ -177,11 +177,11 @@ fn add_collider<N, P>(
     // Position into consideration
     let translation = if parent_part_handle.is_ground() {
         // let scale = 1.0; may be added later
-        let mut iso = position.as_isometry();
+        let iso = &mut position.isometry().clone();
         iso.translation.vector +=
             iso.rotation * physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
         iso.rotation *= physics_collider.offset_from_parent.rotation;
-        iso
+        *iso
     } else {
         physics_collider.offset_from_parent
     };
@@ -250,45 +250,20 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{colliders::Shape, math::Isometry3, PhysicsColliderBuilder};
-    use specs::{
-        world::Builder,
-        Component,
-        DenseVecStorage,
-        DispatcherBuilder,
-        FlaggedStorage,
-        World,
+    use crate::{
+        bodies::util::SimplePosition,
+        colliders::Shape,
+        math::Isometry3,
+        PhysicsColliderBuilder,
     };
-
-    struct SimpleTranslation {
-        x: f32,
-        y: f32,
-        z: f32,
-    }
-
-    impl Component for SimpleTranslation {
-        type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
-    }
-
-    impl Position<f32> for SimpleTranslation {
-        fn as_isometry(&self) -> Isometry3<f32> {
-            Isometry3::translation(self.x, self.y, self.z)
-        }
-
-        fn set_isometry(&mut self, isometry: &Isometry3<f32>) {
-            let translation = isometry.translation.vector;
-            self.x = translation.x;
-            self.y = translation.y;
-            self.z = translation.z;
-        }
-    }
+    use specs::{world::Builder, DispatcherBuilder, World};
 
     #[test]
     fn add_collider() {
         let mut world = World::new();
         let mut dispatcher = DispatcherBuilder::new()
             .with(
-                SyncCollidersToPhysicsSystem::<f32, SimpleTranslation>::default(),
+                SyncCollidersToPhysicsSystem::<f32, SimplePosition<f32>>::default(),
                 "sync_colliders_to_physics_system",
                 &[],
             )
@@ -299,11 +274,9 @@ mod tests {
         // dispatcher
         world
             .create_entity()
-            .with(SimpleTranslation {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            })
+            .with(SimplePosition::<f32>(Isometry3::<f32>::translation(
+                1.0, 1.0, 1.0,
+            )))
             .with(PhysicsColliderBuilder::<f32>::from(Shape::Circle(5.0)).build())
             .build();
         dispatcher.dispatch(&mut world.res);
