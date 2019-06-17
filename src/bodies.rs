@@ -22,9 +22,10 @@ pub mod util {
             &mut self.0
         }
 
-        fn set_isometry(&mut self, isometry: &Isometry3<N>) {
+        fn set_isometry(&mut self, isometry: &Isometry3<N>) -> &mut Self {
             self.0.rotation = isometry.rotation;
             self.0.translation = isometry.translation;
+            self
         }
     }
 
@@ -32,6 +33,7 @@ pub mod util {
         type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
     }
 }
+
 /// An implementation of the `Position` trait is required for the
 /// synchronisation of the position of Specs and nphysics objects.
 ///
@@ -43,7 +45,22 @@ pub trait Position<N: RealField>:
 {
     fn isometry(&self) -> &Isometry3<N>;
     fn isometry_mut(&mut self) -> &mut Isometry3<N>;
-    fn set_isometry(&mut self, isometry: &Isometry3<N>);
+    fn set_isometry(&mut self, isometry: &Isometry3<N>) -> &mut Self;
+}
+
+#[cfg(feature = "amethyst_core")]
+impl Position<amethyst_core::Float> for amethyst_core::Transform {
+    fn isometry(&self) -> &Isometry3<amethyst_core::Float> {
+        self.isometry()
+    }
+
+    fn isometry_mut(&mut self) -> &mut Isometry3<amethyst_core::Float> {
+        self.isometry_mut()
+    }
+
+    fn set_isometry(&mut self, isometry: &Isometry3<amethyst_core::Float>) -> &mut Self {
+        self.set_isometry(*isometry)
+    }
 }
 
 /// The `PhysicsBody` `Component` represents a `PhysicsWorld` `RigidBody` in

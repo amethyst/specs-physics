@@ -42,8 +42,9 @@
 //!         &mut self.0
 //!     }
 //!
-//!     fn set_isometry(&mut self, isometry: &Isometry3<f32>) {
+//!     fn set_isometry(&mut self, isometry: &Isometry3<f32>) -> &mut Pos {
 //!         self.0 = *isometry;
+//!         self
 //!     }
 //! }
 //! ```
