@@ -122,7 +122,6 @@ The following `System`s currently exist and should be added to your `Dispatcher`
 
 1. `specs_physics::systems::SyncBodiesToPhysicsSystem` - handles the creation, modification and removal of [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) based on the `PhysicsBody` `Component` and an implementation of the `Position` *trait*.
 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles the creation, modification and removal of [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) based on the `PhysicsCollider` `Component`. This `System` depends on `SyncBodiesToPhysicsSystem` as [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) can depend on [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies).
-3. `specs_physics::systems::SyncGravityToPhysicsSystem` - handles the modification of the [nphysics](https://www.nphysics.org/) `World`s gravity.
 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression of the [nphysics](https://www.nphysics.org/) `World` and causes objects to actually move and change their position. This `System` is the backbone for collision detection.
 5. `specs_physics::systems::SyncPositionsFromPhysicsSystem` - handles the synchronisation of [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) positions back into the [Specs](https://slide-rs.github.io/specs/) `Component`s. This `System` also utilises the `Position` *trait* implementation.
 
@@ -141,17 +140,11 @@ let dispatcher = DispatcherBuilder::new()
         &["sync_bodies_to_physics_system"],
     )
     .with(
-        SyncGravityToPhysicsSystem::<f32>::default(),
-        "sync_gravity_to_physics_system",
-        &[],
-    )
-    .with(
         PhysicsStepperSystem::<f32>::default(),
         "physics_stepper_system",
         &[
             "sync_bodies_to_physics_system",
             "sync_colliders_to_physics_system",
-            "sync_gravity_to_physics_system",
         ],
     )
     .with(

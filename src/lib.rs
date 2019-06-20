@@ -183,7 +183,6 @@ where
         &[
             "sync_bodies_to_physics_system",
             "sync_colliders_to_physics_system",
-            "sync_gravity_to_physics_system",
         ],
     );
 
