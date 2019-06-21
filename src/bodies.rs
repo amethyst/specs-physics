@@ -120,7 +120,7 @@ impl<N: RealField> PhysicsBody<N> {
 
     pub(crate) fn update_from_physics_world(&mut self, rigid_body: &RigidBody<N>) -> &mut Self {
         // These two probably won't be modified but hey
-        self.gravity_enabled = rigid_body.gravity_enabled(); 
+        self.gravity_enabled = rigid_body.gravity_enabled();
         self.body_status = rigid_body.status();
 
         self.velocity = *rigid_body.velocity();

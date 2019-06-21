@@ -10,17 +10,17 @@ use std::ops::Deref;
 
 pub use self::{
     physics_stepper::PhysicsStepperSystem,
+    sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
     sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
     sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
     sync_parameters_to_physics::SyncParametersToPhysicsSystem,
-    sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
 };
 
 mod physics_stepper;
+mod sync_bodies_from_physics;
 mod sync_bodies_to_physics;
 mod sync_colliders_to_physics;
 mod sync_parameters_to_physics;
-mod sync_bodies_from_physics;
 
 /// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
 /// and returns the results in a `BitSet`.

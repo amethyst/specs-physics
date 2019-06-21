@@ -123,10 +123,10 @@
 //!     bodies::util::SimplePosition,
 //!     systems::{
 //!         PhysicsStepperSystem,
+//!         SyncBodiesFromPhysicsSystem,
 //!         SyncBodiesToPhysicsSystem,
 //!         SyncCollidersToPhysicsSystem,
 //!         SyncParametersToPhysicsSystem,
-//!         SyncBodiesFromPhysicsSystem,
 //!     },
 //! };
 //!
@@ -200,10 +200,10 @@ use self::{
     math::{RealField, Vector3},
     systems::{
         PhysicsStepperSystem,
+        SyncBodiesFromPhysicsSystem,
         SyncBodiesToPhysicsSystem,
         SyncCollidersToPhysicsSystem,
         SyncParametersToPhysicsSystem,
-        SyncBodiesFromPhysicsSystem,
     },
 };
 
