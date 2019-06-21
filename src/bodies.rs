@@ -1,8 +1,11 @@
 use nphysics::object::BodyHandle;
-pub use nphysics::object::BodyStatus;
+pub use nphysics::{
+    algebra::{Force3, Velocity3},
+    object::BodyStatus,
+};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
-use crate::math::{Isometry3, Matrix3, Point3, RealField, Vector3};
+use crate::math::{Isometry3, Matrix3, Point3, RealField};
 
 pub mod util {
     use crate::{
@@ -71,14 +74,32 @@ pub struct PhysicsBody<N: RealField> {
     pub(crate) handle: Option<BodyHandle>,
     pub gravity_enabled: bool,
     pub body_status: BodyStatus,
-    pub velocity: Vector3<N>,
+    pub velocity: Velocity3<N>,
     pub angular_inertia: Matrix3<N>,
     pub mass: N,
     pub local_center_of_mass: Point3<N>,
+    external_forces: Force3<N>,
 }
 
 impl<N: RealField> Component for PhysicsBody<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+
+impl<N: RealField> PhysicsBody<N> {
+    pub fn check_external_force(&self) -> &Force3<N> {
+        &self.external_forces
+    }
+
+    pub fn apply_external_force(&mut self, force: &Force3<N>) -> &mut Self {
+        self.external_forces += *force;
+        self
+    }
+
+    pub(crate) fn drain_external_force(&mut self) -> Force3<N> {
+        let value = self.external_forces;
+        self.external_forces = Force3::<N>::zero();
+        value
+    }
 }
 
 /// The `PhysicsBodyBuilder` implements the builder pattern for `PhysicsBody`s
@@ -89,14 +110,14 @@ impl<N: RealField> Component for PhysicsBody<N> {
 ///
 /// ```rust
 /// use specs_physics::{
-///     bodies::BodyStatus,
-///     math::{Matrix3, Point3, Vector3},
+///     bodies::{BodyStatus, Velocity3},
+///     math::{Matrix3, Point3},
 ///     PhysicsBodyBuilder,
 /// };
 ///
 /// let physics_body = PhysicsBodyBuilder::from(BodyStatus::Dynamic)
 ///     .gravity_enabled(true)
-///     .velocity(Vector3::new(1.0, 1.0, 1.0))
+///     .velocity(Velocity3::linear(1.0, 1.0, 1.0))
 ///     .angular_inertia(Matrix3::from_diagonal_element(3.0))
 ///     .mass(1.3)
 ///     .local_center_of_mass(Point3::new(0.0, 0.0, 0.0))
@@ -105,7 +126,7 @@ impl<N: RealField> Component for PhysicsBody<N> {
 pub struct PhysicsBodyBuilder<N: RealField> {
     gravity_enabled: bool,
     body_status: BodyStatus,
-    velocity: Vector3<N>,
+    velocity: Velocity3<N>,
     angular_inertia: Matrix3<N>,
     mass: N,
     local_center_of_mass: Point3<N>,
@@ -118,10 +139,10 @@ impl<N: RealField> From<BodyStatus> for PhysicsBodyBuilder<N> {
         Self {
             gravity_enabled: false,
             body_status,
-            velocity: Vector3::repeat(N::zero()),
+            velocity: Velocity3::zero(),
             angular_inertia: Matrix3::zeros(),
             mass: N::from_f32(1.2).unwrap(),
-            local_center_of_mass: Point3::new(N::zero(), N::zero(), N::zero()),
+            local_center_of_mass: Point3::origin(),
         }
     }
 }
@@ -134,7 +155,7 @@ impl<N: RealField> PhysicsBodyBuilder<N> {
     }
 
     // Sets the `velocity` value of the `PhysicsBodyBuilder`.
-    pub fn velocity(mut self, velocity: Vector3<N>) -> Self {
+    pub fn velocity(mut self, velocity: Velocity3<N>) -> Self {
         self.velocity = velocity;
         self
     }
@@ -168,6 +189,7 @@ impl<N: RealField> PhysicsBodyBuilder<N> {
             angular_inertia: self.angular_inertia,
             mass: self.mass,
             local_center_of_mass: self.local_center_of_mass,
+            external_forces: Force3::zero(),
         }
     }
 }

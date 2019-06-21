@@ -4,9 +4,9 @@ extern crate simple_logger;
 
 use specs::world::{Builder, World};
 use specs_physics::{
-    bodies::{util::SimplePosition, BodyStatus},
+    bodies::{util::SimplePosition, BodyStatus, Velocity3},
     colliders::Shape,
-    math::{Isometry3, Vector3},
+    math::Isometry3,
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,
@@ -32,7 +32,7 @@ fn main() {
         )))
         .with(
             PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic)
-                .velocity(Vector3::new(1.0, 0.0, 0.0))
+                .velocity(Velocity3::linear(1.0, 0.0, 0.0))
                 .build(),
         )
         .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(2.0, 2.0, 1.0)).build())

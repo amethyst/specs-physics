@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use nalgebra::RealField;
 use nphysics::{
-    math::Velocity,
+    algebra::ForceType,
     object::{Body, RigidBodyDesc},
 };
 use specs::{
@@ -151,19 +151,13 @@ fn add_rigid_body<N, P>(
         physics.world.remove_bodies(&[body_handle]);
     }
 
-    let delta_time = physics.world.timestep();
-
     // create a new RigidBody in the PhysicsWorld and store its
     // handle for later usage
     let handle = RigidBodyDesc::new()
         .position(*position.isometry())
         .gravity_enabled(physics_body.gravity_enabled)
         .status(physics_body.body_status)
-        .velocity(Velocity::linear(
-            physics_body.velocity.x / delta_time,
-            physics_body.velocity.y / delta_time,
-            physics_body.velocity.z / delta_time,
-        ))
+        .velocity(physics_body.velocity)
         .angular_inertia(physics_body.angular_inertia)
         .mass(physics_body.mass)
         .local_center_of_mass(physics_body.local_center_of_mass)
@@ -191,21 +185,16 @@ fn update_rigid_body<N, P>(
     N: RealField,
     P: Position<N>,
 {
-    let delta_time = physics.world.timestep();
-
     if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
         // the PhysicsBody was modified, update everything but the position
         if modified_physics_bodies.contains(id) {
             rigid_body.enable_gravity(physics_body.gravity_enabled);
             rigid_body.set_status(physics_body.body_status);
-            rigid_body.set_velocity(Velocity::linear(
-                physics_body.velocity.x / delta_time,
-                physics_body.velocity.y / delta_time,
-                physics_body.velocity.z / delta_time,
-            ));
+            rigid_body.set_velocity(physics_body.velocity);
             rigid_body.set_angular_inertia(physics_body.angular_inertia);
             rigid_body.set_mass(physics_body.mass);
             rigid_body.set_local_center_of_mass(physics_body.local_center_of_mass);
+            rigid_body.apply_force(0, &physics_body.drain_external_force(), ForceType::Force, true);
         }
 
         // the Position was modified, update the position directly

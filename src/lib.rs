@@ -59,14 +59,14 @@
 //!
 //! ```rust
 //! use specs_physics::{
-//!     bodies::BodyStatus,
-//!     math::{Matrix3, Point3, Vector3},
+//!     bodies::{BodyStatus, Velocity3},
+//!     math::{Matrix3, Point3},
 //!     PhysicsBodyBuilder,
 //! };
 //!
 //! let physics_body = PhysicsBodyBuilder::from(BodyStatus::Dynamic)
 //!     .gravity_enabled(true)
-//!     .velocity(Vector3::new(1.0, 1.0, 1.0))
+//!     .velocity(Velocity3::linear(1.0, 1.0, 1.0))
 //!     .angular_inertia(Matrix3::from_diagonal_element(3.0))
 //!     .mass(1.3)
 //!     .local_center_of_mass(Point3::new(0.0, 0.0, 0.0))
