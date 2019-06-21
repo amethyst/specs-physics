@@ -4,8 +4,8 @@ extern crate simple_logger;
 use specs::world::{Builder, World};
 use specs_physics::{
     colliders::Shape,
-    math::Isometry3,
-    physics::object::BodyStatus,
+    nalgebra::Isometry3,
+    nphysics::object::BodyStatus,
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,

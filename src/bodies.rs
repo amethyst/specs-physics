@@ -1,8 +1,8 @@
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use crate::{
-    math::{Isometry3, Matrix3, Point3, RealField},
-    physics::{
+    nalgebra::{Isometry3, Matrix3, Point3, RealField},
+    nphysics::{
         algebra::{Force3, ForceType, Velocity3},
         object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc},
     },
@@ -13,7 +13,7 @@ pub mod util {
 
     use crate::{
         bodies::Position,
-        math::{Isometry3, RealField},
+        nalgebra::{Isometry3, RealField},
     };
 
     pub struct SimplePosition<N: RealField>(pub Isometry3<N>);
@@ -148,8 +148,8 @@ impl<N: RealField> PhysicsBody<N> {
 ///
 /// ```rust
 /// use specs_physics::{
-///     math::{Matrix3, Point3},
-///     physics::{algebra::Velocity3, object::BodyStatus},
+///     nalgebra::{Matrix3, Point3},
+///     nphysics::{algebra::Velocity3, object::BodyStatus},
 ///     PhysicsBodyBuilder,
 /// };
 ///

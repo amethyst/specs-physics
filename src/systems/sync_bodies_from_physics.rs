@@ -4,7 +4,7 @@ use specs::{Join, ReadExpect, Resources, System, SystemData, WriteStorage};
 
 use crate::{
     bodies::{PhysicsBody, Position},
-    math::RealField,
+    nalgebra::RealField,
     Physics,
 };
 

@@ -13,11 +13,11 @@ use specs::{
 };
 
 use crate::{
-    collision::{events::ContactEvent as NContactEvent, world::CollisionObjectHandle},
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
-    math::RealField,
+    nalgebra::RealField,
+    ncollide::{events::ContactEvent as NContactEvent, world::CollisionObjectHandle},
+    nphysics::world::ColliderWorld,
     parameters::TimeStep,
-    physics::world::ColliderWorld,
     Physics,
 };
 

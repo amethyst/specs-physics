@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use specs::{Read, Resources, System, SystemData, WriteExpect};
 
 use crate::{
-    math::RealField,
+    nalgebra::RealField,
     parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
     Physics,
 };
@@ -82,7 +82,7 @@ mod tests {
     use specs::{DispatcherBuilder, World};
 
     use crate::{
-        math::Vector3,
+        nalgebra::Vector3,
         parameters::Gravity,
         systems::SyncParametersToPhysicsSystem,
         Physics,

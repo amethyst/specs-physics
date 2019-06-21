@@ -16,8 +16,8 @@ use specs::{
 use crate::{
     bodies::Position,
     colliders::PhysicsCollider,
-    math::RealField,
-    physics::object::{BodyPartHandle, ColliderDesc},
+    nalgebra::RealField,
+    nphysics::object::{BodyPartHandle, ColliderDesc},
     Physics,
     PhysicsParent,
 };
@@ -254,15 +254,16 @@ where
 
 #[cfg(test)]
 mod tests {
+    use specs::{world::Builder, DispatcherBuilder, World};
+
     use crate::{
-        bodies::util::SimplePosition,
         colliders::Shape,
-        math::Isometry3,
+        nalgebra::Isometry3,
         systems::SyncCollidersToPhysicsSystem,
         Physics,
         PhysicsColliderBuilder,
+        SimplePosition,
     };
-    use specs::{world::Builder, DispatcherBuilder, World};
 
     #[test]
     fn add_collider() {

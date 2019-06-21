@@ -16,7 +16,7 @@ use specs::{
 
 use crate::{
     bodies::{PhysicsBody, Position},
-    math::RealField,
+    nalgebra::RealField,
     Physics,
 };
 
@@ -209,8 +209,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        math::Isometry3,
-        physics::object::BodyStatus,
+        nalgebra::Isometry3,
+        nphysics::object::BodyStatus,
         systems::SyncBodiesToPhysicsSystem,
         Physics,
         PhysicsBodyBuilder,

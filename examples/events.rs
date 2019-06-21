@@ -6,8 +6,8 @@ use specs::world::{Builder, World};
 use specs_physics::{
     colliders::Shape,
     events::ContactEvents,
-    math::Isometry3,
-    physics::{algebra::Velocity3, object::BodyStatus},
+    nalgebra::Isometry3,
+    nphysics::{algebra::Velocity3, object::BodyStatus},
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,

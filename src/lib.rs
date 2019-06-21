@@ -25,7 +25,7 @@
 //! combined translation and rotation structure) directly:
 //! ```rust
 //! use specs::{Component, DenseVecStorage, FlaggedStorage};
-//! use specs_physics::{bodies::Position, math::Isometry3};
+//! use specs_physics::{bodies::Position, nalgebra::Isometry3};
 //!
 //! struct Pos(pub Isometry3<f32>);
 //!
@@ -59,8 +59,8 @@
 //!
 //! ```rust
 //! use specs_physics::{
-//!     math::{Matrix3, Point3},
-//!     physics::{algebra::Velocity3, object::BodyStatus},
+//!     nalgebra::{Matrix3, Point3},
+//!     nphysics::{algebra::Velocity3, object::BodyStatus},
 //!     PhysicsBodyBuilder,
 //! };
 //!
@@ -82,9 +82,9 @@
 //! ```rust
 //! use specs_physics::{
 //!     colliders::Shape,
-//!     collision::world::CollisionGroups,
-//!     math::Isometry3,
-//!     physics::material::{BasicMaterial, MaterialHandle},
+//!     nalgebra::Isometry3,
+//!     ncollide::world::CollisionGroups,
+//!     nphysics::material::{BasicMaterial, MaterialHandle},
 //!     PhysicsColliderBuilder,
 //! };
 //!
@@ -118,7 +118,6 @@
 //! ```rust
 //! use specs::DispatcherBuilder;
 //! use specs_physics::{
-//!     bodies::util::SimplePosition,
 //!     systems::{
 //!         PhysicsStepperSystem,
 //!         SyncBodiesFromPhysicsSystem,
@@ -126,6 +125,7 @@
 //!         SyncCollidersToPhysicsSystem,
 //!         SyncParametersToPhysicsSystem,
 //!     },
+//!     SimplePosition,
 //! };
 //!
 //! let dispatcher = DispatcherBuilder::new()
@@ -171,21 +171,13 @@
 #[macro_use]
 extern crate log;
 
-pub use nalgebra as math;
-pub use ncollide3d as collision;
-pub use nphysics3d as physics;
+pub use nalgebra;
+pub use ncollide3d as ncollide;
+pub use nphysics3d as nphysics;
 pub use shrev;
 
 use std::collections::HashMap;
 
-use math::{RealField, Vector3};
-use physics::{
-    counters::Counters,
-    material::MaterialsCoefficientsTable,
-    object::{BodyHandle, ColliderHandle},
-    solver::IntegrationParameters,
-    world::World,
-};
 use specs::{
     world::Index,
     Component,
@@ -204,6 +196,14 @@ pub use self::{
 
 use self::{
     bodies::Position,
+    nalgebra::{RealField, Vector3},
+    nphysics::{
+        counters::Counters,
+        material::MaterialsCoefficientsTable,
+        object::{BodyHandle, ColliderHandle},
+        solver::IntegrationParameters,
+        world::World,
+    },
     systems::{
         PhysicsStepperSystem,
         SyncBodiesFromPhysicsSystem,

@@ -3,12 +3,12 @@ use std::{f32::consts::PI, fmt};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use crate::{
-    collision::{
+    nalgebra::{Isometry3, RealField, Vector3},
+    ncollide::{
         shape::{Ball, Cuboid, ShapeHandle},
         world::CollisionGroups,
     },
-    math::{Isometry3, RealField, Vector3},
-    physics::{
+    nphysics::{
         material::{BasicMaterial, MaterialHandle},
         object::ColliderHandle,
     },
@@ -105,9 +105,9 @@ impl<N: RealField> PhysicsCollider<N> {
 /// ```rust
 /// use specs_physics::{
 ///     colliders::Shape,
-///     collision::world::CollisionGroups,
-///     math::Isometry3,
-///     physics::material::{BasicMaterial, MaterialHandle},
+///     nalgebra::Isometry3,
+///     ncollide::world::CollisionGroups,
+///     nphysics::material::{BasicMaterial, MaterialHandle},
 ///     PhysicsColliderBuilder,
 /// };
 ///
