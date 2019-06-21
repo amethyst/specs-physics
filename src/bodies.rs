@@ -1,6 +1,6 @@
-use nphysics::object::BodyHandle;
+use nphysics::object::{Body, BodyHandle, BodyPart, RigidBody, RigidBodyDesc};
 pub use nphysics::{
-    algebra::{Force3, Velocity3},
+    algebra::{Force3, ForceType, Velocity3},
     object::BodyStatus,
 };
 use specs::{Component, DenseVecStorage, FlaggedStorage};
@@ -95,7 +95,43 @@ impl<N: RealField> PhysicsBody<N> {
         self
     }
 
-    pub(crate) fn drain_external_force(&mut self) -> Force3<N> {
+    /// For creating new rigid body from this component's values
+    pub(crate) fn to_rigid_body_desc(&self) -> RigidBodyDesc<N> {
+        RigidBodyDesc::new()
+            .gravity_enabled(self.gravity_enabled)
+            .status(self.body_status)
+            .velocity(self.velocity)
+            .angular_inertia(self.angular_inertia)
+            .mass(self.mass)
+            .local_center_of_mass(self.local_center_of_mass)
+    }
+
+    /// Note: applies forces by draining external force property
+    pub(crate) fn apply_to_physics_world(&mut self, rigid_body: &mut RigidBody<N>) -> &mut Self {
+        rigid_body.enable_gravity(self.gravity_enabled);
+        rigid_body.set_status(self.body_status);
+        rigid_body.set_velocity(self.velocity);
+        rigid_body.set_angular_inertia(self.angular_inertia);
+        rigid_body.set_mass(self.mass);
+        rigid_body.set_local_center_of_mass(self.local_center_of_mass);
+        rigid_body.apply_force(0, &self.drain_external_force(), ForceType::Force, true);
+        self
+    }
+
+    pub(crate) fn update_from_physics_world(&mut self, rigid_body: &RigidBody<N>) -> &mut Self {
+        // These two probably won't be modified but hey
+        self.gravity_enabled = rigid_body.gravity_enabled(); 
+        self.body_status = rigid_body.status();
+
+        self.velocity = *rigid_body.velocity();
+
+        let local_inertia = rigid_body.local_inertia();
+        self.angular_inertia = local_inertia.angular;
+        self.mass = local_inertia.linear;
+        self
+    }
+
+    fn drain_external_force(&mut self) -> Force3<N> {
         let value = self.external_forces;
         self.external_forces = Force3::<N>::zero();
         value

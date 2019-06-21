@@ -35,7 +35,7 @@ Full *TODO* sheet can be found in [this nphysics issue][todo]
 - [x] RigidBody Components
 - [x] Collider Components
 - [x] Proximity and Contact EventChannels
-- [ ] External force property
+- [x] External force property
 - [x] `log` based logging
 - [ ] Handling Body Activation & Sleeping
 - [ ] Multibody-based Component Joints

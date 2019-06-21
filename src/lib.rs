@@ -113,7 +113,7 @@
 //! 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles the creation, modification and removal of [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) based on the `PhysicsCollider` `Component`. This `System` depends on `SyncBodiesToPhysicsSystem` as [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) can depend on [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies).
 //! 3. `specs_physics::systems::SyncParametersToPhysicsSystem` - handles the modification of the [nphysics](https://www.nphysics.org/) `World`s parameters.
 //! 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression of the [nphysics](https://www.nphysics.org/) `World` and causes objects to actually move and change their position. This `System` is the backbone for collision detection.
-//! 5. `specs_physics::systems::SyncPositionsFromPhysicsSystem` - handles the synchronisation of [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) positions back into the [Specs](https://slide-rs.github.io/specs/) `Component`s. This `System` also utilises the `Position` *trait* implementation.
+//! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` - handles the synchronisation of [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) positions and dynamics back into the [Specs](https://slide-rs.github.io/specs/) `Component`s. This `System` also utilises the `Position` *trait* implementation.
 //!
 //! An example `Dispatcher` with all required `System`s:
 //!
@@ -126,7 +126,7 @@
 //!         SyncBodiesToPhysicsSystem,
 //!         SyncCollidersToPhysicsSystem,
 //!         SyncParametersToPhysicsSystem,
-//!         SyncPositionsFromPhysicsSystem,
+//!         SyncBodiesFromPhysicsSystem,
 //!     },
 //! };
 //!
@@ -156,8 +156,8 @@
 //!         ],
 //!     )
 //!     .with(
-//!         SyncPositionsFromPhysicsSystem::<f32, SimplePosition<f32>>::default(),
-//!         "sync_positions_from_physics_system",
+//!         SyncBodiesFromPhysicsSystem::<f32, SimplePosition<f32>>::default(),
+//!         "sync_bodies_from_physics_system",
 //!         &["physics_stepper_system"],
 //!     )
 //!     .build();
@@ -203,7 +203,7 @@ use self::{
         SyncBodiesToPhysicsSystem,
         SyncCollidersToPhysicsSystem,
         SyncParametersToPhysicsSystem,
-        SyncPositionsFromPhysicsSystem,
+        SyncBodiesFromPhysicsSystem,
     },
 };
 
@@ -365,12 +365,12 @@ where
         ],
     );
 
-    // add SyncPositionsFromPhysicsSystem last as it handles the
+    // add SyncBodiesFromPhysicsSystem last as it handles the
     // synchronisation between nphysics World bodies and the Position
     // components; this depends on the PhysicsStepperSystem
     dispatcher_builder.add(
-        SyncPositionsFromPhysicsSystem::<N, P>::default(),
-        "sync_positions_from_physics_system",
+        SyncBodiesFromPhysicsSystem::<N, P>::default(),
+        "sync_bodies_from_physics_system",
         &["physics_stepper_system"],
     );
 }
