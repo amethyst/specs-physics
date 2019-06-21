@@ -2,9 +2,12 @@
 //! Resources for modifying the various simulation parameters of the
 //! nphysics World.
 
-use crate::math::{self as na, RealField, Scalar, Vector3};
-use nphysics::solver::IntegrationParameters;
 use std::ops::{Deref, DerefMut};
+
+use crate::{
+    math::{self, RealField, Scalar, Vector3},
+    physics::solver::IntegrationParameters,
+};
 
 /// The `TimeStep` is used to set the timestep of the nphysics integration, see
 /// `nphysics::world::World::set_timestep(..)`.
@@ -34,7 +37,7 @@ impl<N: RealField> DerefMut for TimeStep<N> {
 
 impl<N: RealField> Default for TimeStep<N> {
     fn default() -> Self {
-        Self(na::convert(1.0 / 60.0))
+        Self(math::convert(1.0 / 60.0))
     }
 }
 
@@ -186,14 +189,14 @@ impl<N: RealField> PartialEq<IntegrationParameters<N>> for PhysicsIntegrationPar
 impl<N: RealField> Default for PhysicsIntegrationParameters<N> {
     fn default() -> Self {
         PhysicsIntegrationParameters {
-            error_reduction_parameter: na::convert(0.2),
-            warmstart_coefficient: na::convert(1.0),
-            restitution_velocity_threshold: na::convert(1.0),
-            allowed_linear_error: na::convert(0.001),
-            allowed_angular_error: na::convert(0.001),
-            max_linear_correction: na::convert(100.0),
-            max_angular_correction: na::convert(0.2),
-            max_stabilization_multiplier: na::convert(0.2),
+            error_reduction_parameter: math::convert(0.2),
+            warmstart_coefficient: math::convert(1.0),
+            restitution_velocity_threshold: math::convert(1.0),
+            allowed_linear_error: math::convert(0.001),
+            allowed_angular_error: math::convert(0.001),
+            max_linear_correction: math::convert(100.0),
+            max_angular_correction: math::convert(0.2),
+            max_stabilization_multiplier: math::convert(0.2),
             max_velocity_iterations: 8,
             max_position_iterations: 3,
         }

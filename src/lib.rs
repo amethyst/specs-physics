@@ -59,8 +59,8 @@
 //!
 //! ```rust
 //! use specs_physics::{
-//!     bodies::{BodyStatus, Velocity3},
 //!     math::{Matrix3, Point3},
+//!     physics::{algebra::Velocity3, object::BodyStatus},
 //!     PhysicsBodyBuilder,
 //! };
 //!
@@ -81,12 +81,10 @@
 //!
 //! ```rust
 //! use specs_physics::{
-//!     colliders::{
-//!         material::{BasicMaterial, MaterialHandle},
-//!         CollisionGroups,
-//!         Shape,
-//!     },
+//!     colliders::Shape,
+//!     collision::world::CollisionGroups,
 //!     math::Isometry3,
+//!     physics::material::{BasicMaterial, MaterialHandle},
 //!     PhysicsColliderBuilder,
 //! };
 //!
@@ -172,32 +170,40 @@
 
 #[macro_use]
 extern crate log;
-extern crate ncollide3d as ncollide;
-extern crate nphysics3d as nphysics;
+
+pub use nalgebra as math;
+pub use ncollide3d as collision;
+pub use nphysics3d as physics;
+pub use shrev;
 
 use std::collections::HashMap;
 
-pub use nalgebra as math;
-use nphysics::{
+use math::{RealField, Vector3};
+use physics::{
     counters::Counters,
     material::MaterialsCoefficientsTable,
     object::{BodyHandle, ColliderHandle},
     solver::IntegrationParameters,
     world::World,
 };
-pub use shrev;
-use specs::world::Index;
+use specs::{
+    world::Index,
+    Component,
+    DenseVecStorage,
+    Dispatcher,
+    DispatcherBuilder,
+    Entity,
+    FlaggedStorage,
+};
+use specs_hierarchy::Parent;
 
 pub use self::{
-    bodies::{PhysicsBody, PhysicsBodyBuilder},
+    bodies::{util::SimplePosition, PhysicsBody, PhysicsBodyBuilder},
     colliders::{PhysicsCollider, PhysicsColliderBuilder},
 };
-use specs::{Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity, FlaggedStorage};
-use specs_hierarchy::Parent;
 
 use self::{
     bodies::Position,
-    math::{RealField, Vector3},
     systems::{
         PhysicsStepperSystem,
         SyncBodiesFromPhysicsSystem,

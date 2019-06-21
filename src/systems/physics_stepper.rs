@@ -1,6 +1,5 @@
-use nalgebra::RealField;
-use ncollide::{events::ContactEvent as NContactEvent, world::CollisionObjectHandle};
-use nphysics::world::ColliderWorld;
+use std::marker::PhantomData;
+
 use specs::{
     world::Index,
     Entities,
@@ -12,11 +11,13 @@ use specs::{
     Write,
     WriteExpect,
 };
-use std::marker::PhantomData;
 
 use crate::{
+    collision::{events::ContactEvent as NContactEvent, world::CollisionObjectHandle},
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
+    math::RealField,
     parameters::TimeStep,
+    physics::world::ColliderWorld,
     Physics,
 };
 

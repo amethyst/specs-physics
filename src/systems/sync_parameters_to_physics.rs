@@ -1,8 +1,12 @@
-use nalgebra::RealField;
+use std::marker::PhantomData;
+
 use specs::{Read, Resources, System, SystemData, WriteExpect};
 
-use crate::{parameters::*, Physics};
-use std::marker::PhantomData;
+use crate::{
+    math::RealField,
+    parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
+    Physics,
+};
 
 /// The `SyncParametersToPhysicsSystem` synchronises the simulation parameters
 /// with the nphysics `World`.
@@ -75,10 +79,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::Physics;
-    use nalgebra::Vector3;
     use specs::{DispatcherBuilder, World};
+
+    use crate::{
+        math::Vector3,
+        parameters::Gravity,
+        systems::SyncParametersToPhysicsSystem,
+        Physics,
+    };
 
     #[test]
     fn update_gravity() {

@@ -1,4 +1,5 @@
-use nalgebra::RealField;
+use std::marker::PhantomData;
+
 use specs::{
     storage::ComponentEvent,
     world::Index,
@@ -11,11 +12,15 @@ use specs::{
     WriteExpect,
     WriteStorage,
 };
-use std::marker::PhantomData;
 
-use nphysics::object::{BodyPartHandle, ColliderDesc};
-
-use crate::{bodies::Position, colliders::PhysicsCollider, Physics, PhysicsParent};
+use crate::{
+    bodies::Position,
+    colliders::PhysicsCollider,
+    math::RealField,
+    physics::object::{BodyPartHandle, ColliderDesc},
+    Physics,
+    PhysicsParent,
+};
 
 use super::iterate_component_events;
 
@@ -249,11 +254,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{
         bodies::util::SimplePosition,
         colliders::Shape,
         math::Isometry3,
+        systems::SyncCollidersToPhysicsSystem,
+        Physics,
         PhysicsColliderBuilder,
     };
     use specs::{world::Builder, DispatcherBuilder, World};

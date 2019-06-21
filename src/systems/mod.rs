@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use specs::{
     storage::{ComponentEvent, MaskedStorage},
     BitSet,
@@ -6,7 +8,6 @@ use specs::{
     Storage,
     Tracked,
 };
-use std::ops::Deref;
 
 pub use self::{
     physics_stepper::PhysicsStepperSystem,

@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use nalgebra::RealField;
 use specs::{
     storage::ComponentEvent,
     world::Index,
@@ -17,6 +16,7 @@ use specs::{
 
 use crate::{
     bodies::{PhysicsBody, Position},
+    math::RealField,
     Physics,
 };
 
@@ -208,12 +208,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{
-        bodies::{util::SimplePosition, BodyStatus},
         math::Isometry3,
+        physics::object::BodyStatus,
+        systems::SyncBodiesToPhysicsSystem,
+        Physics,
         PhysicsBodyBuilder,
+        SimplePosition,
     };
+
     use specs::{world::Builder, DispatcherBuilder, World};
 
     #[test]

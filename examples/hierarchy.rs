@@ -3,13 +3,14 @@ extern crate simple_logger;
 
 use specs::world::{Builder, World};
 use specs_physics::{
-    bodies::{util::SimplePosition, BodyStatus},
     colliders::Shape,
     math::Isometry3,
+    physics::object::BodyStatus,
     physics_dispatcher,
     PhysicsBodyBuilder,
     PhysicsColliderBuilder,
     PhysicsParent,
+    SimplePosition,
 };
 
 fn main() {
