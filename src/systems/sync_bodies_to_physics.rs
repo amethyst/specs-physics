@@ -1,10 +1,5 @@
 use std::marker::PhantomData;
 
-use nalgebra::RealField;
-use nphysics::{
-    math::Velocity,
-    object::{Body, RigidBodyDesc},
-};
 use specs::{
     storage::ComponentEvent,
     world::Index,
@@ -21,6 +16,7 @@ use specs::{
 
 use crate::{
     bodies::{PhysicsBody, Position},
+    nalgebra::RealField,
     Physics,
 };
 
@@ -151,22 +147,11 @@ fn add_rigid_body<N, P>(
         physics.world.remove_bodies(&[body_handle]);
     }
 
-    let delta_time = physics.world.timestep();
-
     // create a new RigidBody in the PhysicsWorld and store its
     // handle for later usage
-    let handle = RigidBodyDesc::new()
-        .position(position.as_isometry())
-        .gravity_enabled(physics_body.gravity_enabled)
-        .status(physics_body.body_status)
-        .velocity(Velocity::linear(
-            physics_body.velocity.x / delta_time,
-            physics_body.velocity.y / delta_time,
-            physics_body.velocity.z / delta_time,
-        ))
-        .angular_inertia(physics_body.angular_inertia)
-        .mass(physics_body.mass)
-        .local_center_of_mass(physics_body.local_center_of_mass)
+    let handle = physics_body
+        .to_rigid_body_desc()
+        .position(*position.isometry())
         .user_data(id)
         .build(&mut physics.world)
         .handle();
@@ -191,26 +176,15 @@ fn update_rigid_body<N, P>(
     N: RealField,
     P: Position<N>,
 {
-    let delta_time = physics.world.timestep();
-
     if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
         // the PhysicsBody was modified, update everything but the position
         if modified_physics_bodies.contains(id) {
-            rigid_body.enable_gravity(physics_body.gravity_enabled);
-            rigid_body.set_status(physics_body.body_status);
-            rigid_body.set_velocity(Velocity::linear(
-                physics_body.velocity.x / delta_time,
-                physics_body.velocity.y / delta_time,
-                physics_body.velocity.z / delta_time,
-            ));
-            rigid_body.set_angular_inertia(physics_body.angular_inertia);
-            rigid_body.set_mass(physics_body.mass);
-            rigid_body.set_local_center_of_mass(physics_body.local_center_of_mass);
+            physics_body.apply_to_physics_world(rigid_body);
         }
 
         // the Position was modified, update the position directly
         if modified_positions.contains(id) {
-            rigid_body.set_position(position.as_isometry());
+            rigid_body.set_position(*position.isometry());
         }
 
         trace!(
@@ -234,46 +208,23 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{bodies::BodyStatus, math::Isometry3, PhysicsBodyBuilder};
-    use specs::{
-        world::Builder,
-        Component,
-        DenseVecStorage,
-        DispatcherBuilder,
-        FlaggedStorage,
-        World,
+    use crate::{
+        nalgebra::Isometry3,
+        nphysics::object::BodyStatus,
+        systems::SyncBodiesToPhysicsSystem,
+        Physics,
+        PhysicsBodyBuilder,
+        SimplePosition,
     };
 
-    struct SimpleTranslation {
-        x: f32,
-        y: f32,
-        z: f32,
-    }
-
-    impl Component for SimpleTranslation {
-        type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
-    }
-
-    impl Position<f32> for SimpleTranslation {
-        fn as_isometry(&self) -> Isometry3<f32> {
-            Isometry3::translation(self.x, self.y, self.z)
-        }
-
-        fn set_isometry(&mut self, isometry: &Isometry3<f32>) {
-            let translation = isometry.translation.vector;
-            self.x = translation.x;
-            self.y = translation.y;
-            self.z = translation.z;
-        }
-    }
+    use specs::{world::Builder, DispatcherBuilder, World};
 
     #[test]
     fn add_rigid_body() {
         let mut world = World::new();
         let mut dispatcher = DispatcherBuilder::new()
             .with(
-                SyncBodiesToPhysicsSystem::<f32, SimpleTranslation>::default(),
+                SyncBodiesToPhysicsSystem::<f32, SimplePosition<f32>>::default(),
                 "sync_bodies_to_physics_system",
                 &[],
             )
@@ -283,11 +234,9 @@ mod tests {
         // create an Entity with the PhysicsBody component and execute the dispatcher
         world
             .create_entity()
-            .with(SimpleTranslation {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            })
+            .with(SimplePosition::<f32>(Isometry3::<f32>::translation(
+                1.0, 1.0, 1.0,
+            )))
             .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
             .build();
         dispatcher.dispatch(&mut world.res);

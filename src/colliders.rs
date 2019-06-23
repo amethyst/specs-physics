@@ -1,15 +1,18 @@
 use std::{f32::consts::PI, fmt};
 
-use nalgebra::RealField;
-use ncollide::shape::{Ball, Cuboid, ShapeHandle};
-pub use ncollide::world::CollisionGroups;
-pub use nphysics::material;
-use nphysics::object::ColliderHandle;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
-use crate::math::{Isometry3, Vector3};
-
-use self::material::{BasicMaterial, MaterialHandle};
+use crate::{
+    nalgebra::{Isometry3, RealField, Vector3},
+    ncollide::{
+        shape::{Ball, Cuboid, ShapeHandle},
+        world::CollisionGroups,
+    },
+    nphysics::{
+        material::{BasicMaterial, MaterialHandle},
+        object::ColliderHandle,
+    },
+};
 
 /// `Shape` serves as an abstraction over nphysics `ShapeHandle`s and makes it
 /// easier to configure and define said `ShapeHandle`s for the user without
@@ -101,12 +104,10 @@ impl<N: RealField> PhysicsCollider<N> {
 ///
 /// ```rust
 /// use specs_physics::{
-///     colliders::{
-///         material::{BasicMaterial, MaterialHandle},
-///         CollisionGroups,
-///         Shape,
-///     },
-///     math::Isometry3,
+///     colliders::Shape,
+///     nalgebra::Isometry3,
+///     ncollide::world::CollisionGroups,
+///     nphysics::material::{BasicMaterial, MaterialHandle},
 ///     PhysicsColliderBuilder,
 /// };
 ///

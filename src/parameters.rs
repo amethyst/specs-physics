@@ -2,9 +2,12 @@
 //! Resources for modifying the various simulation parameters of the
 //! nphysics World.
 
-use crate::math::{self as na, RealField, Scalar, Vector3};
-use nphysics::solver::IntegrationParameters;
 use std::ops::{Deref, DerefMut};
+
+use crate::{
+    nalgebra::{self as na, RealField, Scalar, Vector3},
+    nphysics::solver::IntegrationParameters,
+};
 
 /// The `TimeStep` is used to set the timestep of the nphysics integration, see
 /// `nphysics::world::World::set_timestep(..)`.
