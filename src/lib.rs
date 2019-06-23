@@ -49,6 +49,14 @@
 //! }
 //! ```
 //!
+//! If you're using [Amethyst](https://amethyst.rs/), you can enable the "amethyst" feature for 
+//! this crate which provides a `Position<Float>` impl for `Transform`.
+//! 
+//! ```toml
+//! [dependencies]
+//! specs-physics = { version = "0.3", features = ["amethyst"] }
+//! ```
+//!
 //! ### Components
 //!
 //! ##### PhysicsBody
@@ -161,12 +169,20 @@
 //!     .build();
 //! ```
 //!
+//! If you're using Amethyst Transforms directly, you'd pass the generic arguments like so:
+//!
+//! ```
+//! use specs_physics::systems::SyncBodiesToPhysicsSystem;
+//! use amethyst_core::{Float, Transform};
+//! SyncBodiesToPhysicsSystem::<Float, Transform>::default();
+//! ```
+//!
 //! Alternatively to building your own `Dispatcher`, you can always fall back on
 //! the convenience function `specs_physics::physics_dispatcher()`, which
 //! returns a configured *default* `Dispatcher` for you or
 //! `specs_physics::register_physics_systems()` which takes a
 //! `DispatcherBuilder` as an argument and registers the required `System`s for
-//! you .
+//! you.
 
 #[macro_use]
 extern crate log;
