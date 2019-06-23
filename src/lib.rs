@@ -5,10 +5,13 @@
 //!
 //! ```toml
 //! [dependencies]
-//! specs-physics = "0.2.2"
+//! specs-physics = "0.3.0"
 //! ```
 //!
-//! **specs-physics** defines a set of [Specs](https://slide-rs.github.io/specs/) `System`s and `Component`s to handle the creation, modification and removal of [nphysics](https://www.nphysics.org/) objects ([RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies), [Collider](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders)) and the synchronisation of object positions and global gravity between both worlds.
+//! **specs-physics** defines a set of [Specs][] `System`s and `Component`s to
+//! handle the creation, modification and removal of [nphysics][] objects
+//! ([RigidBody][], [Collider][]) and the synchronisation of object positions
+//! and global gravity between both worlds.
 //!
 //! ### Generic types
 //!
@@ -17,12 +20,27 @@
 //! introduced to keep this integration as generic as possible and allow
 //! compatibility with as many external crates and game engines as possible.
 //!
-//! `N: RealField` - [nphysics](https://www.nphysics.org/) is built upon [nalgebra](https://nalgebra.org/) and uses various types and structures from this crate. **specs-physics** builds up on this even further and utilises the same structures, which all work with any type that implements `nalgebra::RealField`. `nalgebra::RealField` is by default implemented for various standard types, such as `f32` and`f64`. `nalgebra` is re-exported under `specs_physics::math`.
+//! #### `N: RealField`
 //!
-//! `P: Position<N>` - a type parameter which implements the `specs_physics::bodies::Position` *trait*, requiring also a `Component` implementation with a `FlaggedStorage`. This `Position` `Component` is used to initially place a [RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) in the [nphysics](https://www.nphysics.org/) world and later used to synchronise the updated translation and rotation of these bodies back into the [Specs](https://slide-rs.github.io/specs/) world.
+//! [nphysics][] is built upon [nalgebra][] and uses various types and
+//! structures from this crate. **specs-physics** builds up on this even further
+//! and utilises the same structures, which all work with any type that
+//! implements `nalgebra::RealField`. `nalgebra::RealField` is by default
+//! implemented for various standard types, such as `f32` and`f64`. `nalgebra`
+//! is re-exported under `specs_physics::nalgebra`.
+//!
+//! #### `P: Position<N>`
+//!
+//! a type parameter which implements the `specs_physics::bodies::Position`
+//! *trait*, requiring also a `Component` implementation with a
+//! `FlaggedStorage`. This `Position` `Component` is used to initially place a
+//! [RigidBody][] in the [nphysics][] world and later used to synchronise the
+//! updated translation and rotation of these bodies back into the [Specs][]
+//! world.
 //!
 //! Example for a `Position` `Component`, simply using the "Isometry" type (aka
 //! combined translation and rotation structure) directly:
+//!
 //! ```rust
 //! use specs::{Component, DenseVecStorage, FlaggedStorage};
 //! use specs_physics::{bodies::Position, nalgebra::Isometry3};
@@ -49,9 +67,9 @@
 //! }
 //! ```
 //!
-//! If you're using [Amethyst](https://amethyst.rs/), you can enable the "amethyst" feature for 
-//! this crate which provides a `Position<Float>` impl for `Transform`.
-//! 
+//! If you're using [Amethyst][], you can enable the "amethyst" feature for this
+//! crate which provides a `Position<Float>` impl for `Transform`.
+//!
 //! ```toml
 //! [dependencies]
 //! specs-physics = { version = "0.3", features = ["amethyst"] }
@@ -61,7 +79,9 @@
 //!
 //! ##### PhysicsBody
 //!
-//! The `specs_physics::PhysicsBody` `Component` is used to define [RigidBody](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) from the comforts of your [Specs](https://slide-rs.github.io/specs/) world. Changes to the `PhysicsBody` will automatically be synchronised with [nphysics](https://www.nphysics.org/).
+//! The `specs_physics::PhysicsBody` `Component` is used to define [RigidBody][]
+//! from the comforts of your [Specs][] world. Changes to the `PhysicsBody` will
+//! automatically be synchronised with [nphysics][].
 //!
 //! Example:
 //!
@@ -83,7 +103,10 @@
 //!
 //! ##### PhysicsCollider
 //!
-//! `specs_physics::PhysicsCollider`s are the counterpart to `PhysicsBody`s. They can exist on their own or as a part of a `PhysicsBody` `PhysicsCollider`s are used to define and create [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) in [nphysics](https://www.nphysics.org/).
+//! `specs_physics::PhysicsCollider`s are the counterpart to `PhysicsBody`s.
+//! They can exist on their own or as a part of a `PhysicsBody`
+//! `PhysicsCollider`s are used to define and create [Collider][]'s in
+//! [nphysics][].
 //!
 //! Example:
 //!
@@ -108,18 +131,36 @@
 //!     .build();
 //! ```
 //!
-//! To assign multiple [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) the the same body, [Entity hierarchy](https://github.com/bamling/specs-physics/blob/master/examples/hierarchy.rs) can be used. This utilises [specs-hierarchy](https://github.com/rustgd/specs-hierarchy).
+//! To assign multiple [Collider][]'s the the same body, [Entity hierarchy][]
+//! can be used. This utilises [specs-hierarchy][].
 //!
 //! ### Systems
 //!
 //! The following `System`s currently exist and should be added to your
 //! `Dispatcher` in order:
 //!
-//! 1. `specs_physics::systems::SyncBodiesToPhysicsSystem` - handles the creation, modification and removal of [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) based on the `PhysicsBody` `Component` and an implementation of the `Position` *trait*.
-//! 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles the creation, modification and removal of [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) based on the `PhysicsCollider` `Component`. This `System` depends on `SyncBodiesToPhysicsSystem` as [Colliders](https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders) can depend on [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies).
-//! 3. `specs_physics::systems::SyncParametersToPhysicsSystem` - handles the modification of the [nphysics](https://www.nphysics.org/) `World`s parameters.
-//! 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression of the [nphysics](https://www.nphysics.org/) `World` and causes objects to actually move and change their position. This `System` is the backbone for collision detection.
-//! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` - handles the synchronisation of [RigidBodies](https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies) positions and dynamics back into the [Specs](https://slide-rs.github.io/specs/) `Component`s. This `System` also utilises the `Position` *trait* implementation.
+//! 1. `specs_physics::systems::SyncBodiesToPhysicsSystem` - handles the
+//! creation, modification and removal of [RigidBody][]'s based on the
+//! `PhysicsBody` `Component` and an implementation of the `Position`
+//! *trait*.
+//!
+//! 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles
+//! the creation, modification and removal of [Collider][]'s based on the
+//! `PhysicsCollider` `Component`. This `System` depends on
+//! `SyncBodiesToPhysicsSystem` as [Collider][] can depend on [RigidBody][].
+//!
+//! 3. `specs_physics::systems::SyncParametersToPhysicsSystem` - handles the
+//! modification of the [nphysics][] `World`s parameters.
+//!
+//! 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression
+//! of the [nphysics][] `World` and causes objects to actually move and
+//! change their position. This `System` is the backbone for collision
+//! detection.
+//!
+//! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` -
+//! handles the synchronisation of [RigidBody][] positions and dynamics back
+//! into the [Specs][] `Component`s. This `System` also utilises the
+//! `Position` *trait* implementation.
 //!
 //! An example `Dispatcher` with all required `System`s:
 //!
@@ -169,11 +210,12 @@
 //!     .build();
 //! ```
 //!
-//! If you're using Amethyst Transforms directly, you'd pass the generic arguments like so:
+//! If you're using [Amethyst][] Transforms directly, you'd pass the generic
+//! arguments like so:
 //!
 //! ```
-//! use specs_physics::systems::SyncBodiesToPhysicsSystem;
 //! use amethyst_core::{Float, Transform};
+//! use specs_physics::systems::SyncBodiesToPhysicsSystem;
 //! SyncBodiesToPhysicsSystem::<Float, Transform>::default();
 //! ```
 //!
@@ -183,6 +225,15 @@
 //! `specs_physics::register_physics_systems()` which takes a
 //! `DispatcherBuilder` as an argument and registers the required `System`s for
 //! you.
+//!
+//! [Specs]: https://slide-rs.github.io/specs/
+//! [nphysics]: https://www.nphysics.org/
+//! [nalgebra]: https://nalgebra.org/
+//! [RigidBody]: https://www.nphysics.org/rigid_body_simulations_with_contacts/#rigid-bodies
+//! [Collider]: https://www.nphysics.org/rigid_body_simulations_with_contacts/#colliders
+//! [Amethyst]: https://amethyst.rs/
+//! [Entity hierarchy]: https://github.com/bamling/specs-physics/blob/master/examples/hierarchy.rs
+//! [specs-hierarchy]: https://github.com/rustgd/specs-hierarchy
 
 #[macro_use]
 extern crate log;
