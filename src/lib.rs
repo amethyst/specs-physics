@@ -113,13 +113,14 @@
 //! ```rust
 //! use specs_physics::{
 //!     colliders::Shape,
-//!     nalgebra::Isometry3,
+//!     nalgebra::{Isometry3, Vector3},
 //!     ncollide::world::CollisionGroups,
 //!     nphysics::material::{BasicMaterial, MaterialHandle},
 //!     PhysicsColliderBuilder,
 //! };
 //!
-//! let physics_collider = PhysicsColliderBuilder::from(Shape::Rectangle(10.0, 10.0, 1.0))
+//! let physics_collider = PhysicsColliderBuilder::from(
+//!         Shape::Cuboid{ half_extents: Vector3::new(10.0, 10.0, 1.0) })
 //!     .offset_from_parent(Isometry3::identity())
 //!     .density(1.2)
 //!     .material(MaterialHandle::new(BasicMaterial::default()))
