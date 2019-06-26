@@ -82,10 +82,7 @@ mod tests {
     use specs::{DispatcherBuilder, World};
 
     use crate::{
-        nalgebra::Vector3,
-        parameters::Gravity,
-        systems::SyncParametersToPhysicsSystem,
-        Physics,
+        nalgebra::Vector3, parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics,
     };
 
     #[test]

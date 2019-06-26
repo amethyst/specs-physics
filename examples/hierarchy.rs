@@ -4,13 +4,9 @@ extern crate simple_logger;
 use specs::world::{Builder, World};
 use specs_physics::{
     colliders::Shape,
-    nalgebra::Isometry3,
+    nalgebra::{Isometry3, Vector3},
     nphysics::object::BodyStatus,
-    physics_dispatcher,
-    PhysicsBodyBuilder,
-    PhysicsColliderBuilder,
-    PhysicsParent,
-    SimplePosition,
+    physics_dispatcher, PhysicsBodyBuilder, PhysicsColliderBuilder, PhysicsParent, SimplePosition,
 };
 
 fn main() {
@@ -33,7 +29,12 @@ fn main() {
             1.0, 1.0, 1.0,
         )))
         .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
-        .with(PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0)).build())
+        .with(
+            PhysicsColliderBuilder::<f32>::from(Shape::Cuboid {
+                half_extents: Vector3::new(1.0, 1.0, 1.0),
+            })
+            .build(),
+        )
         .build();
 
     // create the child Entity; if this Entity has its own PhysicsBody it'll more or
@@ -46,9 +47,11 @@ fn main() {
             1.0, 1.0, 1.0,
         )))
         .with(
-            PhysicsColliderBuilder::<f32>::from(Shape::Rectangle(1.0, 1.0, 1.0))
-                .sensor(true)
-                .build(),
+            PhysicsColliderBuilder::<f32>::from(Shape::Cuboid {
+                half_extents: Vector3::new(1.0, 1.0, 1.0),
+            })
+            .sensor(true)
+            .build(),
         )
         .with(PhysicsParent { entity: parent })
         .build();
