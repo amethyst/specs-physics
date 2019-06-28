@@ -53,17 +53,17 @@ pub trait Position<N: RealField>:
     fn set_isometry(&mut self, isometry: &Isometry3<N>) -> &mut Self;
 }
 
-#[cfg(feature = "amethyst")]
-impl Position<amethyst_core::Float> for amethyst_core::Transform {
-    fn isometry(&self) -> &Isometry3<amethyst_core::Float> {
+//#[cfg(feature = "amethyst")]
+impl Position<amethyst::core::Float> for amethyst::core::Transform {
+    fn isometry(&self) -> &Isometry3<amethyst::core::Float> {
         self.isometry()
     }
 
-    fn isometry_mut(&mut self) -> &mut Isometry3<amethyst_core::Float> {
+    fn isometry_mut(&mut self) -> &mut Isometry3<amethyst::core::Float> {
         self.isometry_mut()
     }
 
-    fn set_isometry(&mut self, isometry: &Isometry3<amethyst_core::Float>) -> &mut Self {
+    fn set_isometry(&mut self, isometry: &Isometry3<amethyst::core::Float>) -> &mut Self {
         self.set_isometry(*isometry)
     }
 }
