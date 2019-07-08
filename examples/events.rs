@@ -2,7 +2,7 @@
 extern crate log;
 extern crate simple_logger;
 
-use specs::world::{Builder, World};
+use specs::{WorldExt, World, Builder};
 use specs_physics::{
     colliders::Shape,
     events::ContactEvents,
@@ -24,8 +24,8 @@ fn main() {
     // create the dispatcher containing all relevant Systems; alternatively to using
     // the convenience function you can add all required Systems by hand
     let mut dispatcher = physics_dispatcher::<f32, SimplePosition<f32>>();
-    dispatcher.setup(&mut world.res);
-    let mut contact_event_reader = world.res.fetch_mut::<ContactEvents>().register_reader();
+    dispatcher.setup(&mut world);
+    let mut contact_event_reader = world.fetch_mut::<ContactEvents>().register_reader();
 
     // create an Entity with a dynamic PhysicsBody component and a velocity
     world
@@ -63,7 +63,7 @@ fn main() {
         .build();
 
     // execute the dispatcher
-    dispatcher.dispatch(&world.res);
+    dispatcher.dispatch(&world);
 
     // check the ContactEvents channel for events
     let contact_events = world.read_resource::<ContactEvents>();

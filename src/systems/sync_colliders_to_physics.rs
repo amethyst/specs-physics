@@ -260,7 +260,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use specs::{world::Builder, DispatcherBuilder, World};
+    use specs::prelude::*;
 
     use crate::{
         colliders::Shape,
@@ -281,7 +281,7 @@ mod tests {
                 &[],
             )
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
 
         // create an Entity with the PhysicsCollider component and execute the
         // dispatcher
@@ -292,7 +292,7 @@ mod tests {
             )))
             .with(PhysicsColliderBuilder::<f32>::from(Shape::Ball { radius: 5.0 }).build())
             .build();
-        dispatcher.dispatch(&mut world.res);
+        dispatcher.dispatch(&mut world);
 
         // fetch the Physics instance and check for new colliders
         let physics = world.read_resource::<Physics<f32>>();

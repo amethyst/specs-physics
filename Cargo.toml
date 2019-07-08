@@ -21,7 +21,7 @@ amethyst = ["amethyst_core"]
 [dependencies]
 log = "0.4.6"
 specs = "0.15.0"
-specs-hierarchy = "0.3.1"
+specs-hierarchy = { git = "https://github.com/cedric-h/specs-hierarchy.git", branch = "update-specs" }
 shrev = "1.1.1"
 nalgebra = "0.18.0"
 ncollide3d = "0.19"
