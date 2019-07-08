@@ -2,7 +2,7 @@
 extern crate log;
 extern crate simple_logger;
 
-use specs::world::{Builder, World};
+use specs::{WorldExt, World, Builder};
 use specs_physics::{
     colliders::Shape,
     nalgebra::Isometry3,
@@ -23,7 +23,7 @@ fn main() {
     // create the dispatcher containing all relevant Systems; alternatively to using
     // the convenience function you can add all required Systems by hand
     let mut dispatcher = physics_dispatcher::<f32, SimplePosition<f32>>();
-    dispatcher.setup(&mut world.res);
+    dispatcher.setup(&mut world);
 
     // create an Entity with a dynamic PhysicsBody component and a velocity
     let entity = world
@@ -51,7 +51,7 @@ fn main() {
         .build();
 
     // execute the dispatcher
-    dispatcher.dispatch(&world.res);
+    dispatcher.dispatch(&world);
 
     // fetch the translation component for the Entity with the dynamic body; the
     // position should still be approx the same

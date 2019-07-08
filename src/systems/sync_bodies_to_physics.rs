@@ -3,11 +3,11 @@ use std::marker::PhantomData;
 use specs::{
     storage::ComponentEvent,
     world::Index,
+    World,
     BitSet,
     Join,
     ReadStorage,
     ReaderId,
-    World,
     System,
     SystemData,
     WriteExpect,
@@ -217,7 +217,7 @@ mod tests {
         SimplePosition,
     };
 
-    use specs::{world::Builder, DispatcherBuilder, World};
+    use specs::prelude::*;
 
     #[test]
     fn add_rigid_body() {
@@ -229,7 +229,7 @@ mod tests {
                 &[],
             )
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
 
         // create an Entity with the PhysicsBody component and execute the dispatcher
         world
@@ -239,7 +239,7 @@ mod tests {
             )))
             .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
             .build();
-        dispatcher.dispatch(&mut world.res);
+        dispatcher.dispatch(&mut world);
 
         // fetch the Physics instance and check for new bodies
         let physics = world.read_resource::<Physics<f32>>();
