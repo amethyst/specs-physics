@@ -2,7 +2,7 @@
 extern crate log;
 extern crate simple_logger;
 
-use specs::{WorldExt, World, Builder};
+use specs::{Builder, World, WorldExt};
 use specs_physics::{
     colliders::Shape,
     events::ContactEvents,

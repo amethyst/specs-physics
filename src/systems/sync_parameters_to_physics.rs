@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{Read, World, System, SystemData, WriteExpect};
+use specs::{Read, System, SystemData, World, WriteExpect};
 
 use crate::{
     nalgebra::RealField,

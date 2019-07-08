@@ -6,9 +6,9 @@ use specs::{
     Join,
     ReadStorage,
     ReaderId,
-    World,
     System,
     SystemData,
+    World,
     WriteExpect,
     WriteStorage,
 };
