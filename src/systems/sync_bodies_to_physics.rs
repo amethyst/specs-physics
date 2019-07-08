@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use specs::{
     storage::ComponentEvent,
     world::Index,
-    World,
     BitSet,
     Join,
     ReadStorage,
