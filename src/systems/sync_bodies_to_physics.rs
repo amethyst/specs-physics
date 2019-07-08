@@ -7,7 +7,7 @@ use specs::{
     Join,
     ReadStorage,
     ReaderId,
-    Resources,
+    World,
     System,
     SystemData,
     WriteExpect,
@@ -98,7 +98,7 @@ where
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncBodiesToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 

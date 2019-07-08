@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{Read, Resources, System, SystemData, WriteExpect};
+use specs::{Read, World, System, SystemData, WriteExpect};
 
 use crate::{
     nalgebra::RealField,
@@ -57,7 +57,7 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncParametersToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 

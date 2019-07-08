@@ -20,7 +20,7 @@ amethyst = ["amethyst_core"]
 
 [dependencies]
 log = "0.4.6"
-specs = "0.14.3"
+specs = "0.15.0"
 specs-hierarchy = "0.3.1"
 shrev = "1.1.1"
 nalgebra = "0.18.0"
