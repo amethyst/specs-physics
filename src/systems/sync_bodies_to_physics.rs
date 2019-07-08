@@ -1,8 +1,17 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
+    storage::ComponentEvent,
+    world::Index,
+    BitSet,
+    Join,
+    ReadStorage,
+    ReaderId,
+    System,
+    SystemData,
+    World,
+    WriteExpect,
+    WriteStorage,
 };
 
 use crate::{
@@ -89,7 +98,7 @@ where
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncBodiesToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 
@@ -200,8 +209,12 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        nalgebra::Isometry3, nphysics::object::BodyStatus, systems::SyncBodiesToPhysicsSystem,
-        Physics, PhysicsBodyBuilder, SimplePosition,
+        nalgebra::Isometry3,
+        nphysics::object::BodyStatus,
+        systems::SyncBodiesToPhysicsSystem,
+        Physics,
+        PhysicsBodyBuilder,
+        SimplePosition,
     };
 
     use specs::{world::Builder, DispatcherBuilder, World};

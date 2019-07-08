@@ -247,7 +247,13 @@ pub use shrev;
 use std::collections::HashMap;
 
 use specs::{
-    world::Index, Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity, FlaggedStorage,
+    world::Index,
+    Component,
+    DenseVecStorage,
+    Dispatcher,
+    DispatcherBuilder,
+    Entity,
+    FlaggedStorage,
 };
 use specs_hierarchy::Parent;
 
@@ -267,8 +273,11 @@ use self::{
         world::World,
     },
     systems::{
-        PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
-        SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem,
+        PhysicsStepperSystem,
+        SyncBodiesFromPhysicsSystem,
+        SyncBodiesToPhysicsSystem,
+        SyncCollidersToPhysicsSystem,
+        SyncParametersToPhysicsSystem,
     },
 };
 

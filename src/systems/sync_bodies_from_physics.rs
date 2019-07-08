@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{Join, ReadExpect, Resources, System, SystemData, WriteStorage};
+use specs::{Join, ReadExpect, System, SystemData, World, WriteStorage};
 
 use crate::{
     bodies::{PhysicsBody, Position},
@@ -41,7 +41,7 @@ where
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncBodiesFromPhysicsSystem.setup");
         Self::SystemData::setup(res);
 

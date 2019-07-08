@@ -6,7 +6,11 @@ use specs_physics::{
     colliders::Shape,
     nalgebra::{Isometry3, Vector3},
     nphysics::object::BodyStatus,
-    physics_dispatcher, PhysicsBodyBuilder, PhysicsColliderBuilder, PhysicsParent, SimplePosition,
+    physics_dispatcher,
+    PhysicsBodyBuilder,
+    PhysicsColliderBuilder,
+    PhysicsParent,
+    SimplePosition,
 };
 
 fn main() {

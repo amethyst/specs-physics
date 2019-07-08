@@ -1,8 +1,16 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
+    storage::ComponentEvent,
+    world::Index,
+    Join,
+    ReadStorage,
+    ReaderId,
+    System,
+    SystemData,
+    World,
+    WriteExpect,
+    WriteStorage,
 };
 
 use crate::{
@@ -10,7 +18,8 @@ use crate::{
     colliders::PhysicsCollider,
     nalgebra::RealField,
     nphysics::object::{BodyPartHandle, ColliderDesc},
-    Physics, PhysicsParent,
+    Physics,
+    PhysicsParent,
 };
 
 use super::iterate_component_events;
@@ -93,11 +102,10 @@ where
         let event_iter = physics_colliders
             .channel()
             .read(self.physics_colliders_reader_id.as_mut().unwrap());
-        for _ in event_iter{
-        }
+        for _ in event_iter {}
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncCollidersToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 
@@ -255,8 +263,12 @@ mod tests {
     use specs::{world::Builder, DispatcherBuilder, World};
 
     use crate::{
-        colliders::Shape, nalgebra::Isometry3, systems::SyncCollidersToPhysicsSystem, Physics,
-        PhysicsColliderBuilder, SimplePosition,
+        colliders::Shape,
+        nalgebra::Isometry3,
+        systems::SyncCollidersToPhysicsSystem,
+        Physics,
+        PhysicsColliderBuilder,
+        SimplePosition,
     };
 
     #[test]

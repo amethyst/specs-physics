@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{Read, Resources, System, SystemData, WriteExpect};
+use specs::{Read, System, SystemData, World, WriteExpect};
 
 use crate::{
     nalgebra::RealField,
@@ -57,7 +57,7 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncParametersToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 
@@ -82,7 +82,10 @@ mod tests {
     use specs::{DispatcherBuilder, World};
 
     use crate::{
-        nalgebra::Vector3, parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics,
+        nalgebra::Vector3,
+        parameters::Gravity,
+        systems::SyncParametersToPhysicsSystem,
+        Physics,
     };
 
     #[test]

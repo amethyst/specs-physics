@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{
-    world::Index, Entities, Entity, Read, Resources, System, SystemData, Write, WriteExpect,
-};
+use specs::{world::Index, Entities, Entity, Read, System, SystemData, World, Write, WriteExpect};
 
 use crate::{
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
@@ -111,7 +109,7 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
         ));
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("PhysicsStepperSystem.setup");
         Self::SystemData::setup(res);
 
