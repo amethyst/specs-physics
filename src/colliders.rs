@@ -1,11 +1,14 @@
-use std::{f32::consts::PI, fmt};
+use std::{f32::consts::PI, fmt, ops::Deref};
 
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use crate::{
-    nalgebra::{Isometry3, RealField, Vector3},
+    nalgebra::{DMatrix, Isometry3, Point2, Point3, RealField, Unit, Vector3},
     ncollide::{
-        shape::{Ball, Cuboid, ShapeHandle},
+        shape::{
+            Ball, Capsule, Compound, ConvexHull, Cuboid, HeightField, Plane, Polyline, Segment,
+            ShapeHandle, TriMesh, Triangle,
+        },
         world::CollisionGroups,
     },
     nphysics::{
@@ -14,27 +17,109 @@ use crate::{
     },
 };
 
+pub type MeshData<N> = (Vec<Point3<N>>, Vec<Point3<usize>>, Option<Vec<Point2<N>>>);
+
+pub trait IntoMesh: objekt::Clone + Send + Sync {
+    type N: RealField;
+
+    fn points(&self) -> MeshData<Self::N>;
+}
+
+impl<'clone, N: RealField> IntoMesh for Box<(dyn IntoMesh<N = N> + 'clone)> {
+    type N = N;
+
+    fn points(&self) -> MeshData<Self::N> {
+        self.deref().points()
+    }
+}
+
+impl<'clone, N: RealField> Clone for Box<dyn IntoMesh<N = N> + 'clone> {
+    fn clone(&self) -> Self {
+        objekt::clone_box(&*self)
+    }
+}
+
 /// `Shape` serves as an abstraction over nphysics `ShapeHandle`s and makes it
 /// easier to configure and define said `ShapeHandle`s for the user without
 /// having to know the underlying nphysics API.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub enum Shape<N: RealField> {
-    Circle(N),
-    Rectangle(N, N, N),
+    Ball {
+        radius: N,
+    },
+    Capsule {
+        half_height: N,
+        radius: N,
+    },
+    Compound {
+        parts: Vec<(Isometry3<N>, Shape<N>)>,
+    },
+    ConvexHull {
+        points: Vec<Point3<N>>,
+    },
+    Cuboid {
+        half_extents: Vector3<N>,
+    },
+    HeightField {
+        heights: DMatrix<N>,
+        scale: Vector3<N>,
+    },
+    Plane {
+        normal: Unit<Vector3<N>>,
+    },
+    Polyline {
+        points: Vec<Point3<N>>,
+        indices: Option<Vec<Point2<usize>>>,
+    },
+    Segment {
+        a: Point3<N>,
+        b: Point3<N>,
+    },
+    TriMesh {
+        handle: Box<dyn IntoMesh<N = N>>,
+    },
+    Triangle {
+        a: Point3<N>,
+        b: Point3<N>,
+        c: Point3<N>,
+    },
 }
 
 impl<N: RealField> Shape<N> {
     /// Converts a `Shape` and its values into its corresponding `ShapeHandle`
     /// type. The `ShapeHandle` is used to define a `Collider` in the
     /// `PhysicsWorld`.
-    fn handle(&self, margin: N) -> ShapeHandle<N> {
-        match *self {
-            Shape::Circle(radius) => ShapeHandle::new(Ball::new(radius)),
-            Shape::Rectangle(width, height, depth) => ShapeHandle::new(Cuboid::new(Vector3::new(
-                width / N::from_f32(2.0).unwrap() - margin,
-                height / N::from_f32(2.0).unwrap() - margin,
-                depth / N::from_f32(2.0).unwrap() - margin,
-            ))),
+    fn handle(&self) -> ShapeHandle<N> {
+        match self {
+            Shape::Ball { radius } => ShapeHandle::new(Ball::<N>::new(*radius)),
+            Shape::Capsule {
+                half_height,
+                radius,
+            } => ShapeHandle::new(Capsule::new(*half_height, *radius)),
+            Shape::Compound { parts } => ShapeHandle::new(Compound::new(
+                parts
+                    .into_iter()
+                    .map(|part| (part.0, part.1.handle()))
+                    .collect(),
+            )),
+            Shape::ConvexHull { points } => ShapeHandle::new(
+                ConvexHull::try_from_points(&points)
+                    .expect("Failed to generate Convex Hull from points."),
+            ),
+            Shape::Cuboid { half_extents } => ShapeHandle::new(Cuboid::new(*half_extents)),
+            Shape::HeightField { heights, scale } => {
+                ShapeHandle::new(HeightField::new(heights.clone(), *scale))
+            }
+            Shape::Plane { normal } => ShapeHandle::new(Plane::new(*normal)),
+            Shape::Polyline { points, indices } => {
+                ShapeHandle::new(Polyline::new(points.clone(), indices.clone()))
+            }
+            Shape::Segment { a, b } => ShapeHandle::new(Segment::new(*a, *b)),
+            Shape::TriMesh { handle } => {
+                let data = handle.points();
+                ShapeHandle::new(TriMesh::new(data.0, data.1, data.2))
+            }
+            Shape::Triangle { a, b, c } => ShapeHandle::new(Triangle::new(*a, *b, *c)),
         }
     }
 }
@@ -92,7 +177,7 @@ impl<N: RealField> PhysicsCollider<N> {
     /// Returns the `ShapeHandle` for `shape`, taking the `margin` into
     /// consideration.
     pub(crate) fn shape_handle(&self) -> ShapeHandle<N> {
-        self.shape.handle(self.margin)
+        self.shape.handle()
     }
 }
 
@@ -105,13 +190,13 @@ impl<N: RealField> PhysicsCollider<N> {
 /// ```rust
 /// use specs_physics::{
 ///     colliders::Shape,
-///     nalgebra::Isometry3,
+///     nalgebra::{Isometry3, Vector3},
 ///     ncollide::world::CollisionGroups,
 ///     nphysics::material::{BasicMaterial, MaterialHandle},
 ///     PhysicsColliderBuilder,
 /// };
 ///
-/// let physics_collider = PhysicsColliderBuilder::from(Shape::Rectangle(10.0, 10.0, 1.0))
+/// let physics_collider = PhysicsColliderBuilder::from(Shape::Cuboid{ half_extents: Vector3::new(10.0, 10.0, 1.0) })
 ///     .offset_from_parent(Isometry3::identity())
 ///     .density(1.2)
 ///     .material(MaterialHandle::new(BasicMaterial::default()))

@@ -1,16 +1,8 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent,
-    world::Index,
-    Join,
-    ReadStorage,
-    ReaderId,
-    Resources,
-    System,
-    SystemData,
-    WriteExpect,
-    WriteStorage,
+    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
+    SystemData, WriteExpect, WriteStorage,
 };
 
 use crate::{
@@ -18,8 +10,7 @@ use crate::{
     colliders::PhysicsCollider,
     nalgebra::RealField,
     nphysics::object::{BodyPartHandle, ColliderDesc},
-    Physics,
-    PhysicsParent,
+    Physics, PhysicsParent,
 };
 
 use super::iterate_component_events;
@@ -257,12 +248,8 @@ mod tests {
     use specs::{world::Builder, DispatcherBuilder, World};
 
     use crate::{
-        colliders::Shape,
-        nalgebra::Isometry3,
-        systems::SyncCollidersToPhysicsSystem,
-        Physics,
-        PhysicsColliderBuilder,
-        SimplePosition,
+        colliders::Shape, nalgebra::Isometry3, systems::SyncCollidersToPhysicsSystem, Physics,
+        PhysicsColliderBuilder, SimplePosition,
     };
 
     #[test]
@@ -284,7 +271,7 @@ mod tests {
             .with(SimplePosition::<f32>(Isometry3::<f32>::translation(
                 1.0, 1.0, 1.0,
             )))
-            .with(PhysicsColliderBuilder::<f32>::from(Shape::Circle(5.0)).build())
+            .with(PhysicsColliderBuilder::<f32>::from(Shape::Ball { radius: 5.0 }).build())
             .build();
         dispatcher.dispatch(&mut world.res);
 
