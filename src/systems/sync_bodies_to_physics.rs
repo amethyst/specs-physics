@@ -35,7 +35,6 @@ where
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        info!("SyncBodiesToPhysicsSystem.run");
         let (positions, mut physics, mut physics_bodies) = data;
 
         // collect all ComponentEvents for the Position storage
@@ -71,7 +70,6 @@ where
 
             // handle modified events
             if modified_positions.contains(id) || modified_physics_bodies.contains(id) {
-                info!("Modified PhysicsBody with id: {:?}", physics_body);
                 update_rigid_body::<N, P>(
                     id,
                     &position,

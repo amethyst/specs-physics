@@ -2,6 +2,7 @@ use amethyst::{
     assets::Loader,
     core::*,
     ecs::prelude::*,
+    input::{Axis, Bindings, Button, InputBundle, InputHandler, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{
         formats::texture::TextureGenerator,
@@ -31,8 +32,63 @@ use specs_physics::{
     nalgebra::Vector3,
     nphysics::{algebra::Velocity3, object::BodyStatus},
     parameters::Gravity,
-    PhysicsBodyBuilder, PhysicsColliderBuilder,
+    PhysicsBody, PhysicsBodyBuilder, PhysicsColliderBuilder,
 };
+
+fn create_object(world: &mut World, status: BodyStatus, shape: Shape<Float>, translation: [f32; 3], velocity: [f32; 3]) -> EntityBuilder {
+    let mut transform = Transform::default();
+
+    transform.append_translation(Vector3::<Float>::new(
+        translation[0].into(),
+        translation[1].into(),
+        translation[2].into(),
+    ));
+
+    world
+        .create_entity()
+        .with(transform)
+        .with(PhysicsBodyBuilder::<Float>::from(status)
+            .velocity(Velocity3::linear(velocity[0].into(), velocity[1].into(), velocity[2].into()))
+            .build())
+        .with(PhysicsColliderBuilder::<Float>::from(shape).build())
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Toy;
+
+impl Component for Toy {
+    type Storage = NullStorage<Self>;
+}
+
+const TOY_ACCELERATION_MULTIPLIER: Float = Float::from_f64(1.0);
+
+#[derive(Default)]
+struct ToyControllerSystem;
+
+impl<'a> System<'a> for ToyControllerSystem {
+    type SystemData = (
+        Read<'a, InputHandler<StringBindings>>,
+        WriteStorage<'a, PhysicsBody<Float>>,
+        ReadStorage<'a, Toy>,
+    );
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (input, mut physics_bodies, toys) = data;
+
+        let delta = Velocity3::<Float>::new(
+            Vector3::<Float>::new(
+                Float::from(input.axis_value("x").unwrap()) * TOY_ACCELERATION_MULTIPLIER,
+                Float::from(input.axis_value("y").unwrap()) * TOY_ACCELERATION_MULTIPLIER,
+                0.0.into(),
+            ),
+            Vector3::<Float>::zeros(),
+        );
+
+        for (body, _) in (&mut physics_bodies, &toys).join() {
+            body.velocity += delta;
+        }
+    }
+}
 
 #[derive(Default)]
 struct State<'a, 'b> {
@@ -44,6 +100,12 @@ impl<'a, 'b> SimpleState for State<'a, 'b> {
         let mut builder =
             DispatcherBuilder::new().with_pool(data.world.res.fetch::<ArcThreadPool>().clone());
 
+        // Adds an input bundle with "x" being A/D and "y" being W/S
+        InputBundle::new()
+            .with_bindings(bindings())
+            .build(&mut builder)
+            .unwrap();
+        builder.add(ToyControllerSystem::default(), "toy_controller_system", &[]);
         TransformBundle::new().build(&mut builder).unwrap();
         specs_physics::register_physics_systems::<Float, Transform>(&mut builder);
 
@@ -69,9 +131,9 @@ impl<'a, 'b> SimpleState for State<'a, 'b> {
             .with({
                 let mut transform = Transform::default();
                 transform.append_translation(Vector3::<Float>::new(
+                    Float::from_f32(0.0),
                     0.0.into(),
-                    0.0.into(),
-                    Float::from_f32(-4.0),
+                    Float::from_f32(10.0),
                 ));
                 transform
             })
@@ -130,30 +192,16 @@ impl<'a, 'b> SimpleState for State<'a, 'b> {
             (),
         );
 
-        data.world
-            .create_entity()
-            .with({
-                let mut transform = Transform::default();
-                transform.append_translation(Vector3::<Float>::new(
-                    0.1.into(),
-                    1.3.into(),
-                    0.1.into(),
-                ));
-                transform
-            })
-            .with(
-                PhysicsBodyBuilder::<Float>::from(BodyStatus::Dynamic)
-                    .velocity(Velocity3::linear(0.0.into(), 1.0.into(), 0.0.into()))
-                    .build(),
-            )
-            .with(
-                PhysicsColliderBuilder::<Float>::from(Shape::<Float>::Cuboid {
-                    half_extents: Vector3::<Float>::new(0.5.into(), 0.5.into(), 0.5.into()),
-                })
-                .build(),
-            )
+        create_object(data.world, 
+            BodyStatus::Kinematic, 
+            Shape::<Float>::Cuboid {
+                half_extents: Vector3::<Float>::new(0.5.into(), 0.5.into(), 0.5.into()),
+            }, 
+            [0.1, 1.3, 0.1], 
+            [0.0, 1.0, 0.0])
             .with(material.clone())
             .with(cube.clone())
+            .with(Toy::default())
             .build();
 
         let sphere = AmethystShape::Sphere(32, 32)
@@ -163,14 +211,20 @@ impl<'a, 'b> SimpleState for State<'a, 'b> {
                 (),
             );
 
-        data.world
-            .create_entity()
-            .with(Transform::default())
-            .with(PhysicsBodyBuilder::<Float>::from(BodyStatus::Static).build())
-            .with(
-                PhysicsColliderBuilder::<Float>::from(Shape::<Float>::Ball { radius: 0.5.into() })
-                    .build(),
-            )
+        create_object(data.world, 
+            BodyStatus::Dynamic, 
+            Shape::<Float>::Ball { radius: 0.5.into() }, 
+            [-0.1, 3.3, -0.1], 
+            [0.0, 0.0, 0.0])
+            .with(material.clone())
+            .with(sphere.clone())
+            .build();
+
+        create_object(data.world, 
+            BodyStatus::Static, 
+            Shape::<Float>::Ball { radius: 0.5.into() }, 
+            [0.0, 0.0, 0.0], 
+            [0.0, 0.0, 0.0])
             .with(material.clone())
             .with(sphere.clone())
             .build();
@@ -214,13 +268,17 @@ impl<'a, 'b> SimpleState for State<'a, 'b> {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    // Our systems for simulation are being added to a fixed dispatcher in our State's on_start.
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config(DisplayConfig::default()))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
+
     let mut game = Application::new(application_root_dir()?, State::default(), game_data)?;
+
     game.run();
+
     Ok(())
 }
 
@@ -293,4 +351,30 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         graph_builder
     }
+}
+
+fn bindings() -> Bindings<StringBindings> {
+    let mut bindings = Bindings::<StringBindings>::new();
+
+    bindings
+        .insert_axis(
+            "x",
+            Axis::Emulated {
+                pos: Button::Key(VirtualKeyCode::D),
+                neg: Button::Key(VirtualKeyCode::A),
+            },
+        )
+        .unwrap();
+
+    bindings
+        .insert_axis(
+            "y",
+            Axis::Emulated {
+                pos: Button::Key(VirtualKeyCode::W),
+                neg: Button::Key(VirtualKeyCode::S),
+            },
+        )
+        .unwrap();
+
+    bindings
 }

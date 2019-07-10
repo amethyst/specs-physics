@@ -217,11 +217,6 @@ where
 
     // update collision groups
     collider_world.set_collision_groups(collider_handle, physics_collider.collision_groups);
-
-    info!(
-        "Updated collider in world with values: {:?}",
-        physics_collider
-    );
 }
 
 fn remove_collider<N, P>(id: Index, physics: &mut Physics<N>)
