@@ -300,6 +300,18 @@ impl<N: RealField> Physics<N> {
         Self::default()
     }
 
+    pub fn world(&self) -> &World<N> {
+        &self.world
+    }
+
+    pub fn get_body_handle(&self, index: Index) -> Option<BodyHandle> {
+        self.body_handles.get(&index).copied()
+    }
+
+    pub fn get_collider_handle(&self, index: Index) -> Option<ColliderHandle> {
+        self.collider_handles.get(&index).copied()
+    }
+
     /// Reports the internal value for the timestep.
     /// See also `TimeStep` for setting this value.
     pub fn timestep(&self) -> N {
