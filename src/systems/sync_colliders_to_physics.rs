@@ -56,7 +56,7 @@ where
         for (position, parent_entity, mut physics_collider, id) in (
             &positions,
             parent_entities.maybe(),
-            &mut physics_colliders,
+            &mut physics_colliders.restrict_mut(),
             &inserted_positions
                 | &inserted_physics_colliders
                 | &modified_physics_colliders
@@ -72,14 +72,14 @@ where
                     parent_entity,
                     &position,
                     &mut physics,
-                    &mut physics_collider,
+                    physics_collider.get_mut_unchecked(),
                 );
             }
 
             // handle modified events
             if modified_physics_colliders.contains(id) {
                 debug!("Modified PhysicsCollider with id: {}", id);
-                update_collider::<N, P>(id, &mut physics, &physics_collider);
+                update_collider::<N, P>(id, &mut physics, physics_collider.get_unchecked());
             }
 
             // handle removed events
@@ -87,6 +87,13 @@ where
                 debug!("Removed PhysicsCollider with id: {}", id);
                 remove_collider::<N, P>(id, &mut physics);
             }
+        }
+
+        // Drain update triggers caused by inserts
+        let event_iter = physics_colliders
+            .channel()
+            .read(self.physics_colliders_reader_id.as_mut().unwrap());
+        for _ in event_iter{
         }
     }
 
