@@ -8,9 +8,9 @@
 //! specs-physics = "0.3.0"
 //! ```
 //!
-//! **specs-physics** defines a set of [Specs][] `System`s and `Component`s to
-//! handle the creation, modification and removal of [nphysics][] objects
-//! ([RigidBody][], [Collider][]) and the synchronisation of object positions
+//! **specs-physics** defines a set of [Specs] `System`s and `Component`s to
+//! handle the creation, modification and removal of [nphysics] objects
+//! ([RigidBody], [Collider]) and the synchronisation of object positions
 //! and global gravity between both worlds.
 //!
 //! ### Generic types
@@ -22,7 +22,7 @@
 //!
 //! #### `N: RealField`
 //!
-//! [nphysics][] is built upon [nalgebra][] and uses various types and
+//! [nphysics] is built upon [nalgebra] and uses various types and
 //! structures from this crate. **specs-physics** builds up on this even further
 //! and utilises the same structures, which all work with any type that
 //! implements `nalgebra::RealField`. `nalgebra::RealField` is by default
@@ -34,14 +34,14 @@
 //! a type parameter which implements the `specs_physics::bodies::Position`
 //! *trait*, requiring also a `Component` implementation with a
 //! `FlaggedStorage`. This `Position` `Component` is used to initially place a
-//! [RigidBody][] in the [nphysics][] world and later used to synchronise the
-//! updated translation and rotation of these bodies back into the [Specs][]
+//! [RigidBody] in the [nphysics] world and later used to synchronise the
+//! updated translation and rotation of these bodies back into the [Specs]
 //! world.
 //!
 //! Example for a `Position` `Component`, simply using the "Isometry" type (aka
 //! combined translation and rotation structure) directly:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use specs::{Component, DenseVecStorage, FlaggedStorage};
 //! use specs_physics::{bodies::Position, nalgebra::Isometry3};
 //!
@@ -59,15 +59,10 @@
 //!     fn isometry_mut(&mut self) -> &mut Isometry3<f32> {
 //!         &mut self.0
 //!     }
-//!
-//!     fn set_isometry(&mut self, isometry: &Isometry3<f32>) -> &mut Pos {
-//!         self.0 = *isometry;
-//!         self
-//!     }
 //! }
 //! ```
 //!
-//! If you're using [Amethyst][], you can enable the "amethyst" feature for this
+//! If you're using [Amethyst], you can enable the "amethyst" feature for this
 //! crate which provides a `Position<Float>` impl for `Transform`.
 //!
 //! ```toml
@@ -79,13 +74,13 @@
 //!
 //! ##### PhysicsBody
 //!
-//! The `specs_physics::PhysicsBody` `Component` is used to define [RigidBody][]
-//! from the comforts of your [Specs][] world. Changes to the `PhysicsBody` will
-//! automatically be synchronised with [nphysics][].
+//! The `specs_physics::PhysicsBody` `Component` is used to define [RigidBody]
+//! from the comforts of your [Specs] world. Changes to the `PhysicsBody` will
+//! automatically be synchronised with [nphysics].
 //!
 //! Example:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use specs_physics::{
 //!     nalgebra::{Matrix3, Point3},
 //!     nphysics::{algebra::Velocity3, object::BodyStatus},
@@ -105,12 +100,12 @@
 //!
 //! `specs_physics::PhysicsCollider`s are the counterpart to `PhysicsBody`s.
 //! They can exist on their own or as a part of a `PhysicsBody`
-//! `PhysicsCollider`s are used to define and create [Collider][]'s in
-//! [nphysics][].
+//! `PhysicsCollider`s are used to define and create [Collider]'s in
+//! [nphysics].
 //!
 //! Example:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use specs_physics::{
 //!     colliders::Shape,
 //!     nalgebra::{Isometry3, Vector3},
@@ -132,8 +127,8 @@
 //!     .build();
 //! ```
 //!
-//! To assign multiple [Collider][]'s the the same body, [Entity hierarchy][]
-//! can be used. This utilises [specs-hierarchy][].
+//! To assign multiple [Collider]'s the the same body, [Entity hierarchy]
+//! can be used. This utilises [specs-hierarchy].
 //!
 //! ### Systems
 //!
@@ -141,31 +136,31 @@
 //! `Dispatcher` in order:
 //!
 //! 1. `specs_physics::systems::SyncBodiesToPhysicsSystem` - handles the
-//! creation, modification and removal of [RigidBody][]'s based on the
+//! creation, modification and removal of [RigidBody]'s based on the
 //! `PhysicsBody` `Component` and an implementation of the `Position`
 //! *trait*.
 //!
 //! 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles
-//! the creation, modification and removal of [Collider][]'s based on the
+//! the creation, modification and removal of [Collider]'s based on the
 //! `PhysicsCollider` `Component`. This `System` depends on
-//! `SyncBodiesToPhysicsSystem` as [Collider][] can depend on [RigidBody][].
+//! `SyncBodiesToPhysicsSystem` as [Collider] can depend on [RigidBody].
 //!
 //! 3. `specs_physics::systems::SyncParametersToPhysicsSystem` - handles the
-//! modification of the [nphysics][] `World`s parameters.
+//! modification of the [nphysics] `World`s parameters.
 //!
 //! 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression
-//! of the [nphysics][] `World` and causes objects to actually move and
+//! of the [nphysics] `World` and causes objects to actually move and
 //! change their position. This `System` is the backbone for collision
 //! detection.
 //!
 //! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` -
-//! handles the synchronisation of [RigidBody][] positions and dynamics back
-//! into the [Specs][] `Component`s. This `System` also utilises the
+//! handles the synchronisation of [RigidBody] positions and dynamics back
+//! into the [Specs] `Component`s. This `System` also utilises the
 //! `Position` *trait* implementation.
 //!
 //! An example `Dispatcher` with all required `System`s:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use specs::DispatcherBuilder;
 //! use specs_physics::{
 //!     systems::{
@@ -211,11 +206,11 @@
 //!     .build();
 //! ```
 //!
-//! If you're using [Amethyst][] Transforms directly, you'd pass the generic
+//! If you're using [Amethyst] Transforms directly, you'd pass the generic
 //! arguments like so:
 //!
-//! ```
-//! use amethyst_core::Transform;
+//! ```rust,ignore
+//! use amethyst::core::{Float, Transform};
 //! use specs_physics::systems::SyncBodiesToPhysicsSystem;
 //! SyncBodiesToPhysicsSystem::<f32, Transform>::default();
 //! ```
@@ -240,8 +235,14 @@
 extern crate log;
 
 pub use nalgebra;
-pub use ncollide3d as ncollide;
-pub use nphysics3d as nphysics;
+#[cfg(feature = "physics3d")]
+pub extern crate ncollide3d as ncollide;
+#[cfg(feature = "physics3d")]
+pub extern crate nphysics3d as nphysics;
+#[cfg(feature = "physics2d")]
+pub extern crate ncollide2d as ncollide;
+#[cfg(feature = "physics2d")]
+pub extern crate nphysics2d as nphysics;
 pub use shrev;
 
 use std::collections::HashMap;
@@ -258,20 +259,21 @@ use specs::{
 use specs_hierarchy::Parent;
 
 pub use self::{
-    bodies::{util::SimplePosition, PhysicsBody, PhysicsBodyBuilder},
+    bodies::{PhysicsBody, PhysicsBodyBuilder},
+    positon::{Position, SimplePosition},
     colliders::{PhysicsCollider, PhysicsColliderBuilder},
 };
 
+use nphysics::{
+    counters::Counters,
+    material::MaterialsCoefficientsTable,
+    object::{BodyHandle, ColliderHandle},
+    solver::IntegrationParameters,
+    world::World,
+};
+
 use self::{
-    bodies::Position,
-    nalgebra::{RealField, Vector3},
-    nphysics::{
-        counters::Counters,
-        material::MaterialsCoefficientsTable,
-        object::{BodyHandle, ColliderHandle},
-        solver::IntegrationParameters,
-        world::World,
-    },
+    nalgebra::RealField,
     systems::{
         PhysicsStepperSystem,
         SyncBodiesFromPhysicsSystem,
@@ -281,11 +283,18 @@ use self::{
     },
 };
 
+#[cfg(feature = "physics3d")]
+use nalgebra::Vector3 as Vector;
+
+#[cfg(feature = "physics2d")]
+use nalgebra::Vector2 as Vector;
+
 pub mod bodies;
 pub mod colliders;
 pub mod events;
 pub mod parameters;
 pub mod systems;
+pub mod positon;
 
 /// Resource holding the internal fields where physics computation occurs.
 /// Some inspection methods are exposed to allow debugging.
@@ -317,7 +326,7 @@ impl<N: RealField> Physics<N> {
 
     /// Reports the internal value for the gravity.
     /// See also `Gravity` for setting this value.
-    pub fn gravity(&self) -> &Vector3<N> {
+    pub fn gravity(&self) -> &Vector<N> {
         self.world.gravity()
     }
 
@@ -378,8 +387,8 @@ impl Parent for PhysicsParent {
 /// required physics related `System`s.
 ///
 /// # Examples
-/// ```
-/// use specs_physics::bodies::util::SimplePosition;
+/// ```rust
+/// use specs_physics::SimplePosition;
 /// let dispatcher = specs_physics::physics_dispatcher::<f32, SimplePosition<f32>>();
 /// ```
 pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>

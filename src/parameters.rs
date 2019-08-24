@@ -4,10 +4,15 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::{
-    nalgebra::{self as na, RealField, Scalar, Vector3},
-    nphysics::solver::IntegrationParameters,
-};
+use nalgebra::{convert, RealField, Scalar};
+use nphysics::solver::IntegrationParameters;
+
+
+#[cfg(feature = "physics3d")]
+use nalgebra::Vector3 as Vector;
+
+#[cfg(feature = "physics2d")]
+use nalgebra::Vector2 as Vector;
 
 /// The `TimeStep` is used to set the timestep of the nphysics integration, see
 /// `nphysics::world::World::set_timestep(..)`.
@@ -37,17 +42,17 @@ impl<N: RealField> DerefMut for TimeStep<N> {
 
 impl<N: RealField> Default for TimeStep<N> {
     fn default() -> Self {
-        Self(na::convert(1.0 / 60.0))
+        Self(convert(1.0 / 60.0))
     }
 }
 
-/// `Gravity` is a newtype for `Vector3`. It represents a constant
+/// `Gravity` is a newtype for `Vector`. It represents a constant
 /// acceleration affecting all physical objects in the scene.
 #[derive(Debug, PartialEq)]
-pub struct Gravity<N: RealField + Scalar>(pub Vector3<N>);
+pub struct Gravity<N: RealField + Scalar>(pub Vector<N>);
 
 impl<N: RealField + Scalar> Deref for Gravity<N> {
-    type Target = Vector3<N>;
+    type Target = Vector<N>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -62,7 +67,7 @@ impl<N: RealField + Scalar> DerefMut for Gravity<N> {
 
 impl<N: RealField + Scalar> Default for Gravity<N> {
     fn default() -> Self {
-        Self(Vector3::<N>::zeros())
+        Self(Vector::<N>::zeros())
     }
 }
 
@@ -189,14 +194,14 @@ impl<N: RealField> PartialEq<IntegrationParameters<N>> for PhysicsIntegrationPar
 impl<N: RealField> Default for PhysicsIntegrationParameters<N> {
     fn default() -> Self {
         PhysicsIntegrationParameters {
-            error_reduction_parameter: na::convert(0.2),
-            warmstart_coefficient: na::convert(1.0),
-            restitution_velocity_threshold: na::convert(1.0),
-            allowed_linear_error: na::convert(0.001),
-            allowed_angular_error: na::convert(0.001),
-            max_linear_correction: na::convert(100.0),
-            max_angular_correction: na::convert(0.2),
-            max_stabilization_multiplier: na::convert(0.2),
+            error_reduction_parameter: convert(0.2),
+            warmstart_coefficient: convert(1.0),
+            restitution_velocity_threshold: convert(1.0),
+            allowed_linear_error: convert(0.001),
+            allowed_angular_error: convert(0.001),
+            max_linear_correction: convert(100.0),
+            max_angular_correction: convert(0.2),
+            max_stabilization_multiplier: convert(0.2),
             max_velocity_iterations: 8,
             max_position_iterations: 3,
         }
