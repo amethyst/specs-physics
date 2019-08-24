@@ -113,14 +113,14 @@
 //! ```rust
 //! use specs_physics::{
 //!     colliders::Shape,
-//!     nalgebra::{Isometry3, Vector3},
+//!     nalgebra::{Isometry3, Vector},
 //!     ncollide::world::CollisionGroups,
 //!     nphysics::material::{BasicMaterial, MaterialHandle},
 //!     PhysicsColliderBuilder,
 //! };
 //!
 //! let physics_collider = PhysicsColliderBuilder::from(
-//!         Shape::Cuboid{ half_extents: Vector3::new(10.0, 10.0, 1.0) })
+//!         Shape::Cuboid{ half_extents: Vector::new(10.0, 10.0, 1.0) })
 //!     .offset_from_parent(Isometry3::identity())
 //!     .density(1.2)
 //!     .material(MaterialHandle::new(BasicMaterial::default()))
@@ -240,8 +240,14 @@
 extern crate log;
 
 pub use nalgebra;
+#[cfg(feature = "physics3d")]
 pub use ncollide3d as ncollide;
+#[cfg(feature = "physics3d")]
 pub use nphysics3d as nphysics;
+#[cfg(feature = "physics2d")]
+pub use ncollide2d as ncollide;
+#[cfg(feature = "physics2d")]
+pub use nphysics2d as nphysics;
 pub use shrev;
 
 use std::collections::HashMap;
@@ -258,7 +264,7 @@ pub use self::{
 
 use self::{
     bodies::Position,
-    nalgebra::{RealField, Vector3},
+    nalgebra::RealField,
     nphysics::{
         counters::Counters,
         material::MaterialsCoefficientsTable,
@@ -271,6 +277,12 @@ use self::{
         SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem,
     },
 };
+
+#[cfg(feature = "physics3d")]
+use nalgebra::Vector3 as Vector;
+
+#[cfg(feature = "physics2d")]
+use nalgebra::Vector2 as Vector;
 
 pub mod bodies;
 pub mod colliders;
@@ -308,7 +320,7 @@ impl<N: RealField> Physics<N> {
 
     /// Reports the internal value for the gravity.
     /// See also `Gravity` for setting this value.
-    pub fn gravity(&self) -> &Vector3<N> {
+    pub fn gravity(&self) -> &Vector<N> {
         self.world.gravity()
     }
 

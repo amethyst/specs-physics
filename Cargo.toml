@@ -24,9 +24,9 @@ specs = "^0.14"
 specs-hierarchy = "^0.3"
 shrev = "^1.0"
 nalgebra = "^0.18"
-ncollide2d = { version = "^0.20", optional = true }
+ncollide2d = { version = "^0.19", optional = true }
 ncollide3d = { version = "^0.19", optional = true }
-nphysics2d = { version = "^0.12", optional = true }
+nphysics2d = { version = "^0.11", optional = true }
 nphysics3d = { version = "^0.11", optional = true }
 amethyst_core = { version = "^0.7", optional = true }
 objekt = "0.1.2"

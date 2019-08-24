@@ -5,9 +5,15 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    nalgebra::{self as na, RealField, Scalar, Vector3},
+    nalgebra::{self as na, RealField, Scalar},
     nphysics::solver::IntegrationParameters,
 };
+
+#[cfg(feature = "physics3d")]
+use nalgebra::Vector3 as Vector;
+
+#[cfg(feature = "physics2d")]
+use nalgebra::Vector2 as Vector;
 
 /// The `TimeStep` is used to set the timestep of the nphysics integration, see
 /// `nphysics::world::World::set_timestep(..)`.
@@ -41,13 +47,13 @@ impl<N: RealField> Default for TimeStep<N> {
     }
 }
 
-/// `Gravity` is a newtype for `Vector3`. It represents a constant
+/// `Gravity` is a newtype for `Vector`. It represents a constant
 /// acceleration affecting all physical objects in the scene.
 #[derive(Debug, PartialEq)]
-pub struct Gravity<N: RealField + Scalar>(pub Vector3<N>);
+pub struct Gravity<N: RealField + Scalar>(pub Vector<N>);
 
 impl<N: RealField + Scalar> Deref for Gravity<N> {
-    type Target = Vector3<N>;
+    type Target = Vector<N>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -62,7 +68,7 @@ impl<N: RealField + Scalar> DerefMut for Gravity<N> {
 
 impl<N: RealField + Scalar> Default for Gravity<N> {
     fn default() -> Self {
-        Self(Vector3::<N>::zeros())
+        Self(Vector::<N>::zeros())
     }
 }
 
