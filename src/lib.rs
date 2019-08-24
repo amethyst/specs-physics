@@ -8,9 +8,9 @@
 //! specs-physics = "0.3.0"
 //! ```
 //!
-//! **specs-physics** defines a set of [Specs][] `System`s and `Component`s to
-//! handle the creation, modification and removal of [nphysics][] objects
-//! ([RigidBody][], [Collider][]) and the synchronisation of object positions
+//! **specs-physics** defines a set of [Specs] `System`s and `Component`s to
+//! handle the creation, modification and removal of [nphysics] objects
+//! ([RigidBody], [Collider]) and the synchronisation of object positions
 //! and global gravity between both worlds.
 //!
 //! ### Generic types
@@ -22,7 +22,7 @@
 //!
 //! #### `N: RealField`
 //!
-//! [nphysics][] is built upon [nalgebra][] and uses various types and
+//! [nphysics] is built upon [nalgebra] and uses various types and
 //! structures from this crate. **specs-physics** builds up on this even further
 //! and utilises the same structures, which all work with any type that
 //! implements `nalgebra::RealField`. `nalgebra::RealField` is by default
@@ -34,8 +34,8 @@
 //! a type parameter which implements the `specs_physics::bodies::Position`
 //! *trait*, requiring also a `Component` implementation with a
 //! `FlaggedStorage`. This `Position` `Component` is used to initially place a
-//! [RigidBody][] in the [nphysics][] world and later used to synchronise the
-//! updated translation and rotation of these bodies back into the [Specs][]
+//! [RigidBody] in the [nphysics] world and later used to synchronise the
+//! updated translation and rotation of these bodies back into the [Specs]
 //! world.
 //!
 //! Example for a `Position` `Component`, simply using the "Isometry" type (aka
@@ -67,7 +67,7 @@
 //! }
 //! ```
 //!
-//! If you're using [Amethyst][], you can enable the "amethyst" feature for this
+//! If you're using [Amethyst], you can enable the "amethyst" feature for this
 //! crate which provides a `Position<Float>` impl for `Transform`.
 //!
 //! ```toml
@@ -79,9 +79,9 @@
 //!
 //! ##### PhysicsBody
 //!
-//! The `specs_physics::PhysicsBody` `Component` is used to define [RigidBody][]
-//! from the comforts of your [Specs][] world. Changes to the `PhysicsBody` will
-//! automatically be synchronised with [nphysics][].
+//! The `specs_physics::PhysicsBody` `Component` is used to define [RigidBody]
+//! from the comforts of your [Specs] world. Changes to the `PhysicsBody` will
+//! automatically be synchronised with [nphysics].
 //!
 //! Example:
 //!
@@ -105,8 +105,8 @@
 //!
 //! `specs_physics::PhysicsCollider`s are the counterpart to `PhysicsBody`s.
 //! They can exist on their own or as a part of a `PhysicsBody`
-//! `PhysicsCollider`s are used to define and create [Collider][]'s in
-//! [nphysics][].
+//! `PhysicsCollider`s are used to define and create [Collider]'s in
+//! [nphysics].
 //!
 //! Example:
 //!
@@ -132,8 +132,8 @@
 //!     .build();
 //! ```
 //!
-//! To assign multiple [Collider][]'s the the same body, [Entity hierarchy][]
-//! can be used. This utilises [specs-hierarchy][].
+//! To assign multiple [Collider]'s the the same body, [Entity hierarchy]
+//! can be used. This utilises [specs-hierarchy].
 //!
 //! ### Systems
 //!
@@ -141,26 +141,26 @@
 //! `Dispatcher` in order:
 //!
 //! 1. `specs_physics::systems::SyncBodiesToPhysicsSystem` - handles the
-//! creation, modification and removal of [RigidBody][]'s based on the
+//! creation, modification and removal of [RigidBody]'s based on the
 //! `PhysicsBody` `Component` and an implementation of the `Position`
 //! *trait*.
 //!
 //! 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles
-//! the creation, modification and removal of [Collider][]'s based on the
+//! the creation, modification and removal of [Collider]'s based on the
 //! `PhysicsCollider` `Component`. This `System` depends on
-//! `SyncBodiesToPhysicsSystem` as [Collider][] can depend on [RigidBody][].
+//! `SyncBodiesToPhysicsSystem` as [Collider] can depend on [RigidBody].
 //!
 //! 3. `specs_physics::systems::SyncParametersToPhysicsSystem` - handles the
-//! modification of the [nphysics][] `World`s parameters.
+//! modification of the [nphysics] `World`s parameters.
 //!
 //! 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression
-//! of the [nphysics][] `World` and causes objects to actually move and
+//! of the [nphysics] `World` and causes objects to actually move and
 //! change their position. This `System` is the backbone for collision
 //! detection.
 //!
 //! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` -
-//! handles the synchronisation of [RigidBody][] positions and dynamics back
-//! into the [Specs][] `Component`s. This `System` also utilises the
+//! handles the synchronisation of [RigidBody] positions and dynamics back
+//! into the [Specs] `Component`s. This `System` also utilises the
 //! `Position` *trait* implementation.
 //!
 //! An example `Dispatcher` with all required `System`s:
@@ -211,10 +211,10 @@
 //!     .build();
 //! ```
 //!
-//! If you're using [Amethyst][] Transforms directly, you'd pass the generic
+//! If you're using [Amethyst] Transforms directly, you'd pass the generic
 //! arguments like so:
 //!
-//! ```
+//! ```rust,norun
 //! use amethyst_core::{Float, Transform};
 //! use specs_physics::systems::SyncBodiesToPhysicsSystem;
 //! SyncBodiesToPhysicsSystem::<Float, Transform>::default();
