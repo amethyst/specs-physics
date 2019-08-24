@@ -14,19 +14,21 @@ description = "nphysics integration for the Specs entity component system"
 keywords = ["specs", "nphysics", "nphysics3d"]
 
 [features]
-default = []
-
+physics3d = ["ncollide3d", "nphysics3d"]
+physics2d = ["ncollide2d", "nphysics2d"]
 amethyst = ["amethyst_core"]
 
 [dependencies]
-log = "0.4.6"
-specs = "0.15.0"
-specs-hierarchy = { git = "https://github.com/cedric-h/specs-hierarchy.git", branch = "update-specs" }
-shrev = "1.1.1"
-nalgebra = "0.18.0"
-ncollide3d = "0.19"
-nphysics3d = "0.11.1"
-amethyst_core = { git = "https://github.com/amethyst/amethyst", optional = true }
+log = "^0.4.6"
+specs = "^0.14"
+specs-hierarchy = "^0.3"
+shrev = "^1.0"
+nalgebra = "^0.18"
+ncollide2d = { version = "^0.19", optional = true }
+ncollide3d = { version = "^0.19", optional = true }
+nphysics2d = { version = "^0.11", optional = true }
+nphysics3d = { version = "^0.11", optional = true }
+amethyst_core = { version = "^0.7", optional = true }
 objekt = "0.1.2"
 
 [dev-dependencies]
@@ -36,20 +38,25 @@ approx = "0.3.2"
 [[example]]
 name = "basic"
 path = "examples/basic.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "hierarchy"
 path = "examples/hierarchy.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "positions"
 path = "examples/positions.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "collision"
 path = "examples/collision.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "events"
 path = "examples/events.rs"
+required-features = ["physics3d"]
 

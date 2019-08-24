@@ -13,14 +13,11 @@ use specs::{
     WriteStorage,
 };
 
-use crate::{
-    bodies::Position,
-    colliders::PhysicsCollider,
-    nalgebra::RealField,
-    nphysics::object::{BodyPartHandle, ColliderDesc},
-    Physics,
-    PhysicsParent,
-};
+use crate::positon::Position;
+use crate::colliders::PhysicsCollider;
+use crate::{Physics, PhysicsParent};
+use nalgebra::RealField;
+use nphysics::object::{BodyPartHandle, ColliderDesc};
 
 use super::iterate_component_events;
 
@@ -258,17 +255,14 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use specs::prelude::*;
 
+    use nalgebra::Isometry3;
     use crate::{
-        colliders::Shape,
-        nalgebra::Isometry3,
-        systems::SyncCollidersToPhysicsSystem,
-        Physics,
-        PhysicsColliderBuilder,
-        SimplePosition,
+        colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics,
+        PhysicsColliderBuilder, SimplePosition,
     };
 
     #[test]

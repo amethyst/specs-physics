@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use specs::{Read, System, SystemData, World, WriteExpect};
 
+use nalgebra::RealField;
 use crate::{
-    nalgebra::RealField,
     parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
     Physics,
 };
@@ -77,17 +77,13 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use approx::assert_ulps_eq;
     use specs::prelude::*;
 
-    use crate::{
-        nalgebra::Vector3,
-        parameters::Gravity,
-        systems::SyncParametersToPhysicsSystem,
-        Physics,
-    };
+    use nalgebra::Vector3;
+    use crate::{parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics};
 
     #[test]
     fn update_gravity() {
