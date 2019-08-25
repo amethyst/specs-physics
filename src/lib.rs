@@ -236,13 +236,13 @@ extern crate log;
 
 pub use nalgebra;
 #[cfg(feature = "physics3d")]
-pub use ncollide3d as ncollide;
+extern crate ncollide3d as ncollide;
 #[cfg(feature = "physics3d")]
-pub use nphysics3d as nphysics;
+extern crate nphysics3d as nphysics;
 #[cfg(feature = "physics2d")]
-pub use ncollide2d as ncollide;
+extern crate ncollide2d as ncollide;
 #[cfg(feature = "physics2d")]
-pub use nphysics2d as nphysics;
+extern crate nphysics2d as nphysics;
 pub use shrev;
 
 use std::collections::HashMap;

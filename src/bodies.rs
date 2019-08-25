@@ -1,24 +1,19 @@
 use specs::{Component, DenseVecStorage, FlaggedStorage};
-
-use crate::{
-    nalgebra::RealField,
-    nphysics::{
-        algebra::ForceType,
-        object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc},
-    },
-};
+use nalgebra::RealField;
 
 #[cfg(feature = "physics3d")]
-use crate::nalgebra::{Point3 as Point, Matrix3, Isometry3 as Isometry};
+use nalgebra::{Point3 as Point, Matrix3, Isometry3 as Isometry};
 
 #[cfg(feature = "physics2d")]
-use crate::nalgebra::{Point2 as Point, Isometry2 as Isometry};
+use nalgebra::{Point2 as Point, Isometry2 as Isometry};
 
 #[cfg(feature = "physics3d")]
-use crate::nphysics::algebra::{Force3 as Force, Velocity3 as Velocity};
+use nphysics::{algebra::{Force3 as Force, Velocity3 as Velocity, ForceType,},
+                 object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
 
 #[cfg(feature = "physics2d")]
-use crate::nphysics::algebra::{Force2 as Force, Velocity2 as Velocity};
+use nphysics::{algebra::{Force2 as Force, Velocity2 as Velocity, ForceType,},
+                 object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
 
 
 pub mod util {

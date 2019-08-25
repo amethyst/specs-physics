@@ -5,13 +5,11 @@ use specs::{
     SystemData, WriteExpect, WriteStorage,
 };
 
-use crate::{
-    bodies::Position,
-    colliders::PhysicsCollider,
-    nalgebra::RealField,
-    nphysics::object::{BodyPartHandle, ColliderDesc},
-    Physics, PhysicsParent,
-};
+use crate::bodies::Position;
+use crate::colliders::PhysicsCollider;
+use crate::{Physics, PhysicsParent};
+use nalgebra::RealField;
+use nphysics::object::{BodyPartHandle, ColliderDesc};
 
 use super::iterate_component_events;
 
@@ -254,8 +252,9 @@ where
 mod tests {
     use specs::{world::Builder, DispatcherBuilder, World};
 
+    use nalgebra::Isometry3;
     use crate::{
-        colliders::Shape, nalgebra::Isometry3, systems::SyncCollidersToPhysicsSystem, Physics,
+        colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics,
         PhysicsColliderBuilder, SimplePosition,
     };
 

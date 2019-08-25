@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use specs::{Read, Resources, System, SystemData, WriteExpect};
 
+use nalgebra::RealField;
 use crate::{
-    nalgebra::RealField,
     parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
     Physics,
 };
@@ -81,9 +81,8 @@ where
 mod tests {
     use specs::{DispatcherBuilder, World};
 
-    use crate::{
-        nalgebra::Vector3, parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics,
-    };
+    use nalgebra::Vector3;
+    use crate::{parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics};
 
     #[test]
     fn update_gravity() {

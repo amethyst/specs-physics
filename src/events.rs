@@ -1,6 +1,7 @@
 use specs::Entity;
 
-use crate::{ncollide::query::Proximity, shrev::EventChannel};
+use ncollide::query::Proximity;
+use shrev::EventChannel;
 
 /// The `ContactType` is set accordingly to whether a contact began or ended.
 #[derive(Debug)]

@@ -2,24 +2,19 @@ use std::{f32::consts::PI, fmt, ops::Deref};
 
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
-use crate::{
-    nalgebra::{Point2, Point3, RealField, Unit},
-    ncollide::{
-        shape::{
-            Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyline, Segment,
-            ShapeHandle,
-        },
-        world::CollisionGroups,
-    },
-    nphysics::{
-        material::{BasicMaterial, MaterialHandle},
-        object::ColliderHandle,
-    },
+use nalgebra::{Point2, Point3, RealField, Unit};
+use ncollide::{
+    shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyline, Segment, ShapeHandle},
+    world::CollisionGroups
+};
+use nphysics::{
+    material::{BasicMaterial, MaterialHandle},
+    object::ColliderHandle,
 };
 
 
 #[cfg(feature = "physics3d")]
-use crate::ncollide::shape::{ConvexHull, TriMesh, Triangle};
+use ncollide::shape::{ConvexHull, TriMesh, Triangle};
 
 #[cfg(feature = "physics3d")]
 use nalgebra::{Isometry3 as Isometry, DMatrix, Vector3 as Vector, Point3 as Point};

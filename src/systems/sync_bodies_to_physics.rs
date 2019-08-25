@@ -5,11 +5,9 @@ use specs::{
     SystemData, WriteExpect, WriteStorage,
 };
 
-use crate::{
-    bodies::{PhysicsBody, Position},
-    nalgebra::RealField,
-    Physics,
-};
+use nalgebra::RealField;
+use crate::bodies::{PhysicsBody, Position};
+use crate::Physics;
 
 use super::iterate_component_events;
 
@@ -199,10 +197,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        nalgebra::Isometry3, nphysics::object::BodyStatus, systems::SyncBodiesToPhysicsSystem,
-        Physics, PhysicsBodyBuilder, SimplePosition,
-    };
+    use nalgebra::Isometry3;
+    use nphysics::object::BodyStatus;
+    use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};
 
     use specs::{world::Builder, DispatcherBuilder, World};
 

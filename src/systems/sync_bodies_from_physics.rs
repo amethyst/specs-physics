@@ -2,11 +2,9 @@ use std::marker::PhantomData;
 
 use specs::{Join, ReadExpect, Resources, System, SystemData, WriteStorage};
 
-use crate::{
-    bodies::{PhysicsBody, Position},
-    nalgebra::RealField,
-    Physics,
-};
+use crate::bodies::{PhysicsBody, Position};
+use crate::Physics;
+use nalgebra::RealField;
 
 /// The `SyncBodiesFromPhysicsSystem` synchronised the updated position of
 /// the `RigidBody`s in the nphysics `World` with their Specs counterparts. This
