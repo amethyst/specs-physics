@@ -6,7 +6,8 @@ use specs::{
 };
 
 use nalgebra::RealField;
-use crate::bodies::{PhysicsBody, Position};
+use crate::bodies::PhysicsBody;
+use crate::positon::Position;
 use crate::Physics;
 
 use super::iterate_component_events;

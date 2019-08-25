@@ -2,7 +2,8 @@ use std::marker::PhantomData;
 
 use specs::{Join, ReadExpect, Resources, System, SystemData, WriteStorage};
 
-use crate::bodies::{PhysicsBody, Position};
+use crate::bodies::PhysicsBody;
+use crate::positon::Position;
 use crate::Physics;
 use nalgebra::RealField;
 

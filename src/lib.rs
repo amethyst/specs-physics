@@ -253,20 +253,21 @@ use specs::{
 use specs_hierarchy::Parent;
 
 pub use self::{
-    bodies::{util::SimplePosition, PhysicsBody, PhysicsBodyBuilder},
+    bodies::{PhysicsBody, PhysicsBodyBuilder},
+    positon::{Position, SimplePosition},
     colliders::{PhysicsCollider, PhysicsColliderBuilder},
 };
 
+use nphysics::{
+    counters::Counters,
+    material::MaterialsCoefficientsTable,
+    object::{BodyHandle, ColliderHandle},
+    solver::IntegrationParameters,
+    world::World,
+};
+
 use self::{
-    bodies::Position,
     nalgebra::RealField,
-    nphysics::{
-        counters::Counters,
-        material::MaterialsCoefficientsTable,
-        object::{BodyHandle, ColliderHandle},
-        solver::IntegrationParameters,
-        world::World,
-    },
     systems::{
         PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
         SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem,
@@ -284,6 +285,7 @@ pub mod colliders;
 pub mod events;
 pub mod parameters;
 pub mod systems;
+pub mod positon;
 
 /// Resource holding the internal fields where physics computation occurs.
 /// Some inspection methods are exposed to allow debugging.
@@ -377,7 +379,7 @@ impl Parent for PhysicsParent {
 ///
 /// # Examples
 /// ```rust
-/// use specs_physics::bodies::util::SimplePosition;
+/// use specs_physics::SimplePosition;
 /// let dispatcher = specs_physics::physics_dispatcher::<f32, SimplePosition<f32>>();
 /// ```
 pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>

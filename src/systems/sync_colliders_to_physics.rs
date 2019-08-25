@@ -5,7 +5,7 @@ use specs::{
     SystemData, WriteExpect, WriteStorage,
 };
 
-use crate::bodies::Position;
+use crate::positon::Position;
 use crate::colliders::PhysicsCollider;
 use crate::{Physics, PhysicsParent};
 use nalgebra::RealField;
