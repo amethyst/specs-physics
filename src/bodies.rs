@@ -49,6 +49,22 @@ pub trait Position<N: RealField>:
 {
     fn isometry(&self) -> &Isometry<N>;
     fn isometry_mut(&mut self) -> &mut Isometry<N>;
+
+    /// Helper function to extract the location of this `Position`. Using `Position::isometry()` is
+    /// preferable, but can be harder to work with. The translation of this `Position` can be set
+    /// using `Position::isometry_mut()`.
+    fn translation(&self) -> Point<N> {
+        self.isometry().translation.vector.into()
+    }
+
+    /// Helper function to extract the rotation of this `Position`. Using `Position::isometry()` is
+    /// preferable, but can be harder to work with. The rotation of this `Position` can be set
+    /// using `Position::isometry_mut()`. This is only available when the `physics2d` feature is
+    /// enabled.
+    #[cfg(feature = "physics2d")]
+    fn angle(&self) -> N {
+        self.isometry().rotation.angle()
+    }
 }
 
 #[cfg(feature = "amethyst")]
