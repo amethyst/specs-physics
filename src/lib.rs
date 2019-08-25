@@ -41,7 +41,7 @@
 //! Example for a `Position` `Component`, simply using the "Isometry" type (aka
 //! combined translation and rotation structure) directly:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use specs::{Component, DenseVecStorage, FlaggedStorage};
 //! use specs_physics::{bodies::Position, nalgebra::Isometry3};
 //!
@@ -80,7 +80,7 @@
 //!
 //! Example:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use specs_physics::{
 //!     nalgebra::{Matrix3, Point3},
 //!     nphysics::{algebra::Velocity3, object::BodyStatus},
@@ -105,17 +105,17 @@
 //!
 //! Example:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use specs_physics::{
 //!     colliders::Shape,
-//!     nalgebra::{Isometry3, Vector},
+//!     nalgebra::{Isometry3, Vector3},
 //!     ncollide::world::CollisionGroups,
 //!     nphysics::material::{BasicMaterial, MaterialHandle},
 //!     PhysicsColliderBuilder,
 //! };
 //!
 //! let physics_collider = PhysicsColliderBuilder::from(
-//!         Shape::Cuboid{ half_extents: Vector::new(10.0, 10.0, 1.0) })
+//!         Shape::Cuboid{ half_extents: Vector3::new(10.0, 10.0, 1.0) })
 //!     .offset_from_parent(Isometry3::identity())
 //!     .density(1.2)
 //!     .material(MaterialHandle::new(BasicMaterial::default()))
@@ -160,7 +160,7 @@
 //!
 //! An example `Dispatcher` with all required `System`s:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use specs::DispatcherBuilder;
 //! use specs_physics::{
 //!     systems::{
@@ -209,8 +209,8 @@
 //! If you're using [Amethyst] Transforms directly, you'd pass the generic
 //! arguments like so:
 //!
-//! ```rust,norun
-//! use amethyst_core::{Float, Transform};
+//! ```rust,ignore
+//! use amethyst::core::{Float, Transform};
 //! use specs_physics::systems::SyncBodiesToPhysicsSystem;
 //! SyncBodiesToPhysicsSystem::<Float, Transform>::default();
 //! ```
@@ -236,13 +236,13 @@ extern crate log;
 
 pub use nalgebra;
 #[cfg(feature = "physics3d")]
-extern crate ncollide3d as ncollide;
+pub extern crate ncollide3d as ncollide;
 #[cfg(feature = "physics3d")]
-extern crate nphysics3d as nphysics;
+pub extern crate nphysics3d as nphysics;
 #[cfg(feature = "physics2d")]
-extern crate ncollide2d as ncollide;
+pub extern crate ncollide2d as ncollide;
 #[cfg(feature = "physics2d")]
-extern crate nphysics2d as nphysics;
+pub extern crate nphysics2d as nphysics;
 pub use shrev;
 
 use std::collections::HashMap;
@@ -376,7 +376,7 @@ impl Parent for PhysicsParent {
 /// required physics related `System`s.
 ///
 /// # Examples
-/// ```
+/// ```rust
 /// use specs_physics::bodies::util::SimplePosition;
 /// let dispatcher = specs_physics::physics_dispatcher::<f32, SimplePosition<f32>>();
 /// ```

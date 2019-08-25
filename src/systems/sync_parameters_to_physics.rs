@@ -77,7 +77,7 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use specs::{DispatcherBuilder, World};
 

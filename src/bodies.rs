@@ -143,19 +143,19 @@ impl<N: RealField> PhysicsBody<N> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use specs_physics::{
-///     nalgebra::{Matrix3, Point},
-///     nphysics::{algebra::Velocity, object::BodyStatus},
+///     nalgebra::{Matrix3, Point3},
+///     nphysics::{algebra::Velocity3, object::BodyStatus},
 ///     PhysicsBodyBuilder,
 /// };
 ///
 /// let physics_body = PhysicsBodyBuilder::from(BodyStatus::Dynamic)
 ///     .gravity_enabled(true)
-///     .velocity(Velocity::linear(1.0, 1.0, 1.0))
+///     .velocity(Velocity3::linear(1.0, 1.0, 1.0))
 ///     .angular_inertia(Matrix3::from_diagonal_element(3.0))
 ///     .mass(1.3)
-///     .local_center_of_mass(Point::new(0.0, 0.0, 0.0))
+///     .local_center_of_mass(Point3::new(0.0, 0.0, 0.0))
 ///     .build();
 /// ```
 pub struct PhysicsBodyBuilder<N: RealField> {

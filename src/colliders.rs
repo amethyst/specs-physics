@@ -202,7 +202,7 @@ impl<N: RealField> PhysicsCollider<N> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use specs_physics::{
 ///     colliders::Shape,
 ///     nalgebra::{Isometry, Vector3},

@@ -37,20 +37,25 @@ simple_logger = "1.2.0"
 [[example]]
 name = "basic"
 path = "examples/basic.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "hierarchy"
 path = "examples/hierarchy.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "positions"
 path = "examples/positions.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "collision"
 path = "examples/collision.rs"
+required-features = ["physics3d"]
 
 [[example]]
 name = "events"
 path = "examples/events.rs"
+required-features = ["physics3d"]
 

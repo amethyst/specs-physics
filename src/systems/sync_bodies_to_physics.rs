@@ -195,7 +195,7 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use nalgebra::Isometry3;
     use nphysics::object::BodyStatus;
