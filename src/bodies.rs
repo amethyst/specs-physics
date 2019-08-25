@@ -36,12 +36,6 @@ pub mod util {
         fn isometry_mut(&mut self) -> &mut Isometry<N> {
             &mut self.0
         }
-
-        fn set_isometry(&mut self, isometry: &Isometry<N>) -> &mut Self {
-            self.0.rotation = isometry.rotation;
-            self.0.translation = isometry.translation;
-            self
-        }
     }
 
     impl<N: RealField> Component for SimplePosition<N> {
@@ -60,7 +54,6 @@ pub trait Position<N: RealField>:
 {
     fn isometry(&self) -> &Isometry<N>;
     fn isometry_mut(&mut self) -> &mut Isometry<N>;
-    fn set_isometry(&mut self, isometry: &Isometry<N>) -> &mut Self;
 }
 
 #[cfg(feature = "amethyst")]
@@ -71,10 +64,6 @@ impl Position<f32> for amethyst_core::Transform {
 
     fn isometry_mut(&mut self) -> &mut Isometry<f32> {
         self.isometry_mut()
-    }
-
-    fn set_isometry(&mut self, isometry: &Isometry<f32>) -> &mut Self {
-        self.set_isometry(*isometry)
     }
 }
 
