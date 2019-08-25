@@ -20,6 +20,7 @@ pub mod util {
     use specs::{Component, DenseVecStorage, FlaggedStorage};
 
     use super::{Position, Isometry, RealField};
+    use objekt::private::ops::{Deref, DerefMut};
 
     pub struct SimplePosition<N: RealField>(pub Isometry<N>);
 
@@ -35,6 +36,20 @@ pub mod util {
 
     impl<N: RealField> Component for SimplePosition<N> {
         type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+    }
+
+    impl<N: RealField> Deref for SimplePosition<N> {
+        type Target = Isometry<N>;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl<N: RealField> DerefMut for SimplePosition<N> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
     }
 }
 
