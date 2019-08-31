@@ -111,7 +111,7 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
         ));
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("PhysicsStepperSystem.setup");
         Self::SystemData::setup(res);
 
