@@ -89,7 +89,7 @@ impl<N: RealField> Shape<N> {
     /// Converts a `Shape` and its values into its corresponding `ShapeHandle`
     /// type. The `ShapeHandle` is used to define a `Collider` in the
     /// `PhysicsWorld`.
-    fn handle(&self) -> ShapeHandle<N> {
+    pub fn handle(&self) -> ShapeHandle<N> {
         match self {
             Shape::Ball { radius } => ShapeHandle::new(Ball::<N>::new(*radius)),
             Shape::Capsule {
@@ -130,15 +130,27 @@ impl<N: RealField> Shape<N> {
 /// the physic worlds `Collider`.
 #[derive(Clone)]
 pub struct PhysicsCollider<N: RealField> {
+    /// The handle to the collider in the physics world.
     pub(crate) handle: Option<ColliderHandle>,
+    /// The shape of this collider.
     pub shape: Shape<N>,
+    /// The position/rotation offset of the collider from the entity it is attached to.
     pub offset_from_parent: Isometry3<N>,
     pub density: N,
+    /// The physics material of which this collider is composed.
+    /// Defines properties like bounciness and others.
     pub material: MaterialHandle<N>,
+    /// Margin between the detection zone of what is "near" the collider and the actual collider.
     pub margin: N,
+    /// Collision groups this collider is part of.
+    /// Defines with which other colliders this collider can interact.
     pub collision_groups: CollisionGroups,
+    /// Prediction amount of the linear momentum.
     pub linear_prediction: N,
+    /// Prediction amount of the angular momentum.
     pub angular_prediction: N,
+    /// Whether this collider is a sensor and only emits events without interacting (true) or
+    /// if it is a regular collider (false).
     pub sensor: bool,
 }
 
