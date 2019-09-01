@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use specs::{
-    world::Index, Entities, Entity, Read, Resources, System, SystemData, Write, WriteExpect,
+    world::Index, World, Entities, Entity, Read, System, SystemData, Write, WriteExpect,
 };
 
 use crate::{
