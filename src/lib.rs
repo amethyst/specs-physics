@@ -215,9 +215,9 @@
 //! arguments like so:
 //!
 //! ```
-//! use amethyst_core::{Float, Transform};
+//! use amethyst_core::Transform;
 //! use specs_physics::systems::SyncBodiesToPhysicsSystem;
-//! SyncBodiesToPhysicsSystem::<Float, Transform>::default();
+//! SyncBodiesToPhysicsSystem::<f32, Transform>::default();
 //! ```
 //!
 //! Alternatively to building your own `Dispatcher`, you can always fall back on
@@ -247,7 +247,13 @@ pub use shrev;
 use std::collections::HashMap;
 
 use specs::{
-    world::Index, Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity, FlaggedStorage,
+    world::Index,
+    Component,
+    DenseVecStorage,
+    Dispatcher,
+    DispatcherBuilder,
+    Entity,
+    FlaggedStorage,
 };
 use specs_hierarchy::Parent;
 
@@ -267,8 +273,11 @@ use self::{
         world::World,
     },
     systems::{
-        PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
-        SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem,
+        PhysicsStepperSystem,
+        SyncBodiesFromPhysicsSystem,
+        SyncBodiesToPhysicsSystem,
+        SyncCollidersToPhysicsSystem,
+        SyncParametersToPhysicsSystem,
     },
 };
 
