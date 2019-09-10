@@ -215,9 +215,9 @@
 //! arguments like so:
 //!
 //! ```
-//! use amethyst_core::{Float, Transform};
+//! use amethyst_core::Transform;
 //! use specs_physics::systems::SyncBodiesToPhysicsSystem;
-//! SyncBodiesToPhysicsSystem::<Float, Transform>::default();
+//! SyncBodiesToPhysicsSystem::<f32, Transform>::default();
 //! ```
 //!
 //! Alternatively to building your own `Dispatcher`, you can always fall back on

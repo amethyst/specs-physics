@@ -26,7 +26,8 @@ shrev = "1.1.1"
 nalgebra = "0.18.0"
 ncollide3d = "0.19"
 nphysics3d = "0.11.1"
-amethyst_core = { version = "0.7.0", optional = true }
+# TODO: fix before release
+amethyst_core = { git = "https://github.com/amethyst/amethyst", optional = true }
 objekt = "0.1.2"
 
 [dev-dependencies]
