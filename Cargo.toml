@@ -32,6 +32,7 @@ objekt = "0.1.2"
 
 [dev-dependencies]
 simple_logger = "1.2.0"
+approx = "0.3.2"
 
 [[example]]
 name = "basic"
