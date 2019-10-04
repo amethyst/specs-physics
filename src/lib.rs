@@ -249,9 +249,13 @@ pub use ncollide2d as ncollide;
 #[cfg(feature = "dim2")]
 pub use nphysics2d as nphysics;
 
+//pub mod bodies;
 pub mod events;
 pub mod handle;
+pub mod position;
 pub mod systems;
+
+pub use self::position::{Position, SimplePosition};
 
 use crate::nphysics::{
     force_generator::DefaultForceGeneratorSet,
@@ -268,19 +272,3 @@ pub type BodySetType<N> = DefaultBodySet<N>;
 pub type ColliderSetType<N> = DefaultColliderSet<N, BodyHandleType>;
 pub type JointConstraintSetType<N> = DefaultJointConstraintSet<N, BodySetType<N>>;
 pub type ForceGeneratorSetType<N> = DefaultForceGeneratorSet<N, BodySetType<N>>;
-
-//pub struct BodySetJoinMut<'a>(FetchMut<'a, DefaultBodySet>, ReadStorage<'a,
-// BodyPartHandle>);
-
-//pub use self::{
-//    bodies::{PhysicsBody, PhysicsBodyBuilder},
-//    position::{Position, SimplePosition},
-//    colliders::{PhysicsCollider, PhysicsColliderBuilder},
-//    systems::{physics_dispatcher, register_physics_systems},
-//};
-
-//pub mod bodies;
-//pub mod colliders;
-//pub mod parameters;
-//pub mod parent;
-//pub mod position;

@@ -1,11 +1,13 @@
-use std::marker::PhantomData;
+use crate::{
+    handle::{BodyHandle, BodyPartHandle, EntityHandleExt},
+    nalgebra::RealField,
+    position::Position,
+    BodySetType,
+};
 
-use specs::{Join, ReadExpect, World, System, SystemData, WriteStorage};
+use specs::{Join, ReadExpect, ReadStorage, System, WriteStorage};
 
-use crate::bodies::PhysicsBody;
-use crate::positon::Position;
-use crate::Physics;
-use nalgebra::RealField;
+use std::{marker::PhantomData, ops::Deref};
 
 /// The `SyncBodiesFromPhysicsSystem` synchronised the updated position of
 /// the `RigidBody`s in the nphysics `World` with their Specs counterparts. This
@@ -21,31 +23,39 @@ where
     P: Position<N>,
 {
     type SystemData = (
-        ReadExpect<'s, Physics<N>>,
-        WriteStorage<'s, PhysicsBody<N>>,
+        ReadExpect<'s, BodySetType<N>>,
+        ReadStorage<'s, BodyHandle>,
+        ReadStorage<'s, BodyPartHandle>,
         WriteStorage<'s, P>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (physics, mut physics_bodies, mut positions) = data;
+        let (body_set, body_handles, body_part_handles, mut positions) = data;
 
         // iterate over all PhysicBody components joined with their Positions
-        for (physics_body, position) in (&mut physics_bodies, &mut positions).join() {
+        for (rigid_body, position) in (&body_set.deref().join(&body_handles), &mut positions).join()
+        {
             // if a RigidBody exists in the nphysics World we fetch it and update the
             // Position component accordingly
-            if let Some(rigid_body) = physics.world.rigid_body(physics_body.handle.unwrap()) {
-                *position.isometry_mut() = *rigid_body.position();
-                physics_body.update_from_physics_world(rigid_body);
+            if let Some(body) = rigid_body {
+                if let Some(part) = body.part(0) {
+                    *position.isometry_mut() = part.position();
+                }
             }
         }
-    }
 
-    fn setup(&mut self, res: &mut World) {
-        info!("SyncBodiesFromPhysicsSystem.setup");
-        Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
+        for (rigid_body, position) in (
+            &body_set.deref().join_part(&body_part_handles),
+            &mut positions,
+        )
+            .join()
+        {
+            // if a RigidBody exists in the nphysics World we fetch it and update the
+            // Position component accordingly
+            if let Some(body) = rigid_body {
+                *position.isometry_mut() = body.position();
+            }
+        }
     }
 }
 

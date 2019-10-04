@@ -14,18 +14,16 @@ use specs::{
     WriteStorage,
 };
 
+use crate::{bodies::PhysicsBody, positon::Position, Physics};
 use nalgebra::RealField;
-use crate::bodies::PhysicsBody;
-use crate::positon::Position;
-use crate::Physics;
 
 use super::iterate_component_events;
 
 /// The `SyncBodiesToPhysicsSystem` handles the synchronisation of `PhysicsBody`
 /// `Component`s into the physics `World`.
 pub struct SyncBodiesToPhysicsSystem<N, P> {
-    positions_reader_id: Option<ReaderId<ComponentEvent>>,
-    physics_bodies_reader_id: Option<ReaderId<ComponentEvent>>,
+    positions_reader_id: ReaderId<ComponentEvent>,
+    physics_bodies_reader_id: ReaderId<ComponentEvent>,
 
     n_marker: PhantomData<N>,
     p_marker: PhantomData<P>,
@@ -36,11 +34,7 @@ where
     N: RealField,
     P: Position<N>,
 {
-    type SystemData = (
-        ReadStorage<'s, P>,
-        WriteExpect<'s, Physics<N>>,
-        WriteStorage<'s, PhysicsBody<N>>,
-    );
+    type SystemData = (ReadStorage<'s, P>,);
 
     fn run(&mut self, data: Self::SystemData) {
         let (positions, mut physics, mut physics_bodies) = data;
@@ -207,9 +201,9 @@ where
 
 #[cfg(all(test, feature = "physics3d"))]
 mod tests {
+    use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};
     use nalgebra::Isometry3;
     use nphysics::object::BodyStatus;
-    use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};
 
     use specs::prelude::*;
 

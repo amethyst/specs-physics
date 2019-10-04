@@ -1,23 +1,27 @@
-/*use std::ops::Deref;
+use crate::{nalgebra::RealField, position::Position};
 
 use specs::{
     storage::{ComponentEvent, MaskedStorage},
     BitSet,
     Component,
+    Dispatcher,
+    DispatcherBuilder,
     ReaderId,
     Storage,
     Tracked,
-};*/
+};
 
-pub use self::physics_stepper::PhysicsStepperSystem;
+use std::ops::Deref;
 
 mod physics_stepper;
-//mod sync_bodies_from_physics;
-//mod sync_bodies_to_physics;
-//mod sync_colliders_to_physics;
-//mod sync_parameters_to_physics;
+mod sync_bodies_from_physics;
+mod sync_bodies_to_physics;
 
-/*
+pub use self::{
+    physics_stepper::PhysicsStepperSystem,
+    sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
+    sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
+};
 
 /// Convenience function for configuring and building a `Dispatcher` with all
 /// required physics related `System`s.
@@ -28,9 +32,9 @@ mod physics_stepper;
 /// let dispatcher = specs_physics::physics_dispatcher::<f32, SimplePosition<f32>>();
 /// ```
 pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>
-    where
-        N: RealField,
-        P: Position<N>,
+where
+    N: RealField,
+    P: Position<N>,
 {
     let mut dispatcher_builder = DispatcherBuilder::new();
     register_physics_systems::<N, P>(&mut dispatcher_builder);
@@ -42,9 +46,9 @@ pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>
 /// to the given `DispatcherBuilder`. This also serves as a blueprint on how
 /// to properly set up the `System`s and have them depend on each other.
 pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder)
-    where
-        N: RealField,
-        P: Position<N>,
+where
+    N: RealField,
+    P: Position<N>,
 {
     // add SyncBodiesToPhysicsSystem first since we have to start with bodies;
     // colliders can exist without a body but in most cases have a body parent
@@ -54,34 +58,13 @@ pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder
         &[],
     );
 
-    // add SyncCollidersToPhysicsSystem next with SyncBodiesToPhysicsSystem as its
-    // dependency
-    dispatcher_builder.add(
-        SyncCollidersToPhysicsSystem::<N, P>::default(),
-        "sync_colliders_to_physics_system",
-        &["sync_bodies_to_physics_system"],
-    );
-
-    // add SyncParametersToPhysicsSystem; this System can be added at any point in
-    // time as it merely synchronizes the simulation parameters of the world,
-    // thus it has no other dependencies.
-    dispatcher_builder.add(
-        SyncParametersToPhysicsSystem::<N>::default(),
-        "sync_parameters_to_physics_system",
-        &[],
-    );
-
     // add PhysicsStepperSystem after all other Systems that write data to the
     // nphysics World and has to depend on them; this System is used to progress the
     // nphysics World for all existing objects
     dispatcher_builder.add(
         PhysicsStepperSystem::<N>::default(),
         "physics_stepper_system",
-        &[
-            "sync_bodies_to_physics_system",
-            "sync_colliders_to_physics_system",
-            "sync_parameters_to_physics_system",
-        ],
+        &["sync_bodies_to_physics_system"],
     );
 
     // add SyncBodiesFromPhysicsSystem last as it handles the
@@ -93,7 +76,6 @@ pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder
         &["physics_stepper_system"],
     );
 }
-
 
 /// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
 /// and returns the results in a `BitSet`.
@@ -126,4 +108,3 @@ where
 
     (inserted, modified, removed)
 }
-*/
