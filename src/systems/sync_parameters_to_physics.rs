@@ -79,6 +79,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_ulps_eq;
     use specs::prelude::*;
 
     use crate::{
@@ -100,13 +101,12 @@ mod tests {
             .build();
         dispatcher.setup(&mut world);
 
-        world.insert(Gravity(Vector3::<f32>::new(1.0, 2.0, 3.0).into()));
-        dispatcher.dispatch(&mut world);
+        world.insert(Gravity(Vector3::<f32>::new(1.0, 2.0, 3.0)));
+        dispatcher.dispatch(&world);
 
         let physics = world.read_resource::<Physics<f32>>();
-        assert_eq!(physics.world.gravity().x, 1.0);
-        assert_eq!(physics.world.gravity().y, 2.0);
-        assert_eq!(physics.world.gravity().z, 3.0);
+        assert_ulps_eq!(physics.world.gravity().x, 1.0);
+        assert_ulps_eq!(physics.world.gravity().y, 2.0);
+        assert_ulps_eq!(physics.world.gravity().z, 3.0);
     }
-
 }

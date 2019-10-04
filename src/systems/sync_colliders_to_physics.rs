@@ -292,7 +292,7 @@ mod tests {
             )))
             .with(PhysicsColliderBuilder::<f32>::from(Shape::Ball { radius: 5.0 }).build())
             .build();
-        dispatcher.dispatch(&mut world);
+        dispatcher.dispatch(&world);
 
         // fetch the Physics instance and check for new colliders
         let physics = world.read_resource::<Physics<f32>>();

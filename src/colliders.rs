@@ -107,10 +107,7 @@ impl<N: RealField> Shape<N> {
                 radius,
             } => ShapeHandle::new(Capsule::new(*half_height, *radius)),
             Shape::Compound { parts } => ShapeHandle::new(Compound::new(
-                parts
-                    .into_iter()
-                    .map(|part| (part.0, part.1.handle()))
-                    .collect(),
+                parts.iter().map(|part| (part.0, part.1.handle())).collect(),
             )),
             Shape::ConvexHull { points } => ShapeHandle::new(
                 ConvexHull::try_from_points(&points)

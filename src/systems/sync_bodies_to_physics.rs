@@ -239,7 +239,7 @@ mod tests {
             )))
             .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
             .build();
-        dispatcher.dispatch(&mut world);
+        dispatcher.dispatch(&world);
 
         // fetch the Physics instance and check for new bodies
         let physics = world.read_resource::<Physics<f32>>();
