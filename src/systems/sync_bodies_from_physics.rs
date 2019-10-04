@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{Join, ReadExpect, System, SystemData, World, WriteStorage};
+use specs::{Join, ReadExpect, World, System, SystemData, WriteStorage};
 
 use crate::bodies::PhysicsBody;
 use crate::positon::Position;

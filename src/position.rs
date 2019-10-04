@@ -1,13 +1,7 @@
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::ops::{Deref, DerefMut};
 use nalgebra::RealField;
-
-#[cfg(feature = "physics3d")]
-use nalgebra::{Point3 as Point, Isometry3 as Isometry};
-
-#[cfg(feature = "physics2d")]
-use nalgebra::{Point2 as Point, Isometry2 as Isometry};
-
+use nalgebra::{Point, Isometry};
 
 /// An implementation of the `Position` trait is required for the
 /// synchronisation of the position of Specs and nphysics objects.

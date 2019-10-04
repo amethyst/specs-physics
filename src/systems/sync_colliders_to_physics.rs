@@ -1,16 +1,8 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent,
-    world::Index,
-    Join,
-    ReadStorage,
-    ReaderId,
-    System,
-    SystemData,
-    World,
-    WriteExpect,
-    WriteStorage,
+    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, World, System,
+    SystemData, WriteExpect, WriteStorage,
 };
 
 use crate::positon::Position;

@@ -1,6 +1,6 @@
 [package]
 name = "specs-physics"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Benjamin Amling <benjamin@amling.net>", "Kel <x@unclear.info>", "jojolepro <jojolepromain@gmail.com>"]
 repository = "https://github.com/amethyst/specs-physics.git"
 homepage = "https://github.com/amethyst/specs-physics.git"
@@ -9,31 +9,32 @@ edition = "2018"
 license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/specs-physics"
-description = "nphysics integration for the Specs entity component system"
+description = "Integration with nphysics for the SPECS Parallel ECS."
 
 keywords = ["specs", "nphysics", "nphysics3d"]
 
 [features]
-physics3d = ["ncollide3d", "nphysics3d"]
-physics2d = ["ncollide2d", "nphysics2d"]
+default = ["dim3"]
+dim3 = ["ncollide3d", "nphysics3d"]
+dim2 = ["ncollide2d", "nphysics2d"]
 amethyst = ["amethyst_core"]
 
 [dependencies]
-log = "^0.4.6"
-specs = "^0.14"
-specs-hierarchy = "^0.3"
-shrev = "^1.0"
-nalgebra = "^0.18"
-ncollide2d = { version = "^0.19", optional = true }
-ncollide3d = { version = "^0.19", optional = true }
-nphysics2d = { version = "^0.11", optional = true }
-nphysics3d = { version = "^0.11", optional = true }
-amethyst_core = { version = "^0.7", optional = true }
-objekt = "0.1.2"
+log = "0.4"
+specs = "0.15"
+specs-hierarchy = "0.5"
+nalgebra = "0.18"
+ncollide2d = { version = "0.20", optional = true }
+ncollide3d = { version = "0.20", optional = true }
+nphysics2d = { version = "0.12", optional = true }
+nphysics3d = { version = "0.12", optional = true }
+amethyst_core = { version = "0.8", optional = true }
+objekt = "0.1"
+shrinkwraprs = "0.2"
 
 [dev-dependencies]
-simple_logger = "1.2.0"
-approx = "0.3.2"
+simple_logger = "1.3"
+approx = "0.3"
 
 [[example]]
 name = "basic"
