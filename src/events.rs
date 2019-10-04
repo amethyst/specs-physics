@@ -1,7 +1,7 @@
 use specs::Entity;
 
-use ncollide::query::Proximity;
-use shrev::EventChannel;
+use crate::{ncollide::query::Proximity, ColliderHandleType};
+use specs::shrev::EventChannel;
 
 /// The `ContactType` is set accordingly to whether a contact began or ended.
 #[derive(Debug)]
@@ -16,8 +16,8 @@ pub enum ContactType {
 /// collided.
 #[derive(Debug)]
 pub struct ContactEvent {
-    pub collider1: Entity,
-    pub collider2: Entity,
+    pub collider1: (Option<Entity>, ColliderHandleType),
+    pub collider2: (Option<Entity>, ColliderHandleType),
 
     pub contact_type: ContactType,
 }
@@ -31,8 +31,8 @@ pub type ContactEvents = EventChannel<ContactEvent>;
 /// *sensor* `PhysicsCollider`.
 #[derive(Debug)]
 pub struct ProximityEvent {
-    pub collider1: Entity,
-    pub collider2: Entity,
+    pub collider1: (Option<Entity>, ColliderHandleType),
+    pub collider2: (Option<Entity>, ColliderHandleType),
 
     pub prev_status: Proximity,
     pub new_status: Proximity,

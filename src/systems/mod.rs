@@ -1,4 +1,4 @@
-use std::ops::Deref;
+/*use std::ops::Deref;
 
 use specs::{
     storage::{ComponentEvent, MaskedStorage},
@@ -7,22 +7,17 @@ use specs::{
     ReaderId,
     Storage,
     Tracked,
-};
+};*/
 
-pub use self::{
-    physics_stepper::PhysicsStepperSystem,
-    sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
-    sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
-    sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
-    sync_parameters_to_physics::SyncParametersToPhysicsSystem,
-};
+pub use self::physics_stepper::PhysicsStepperSystem;
 
 mod physics_stepper;
-mod sync_bodies_from_physics;
-mod sync_bodies_to_physics;
-mod sync_colliders_to_physics;
-mod sync_parameters_to_physics;
+//mod sync_bodies_from_physics;
+//mod sync_bodies_to_physics;
+//mod sync_colliders_to_physics;
+//mod sync_parameters_to_physics;
 
+/*
 
 /// Convenience function for configuring and building a `Dispatcher` with all
 /// required physics related `System`s.
@@ -131,3 +126,4 @@ where
 
     (inserted, modified, removed)
 }
+*/

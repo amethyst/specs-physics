@@ -21,16 +21,20 @@ amethyst = ["amethyst_core"]
 
 [dependencies]
 log = "0.4"
+objekt = "0.1"
+shrinkwraprs = "0.2"
+
 specs = "0.15"
 specs-hierarchy = "0.5"
 nalgebra = "0.18"
+
 ncollide2d = { version = "0.20", optional = true }
 ncollide3d = { version = "0.20", optional = true }
+
 nphysics2d = { version = "0.12", optional = true }
 nphysics3d = { version = "0.12", optional = true }
+
 amethyst_core = { version = "0.8", optional = true }
-objekt = "0.1"
-shrinkwraprs = "0.2"
 
 [dev-dependencies]
 simple_logger = "1.3"
