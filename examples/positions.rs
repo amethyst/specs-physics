@@ -7,10 +7,7 @@ use specs_physics::{
     colliders::Shape,
     nalgebra::{Isometry3, Vector3},
     nphysics::{algebra::Velocity3, object::BodyStatus},
-    physics_dispatcher,
-    PhysicsBodyBuilder,
-    PhysicsColliderBuilder,
-    SimplePosition,
+    physics_dispatcher, PhysicsBodyBuilder, PhysicsColliderBuilder, SimplePosition,
 };
 
 fn main() {

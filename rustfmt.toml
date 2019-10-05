@@ -1,6 +1,4 @@
-imports_layout = "HorizontalVertical"
 condense_wildcard_suffixes = true
-#brace_style = "PreferSameLine"
 merge_imports = true
 reorder_impl_items = true
 use_field_init_shorthand = true

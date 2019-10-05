@@ -1,23 +1,11 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent,
-    world::Index,
-    BitSet,
-    Join,
-    ReadStorage,
-    ReaderId,
-    System,
-    SystemData,
-    World,
-    WriteExpect,
-    WriteStorage,
+    storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, System, SystemData,
+    World, WriteExpect, WriteStorage,
 };
 
-use crate::{bodies::PhysicsBody, positon::Position, Physics};
-use nalgebra::RealField;
-
-use super::iterate_component_events;
+use crate::{nalgebra::RealField, position::Position};
 
 /// The `SyncBodiesToPhysicsSystem` handles the synchronisation of `PhysicsBody`
 /// `Component`s into the physics `World`.
@@ -37,8 +25,9 @@ where
     type SystemData = (ReadStorage<'s, P>,);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (positions, mut physics, mut physics_bodies) = data;
+        let (positions) = data;
 
+        /*
         // collect all ComponentEvents for the Position storage
         let (inserted_positions, modified_positions, removed_positions) =
             iterate_component_events(&positions, self.positions_reader_id.as_mut().unwrap());
@@ -88,26 +77,21 @@ where
                 debug!("Removed PhysicsBody with id: {}", id);
                 remove_rigid_body::<N, P>(id, &mut physics);
             }
-        }
-    }
-
-    fn setup(&mut self, res: &mut World) {
-        info!("SyncBodiesToPhysicsSystem.setup");
-        Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
-
-        // register reader id for the Position storage
-        let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
-        self.positions_reader_id = Some(position_storage.register_reader());
-
-        // register reader id for the PhysicsBody storage
-        let mut physics_body_storage: WriteStorage<PhysicsBody<N>> = SystemData::fetch(&res);
-        self.physics_bodies_reader_id = Some(physics_body_storage.register_reader());
+        }*/
     }
 }
 
+/*
+
+// register reader id for the Position storage
+let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
+self.positions_reader_id = Some(position_storage.register_reader());
+
+// register reader id for the PhysicsBody storage
+let mut physics_body_storage: WriteStorage<PhysicsBody<N>> = SystemData::fetch(&res);
+self.physics_bodies_reader_id = Some(physics_body_storage.register_reader());
+*/
+/*
 impl<N, P> Default for SyncBodiesToPhysicsSystem<N, P>
 where
     N: RealField,
@@ -121,13 +105,13 @@ where
             p_marker: PhantomData,
         }
     }
-}
-
+}*/
+/*
 fn add_rigid_body<N, P>(
     id: Index,
     position: &P,
-    physics: &mut Physics<N>,
-    physics_body: &mut PhysicsBody<N>,
+    //physics: &mut Physics<N>,
+    //physics_body: &mut PhysicsBody<N>,
 ) where
     N: RealField,
     P: Position<N>,
@@ -199,6 +183,39 @@ where
     }
 }
 
+/// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
+/// and returns the results in a `BitSet`.
+fn iterate_component_events<T, D>(
+    tracked_storage: &Storage<T, D>,
+    reader_id: &mut ReaderId<ComponentEvent>,
+) -> (BitSet, BitSet, BitSet)
+    where
+        T: Component,
+        T::Storage: Tracked,
+        D: Deref<Target = MaskedStorage<T>>,
+{
+    let (mut inserted, mut modified, mut removed) = (BitSet::new(), BitSet::new(), BitSet::new());
+    for component_event in tracked_storage.channel().read(reader_id) {
+        match component_event {
+            ComponentEvent::Inserted(id) => {
+                debug!("Got Inserted event with id: {}", id);
+                inserted.add(*id);
+            }
+            ComponentEvent::Modified(id) => {
+                debug!("Got Modified event with id: {}", id);
+                modified.add(*id);
+            }
+            ComponentEvent::Removed(id) => {
+                debug!("Got Removed event with id: {}", id);
+                removed.add(*id);
+            }
+        }
+    }
+
+    (inserted, modified, removed)
+}
+
+
 #[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};
@@ -235,3 +252,4 @@ mod tests {
         assert_eq!(physics.world.bodies().count(), 1);
     }
 }
+*/

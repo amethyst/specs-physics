@@ -2,13 +2,8 @@ use crate::{
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
     nalgebra::RealField,
     ncollide::pipeline::narrow_phase::ContactEvent as NContactEvent,
-    BodySetType,
-    ColliderHandleType,
-    ColliderSetType,
-    ForceGeneratorSetType,
-    GeometricalWorldType,
-    JointConstraintSetType,
-    MechanicalWorldType,
+    BodySetRes, ColliderHandleType, ColliderSetRes, ForceGeneratorSetRes, GeometricalWorldRes,
+    JointConstraintSetRes, MechanicalWorldRes,
 };
 
 use specs::{world::Index, Entities, Entity, System, Write, WriteExpect};
@@ -23,12 +18,12 @@ pub struct PhysicsStepperSystem<N: RealField> {
 impl<'a, N: RealField> System<'a> for PhysicsStepperSystem<N> {
     type SystemData = (
         Entities<'a>,
-        WriteExpect<'a, MechanicalWorldType<N>>,
-        WriteExpect<'a, GeometricalWorldType<N>>,
-        WriteExpect<'a, BodySetType<N>>,
-        WriteExpect<'a, ColliderSetType<N>>,
-        WriteExpect<'a, JointConstraintSetType<N>>,
-        WriteExpect<'a, ForceGeneratorSetType<N>>,
+        WriteExpect<'a, MechanicalWorldRes<N>>,
+        WriteExpect<'a, GeometricalWorldRes<N>>,
+        WriteExpect<'a, BodySetRes<N>>,
+        WriteExpect<'a, ColliderSetRes<N>>,
+        WriteExpect<'a, JointConstraintSetRes<N>>,
+        WriteExpect<'a, ForceGeneratorSetRes<N>>,
         Write<'a, ContactEvents>,
         Write<'a, ProximityEvents>,
     );
@@ -139,7 +134,7 @@ where
 fn entity_from_collision_object_handle<N: RealField>(
     entities: &Entities,
     collision_object_handle: ColliderHandleType,
-    collider_set: &ColliderSetType<N>,
+    collider_set: &ColliderSetRes<N>,
 ) -> Option<Entity> {
     collider_set
         .get(collision_object_handle)

@@ -249,7 +249,7 @@ pub use ncollide2d as ncollide;
 #[cfg(feature = "dim2")]
 pub use nphysics2d as nphysics;
 
-//pub mod bodies;
+pub mod builder;
 pub mod events;
 pub mod handle;
 pub mod position;
@@ -261,14 +261,15 @@ use crate::nphysics::{
     force_generator::DefaultForceGeneratorSet,
     joint::DefaultJointConstraintSet,
     object::{DefaultBodyHandle, DefaultBodySet, DefaultColliderHandle, DefaultColliderSet},
-    world::{DefaultMechanicalWorld, GeometricalWorld},
+    world::{DefaultGeometricalWorld, DefaultMechanicalWorld},
 };
 
 pub type BodyHandleType = DefaultBodyHandle;
 pub type ColliderHandleType = DefaultColliderHandle;
-pub type MechanicalWorldType<N> = DefaultMechanicalWorld<N>;
-pub type GeometricalWorldType<N> = GeometricalWorld<N, BodyHandleType, ColliderHandleType>;
-pub type BodySetType<N> = DefaultBodySet<N>;
-pub type ColliderSetType<N> = DefaultColliderSet<N, BodyHandleType>;
-pub type JointConstraintSetType<N> = DefaultJointConstraintSet<N, BodySetType<N>>;
-pub type ForceGeneratorSetType<N> = DefaultForceGeneratorSet<N, BodySetType<N>>;
+
+pub type MechanicalWorldRes<N> = DefaultMechanicalWorld<N>;
+pub type GeometricalWorldRes<N> = DefaultGeometricalWorld<N>;
+pub type BodySetRes<N> = DefaultBodySet<N>;
+pub type ColliderSetRes<N> = DefaultColliderSet<N>;
+pub type JointConstraintSetRes<N> = DefaultJointConstraintSet<N>;
+pub type ForceGeneratorSetRes<N> = DefaultForceGeneratorSet<N>;

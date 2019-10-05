@@ -47,14 +47,25 @@ impl Position<f32> for amethyst_core::Transform {
     }
 }
 
+// Two dimensional Amethyst code from
+// https://github.com/olvyko/specs-physics/blob/master/src/pose.rs
+// TODO: Write tests for this code.
 #[cfg(all(feature = "amethyst", feature = "dim2"))]
 impl Position<f32> for amethyst_core::Transform {
     fn isometry(&self) -> &Isometry<f32> {
-        unimplemented!()
+        let iso = self.isometry();
+        Isometry::from_parts(
+            Translation2::new(iso.translation.x, iso.translation.y),
+            UnitComplex::new(iso.rotation.euler_angles().2),
+        )
     }
 
     fn isometry_mut(&mut self) -> &mut Isometry<f32> {
-        unimplemented!()
+        let euler = self.rotation().euler_angles();
+        self.set_rotation_euler(euler.0, euler.1, isometry.rotation.angle());
+        self.set_translation_x(isometry.translation.x);
+        self.set_translation_y(isometry.translation.y);
+        self
     }
 }
 

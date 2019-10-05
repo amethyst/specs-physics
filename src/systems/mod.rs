@@ -1,25 +1,13 @@
 use crate::{nalgebra::RealField, position::Position};
 
-use specs::{
-    storage::{ComponentEvent, MaskedStorage},
-    BitSet,
-    Component,
-    Dispatcher,
-    DispatcherBuilder,
-    ReaderId,
-    Storage,
-    Tracked,
-};
-
-use std::ops::Deref;
+use specs::{Dispatcher, DispatcherBuilder};
 
 mod physics_stepper;
 mod sync_bodies_from_physics;
 mod sync_bodies_to_physics;
 
 pub use self::{
-    physics_stepper::PhysicsStepperSystem,
-    sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
+    physics_stepper::PhysicsStepperSystem, sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
     sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
 };
 
@@ -52,11 +40,11 @@ where
 {
     // add SyncBodiesToPhysicsSystem first since we have to start with bodies;
     // colliders can exist without a body but in most cases have a body parent
-    dispatcher_builder.add(
-        SyncBodiesToPhysicsSystem::<N, P>::default(),
-        "sync_bodies_to_physics_system",
-        &[],
-    );
+    //dispatcher_builder.add(
+    //    SyncBodiesToPhysicsSystem::<N, P>::default(),
+    //    "sync_bodies_to_physics_system",
+    //    &[],
+    //);
 
     // add PhysicsStepperSystem after all other Systems that write data to the
     // nphysics World and has to depend on them; this System is used to progress the
@@ -75,36 +63,4 @@ where
         "sync_bodies_from_physics_system",
         &["physics_stepper_system"],
     );
-}
-
-/// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
-/// and returns the results in a `BitSet`.
-pub(crate) fn iterate_component_events<T, D>(
-    tracked_storage: &Storage<T, D>,
-    reader_id: &mut ReaderId<ComponentEvent>,
-) -> (BitSet, BitSet, BitSet)
-where
-    T: Component,
-    T::Storage: Tracked,
-    D: Deref<Target = MaskedStorage<T>>,
-{
-    let (mut inserted, mut modified, mut removed) = (BitSet::new(), BitSet::new(), BitSet::new());
-    for component_event in tracked_storage.channel().read(reader_id) {
-        match component_event {
-            ComponentEvent::Inserted(id) => {
-                debug!("Got Inserted event with id: {}", id);
-                inserted.add(*id);
-            }
-            ComponentEvent::Modified(id) => {
-                debug!("Got Modified event with id: {}", id);
-                modified.add(*id);
-            }
-            ComponentEvent::Removed(id) => {
-                debug!("Got Removed event with id: {}", id);
-                removed.add(*id);
-            }
-        }
-    }
-
-    (inserted, modified, removed)
 }

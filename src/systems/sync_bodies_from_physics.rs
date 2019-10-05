@@ -2,7 +2,7 @@ use crate::{
     handle::{BodyHandle, BodyPartHandle, EntityHandleExt},
     nalgebra::RealField,
     position::Position,
-    BodySetType,
+    BodySetRes,
 };
 
 use specs::{Join, ReadExpect, ReadStorage, System, WriteStorage};
@@ -23,7 +23,7 @@ where
     P: Position<N>,
 {
     type SystemData = (
-        ReadExpect<'s, BodySetType<N>>,
+        ReadExpect<'s, BodySetRes<N>>,
         ReadStorage<'s, BodyHandle>,
         ReadStorage<'s, BodyPartHandle>,
         WriteStorage<'s, P>,
@@ -33,18 +33,15 @@ where
         let (body_set, body_handles, body_part_handles, mut positions) = data;
 
         // iterate over all PhysicBody components joined with their Positions
-        for (rigid_body, position) in (&body_set.deref().join(&body_handles), &mut positions).join()
-        {
+        for (body, position) in (&body_set.deref().join(&body_handles), &mut positions).join() {
             // if a RigidBody exists in the nphysics World we fetch it and update the
             // Position component accordingly
-            if let Some(body) = rigid_body {
-                if let Some(part) = body.part(0) {
-                    *position.isometry_mut() = part.position();
-                }
+            if let Some(part) = body.part(0) {
+                *position.isometry_mut() = part.position();
             }
         }
 
-        for (rigid_body, position) in (
+        for (body, position) in (
             &body_set.deref().join_part(&body_part_handles),
             &mut positions,
         )
@@ -52,9 +49,7 @@ where
         {
             // if a RigidBody exists in the nphysics World we fetch it and update the
             // Position component accordingly
-            if let Some(body) = rigid_body {
-                *position.isometry_mut() = body.position();
-            }
+            *position.isometry_mut() = body.position();
         }
     }
 }
