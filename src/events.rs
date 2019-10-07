@@ -1,6 +1,6 @@
 use specs::Entity;
 
-use crate::{ncollide::query::Proximity, ColliderHandleType};
+use crate::{ncollide::query::Proximity, world::ColliderHandleType};
 use specs::shrev::EventChannel;
 
 /// The `ContactType` is set accordingly to whether a contact began or ended.

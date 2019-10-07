@@ -1,7 +1,7 @@
 use crate::{
     nalgebra::RealField,
     nphysics::object::{Body, BodyPart},
-    BodyHandleType, BodySetRes,
+    world::{BodyHandleType, BodySetRes},
 };
 
 use specs::{
@@ -9,7 +9,7 @@ use specs::{
     ReadStorage,
 };
 
-use std::convert::identity;
+use std::{convert::identity, marker::PhantomData};
 
 static BODY_ERROR: &str =
     "Attempted to get Body in join that does not exist. \
@@ -44,7 +44,7 @@ pub trait EntityHandleExt<'a, N: RealField> {
 
 impl<'a, N: RealField> EntityHandleExt<'a, N> for &'a BodySetRes<N> {
     fn join(&self, handles: &'a ReadStorage<'a, BodyHandle>) -> BodyJoin<'a, N> {
-        BodyJoin(self, handles)
+        BodyJoin(self, handles, PhantomData)
     }
 
     fn join_part(&self, handles: &'a ReadStorage<'a, BodyPartHandle>) -> BodyPartJoin<'a, N> {
@@ -62,7 +62,7 @@ impl<'a, N: RealField> EntityHandleMutExt<'a, N> for &'a mut BodySetRes<N> {
     }
 }
 
-pub struct BodyJoin<'a, N: RealField>(&'a BodySetRes<N>, &'a ReadStorage<'a, BodyHandle>);
+pub struct BodyJoin<'a, N: RealField>(&'a BodySetRes<N>, &'a ReadStorage<'a, BodyHandle>, PhantomData<N>);
 
 impl<'a, 'e, N: RealField> Join for &'a BodyJoin<'e, N> {
     type Mask = &'a BitSet;

@@ -1,11 +1,18 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, System, SystemData,
-    World, WriteExpect, WriteStorage,
+    storage::{ComponentEvent, MaskedStorage, Storage}, world::Index, BitSet, Join, ReadStorage, ReaderId, System, SystemData,
+    World, WriteExpect, WriteStorage, Component, Tracked,
 };
 
-use crate::{nalgebra::RealField, position::Position};
+use crate::{
+    nalgebra::RealField,
+    position::Position,
+    world::BodySetRes,
+    handle::{BodyHandle, BodyPartHandle}
+};
+
+use std::ops::Deref;
 
 /// The `SyncBodiesToPhysicsSystem` handles the synchronisation of `PhysicsBody`
 /// `Component`s into the physics `World`.
@@ -22,16 +29,26 @@ where
     N: RealField,
     P: Position<N>,
 {
-    type SystemData = (ReadStorage<'s, P>,);
+    type SystemData = (
+        WriteExpect<'s, BodySetRes<N>>,
+        ReadStorage<'s, BodyHandle>,
+        ReadStorage<'s, BodyPartHandle>,
+        WriteStorage<'s, P>,
+    );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (positions) = data;
+        let (
+            mut body_set,
+            handles,
+            part_handles,
+            mut positions
+        ) = data;
 
-        /*
         // collect all ComponentEvents for the Position storage
         let (inserted_positions, modified_positions, removed_positions) =
-            iterate_component_events(&positions, self.positions_reader_id.as_mut().unwrap());
+            iterate_component_events(&positions, &mut self.positions_reader_id);
 
+        /*
         // collect all ComponentEvents for the PhysicsBody storage
         let (inserted_physics_bodies, modified_physics_bodies, removed_physics_bodies) =
             iterate_component_events(
@@ -154,11 +171,6 @@ fn update_rigid_body<N, P>(
     P: Position<N>,
 {
     if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
-        // the PhysicsBody was modified, update everything but the position
-        if modified_physics_bodies.contains(id) {
-            physics_body.apply_to_physics_world(rigid_body);
-        }
-
         // the Position was modified, update the position directly
         if modified_positions.contains(id) {
             rigid_body.set_position(*position.isometry());
@@ -182,6 +194,7 @@ where
         info!("Removed rigid body from world with id: {}", id);
     }
 }
+*/
 
 /// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
 /// and returns the results in a `BitSet`.
@@ -215,7 +228,7 @@ fn iterate_component_events<T, D>(
     (inserted, modified, removed)
 }
 
-
+/*
 #[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};

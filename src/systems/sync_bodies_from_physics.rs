@@ -2,7 +2,7 @@ use crate::{
     handle::{BodyHandle, BodyPartHandle, EntityHandleExt},
     nalgebra::RealField,
     position::Position,
-    BodySetRes,
+    world::BodySetRes,
 };
 
 use specs::{Join, ReadExpect, ReadStorage, System, WriteStorage};

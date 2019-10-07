@@ -1,4 +1,4 @@
-use crate::{handle::BodyHandle, nalgebra::RealField, nphysics::object::Body, BodySetRes};
+use crate::{handle::BodyHandle, nalgebra::RealField, nphysics::object::Body, world::BodySetRes};
 
 use specs::{world::Builder, EntityBuilder};
 

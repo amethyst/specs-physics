@@ -2,8 +2,8 @@ use crate::{
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
     nalgebra::RealField,
     ncollide::pipeline::narrow_phase::ContactEvent as NContactEvent,
-    BodySetRes, ColliderHandleType, ColliderSetRes, ForceGeneratorSetRes, GeometricalWorldRes,
-    JointConstraintSetRes, MechanicalWorldRes,
+    world::{BodySetRes, ColliderHandleType, ColliderSetRes, ForceGeneratorSetRes, GeometricalWorldRes,
+    JointConstraintSetRes, MechanicalWorldRes},
 };
 
 use specs::{world::Index, Entities, Entity, System, Write, WriteExpect};
