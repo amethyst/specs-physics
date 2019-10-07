@@ -1,27 +1,30 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::{ComponentEvent, MaskedStorage, Storage}, world::Index, BitSet, Join, ReadStorage, ReaderId, System, SystemData,
-    World, WriteExpect, WriteStorage, Component, Tracked,
+    storage::ComponentEvent, BitSet, Join, ReaderId, System,
+    World, WriteStorage, Tracked,
 };
 
 use crate::{
     nalgebra::RealField,
     position::Position,
-    world::BodySetRes,
-    handle::{BodyHandle, BodyPartHandle}
+    world::WriteBodyStorage,
 };
-
-use std::ops::Deref;
 
 /// The `SyncBodiesToPhysicsSystem` handles the synchronisation of `PhysicsBody`
 /// `Component`s into the physics `World`.
 pub struct SyncBodiesToPhysicsSystem<N, P> {
     positions_reader_id: ReaderId<ComponentEvent>,
-    physics_bodies_reader_id: ReaderId<ComponentEvent>,
-
     n_marker: PhantomData<N>,
     p_marker: PhantomData<P>,
+}
+
+impl<N: RealField, P: Position<N>> SyncBodiesToPhysicsSystem<N, P> {
+    fn new(world: &mut World) -> Self {
+        SyncBodiesToPhysicsSystem {
+            positions_reader_id: world.write_component::<P>().register_reader()
+        }
+    }
 }
 
 impl<'s, N, P> System<'s> for SyncBodiesToPhysicsSystem<N, P>
@@ -30,202 +33,35 @@ where
     P: Position<N>,
 {
     type SystemData = (
-        WriteExpect<'s, BodySetRes<N>>,
-        ReadStorage<'s, BodyHandle>,
-        ReadStorage<'s, BodyPartHandle>,
+        WriteBodyStorage<'s, N>,
         WriteStorage<'s, P>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         let (
             mut body_set,
-            handles,
-            part_handles,
             mut positions
         ) = data;
 
         // collect all ComponentEvents for the Position storage
-        let (inserted_positions, modified_positions, removed_positions) =
-            iterate_component_events(&positions, &mut self.positions_reader_id);
+        let modified_positions = BitSet::new();
 
-        /*
-        // collect all ComponentEvents for the PhysicsBody storage
-        let (inserted_physics_bodies, modified_physics_bodies, removed_physics_bodies) =
-            iterate_component_events(
-                &physics_bodies,
-                self.physics_bodies_reader_id.as_mut().unwrap(),
-            );
+        for component_event in positions.channel().read(self.positions_reader_id) {
+            match component_event {
+                ComponentEvent::Modified(id) => {
+                    debug!("Got Modified event with id: {}", id);
+                    modified_positions.add(*id);
+                }
+                _ => {}
+            }
+        }
 
         // iterate over PhysicsBody and Position components with an id/Index that
         // exists in either of the collected ComponentEvent BitSets
-        for (position, mut physics_body, id) in (
-            &positions,
-            &mut physics_bodies,
-            &inserted_positions
-                | &modified_positions
-                | &removed_positions
-                | &inserted_physics_bodies
-                | &modified_physics_bodies
-                | &removed_physics_bodies,
-        )
-            .join()
-        {
-            // handle inserted events
-            if inserted_positions.contains(id) || inserted_physics_bodies.contains(id) {
-                debug!("Inserted PhysicsBody with id: {}", id);
-                add_rigid_body::<N, P>(id, &position, &mut physics, &mut physics_body);
-            }
-
-            // handle modified events
-            if modified_positions.contains(id) || modified_physics_bodies.contains(id) {
-                debug!("Modified PhysicsBody with id: {}", id);
-                update_rigid_body::<N, P>(
-                    id,
-                    &position,
-                    &mut physics,
-                    &mut physics_body,
-                    &modified_positions,
-                    &modified_physics_bodies,
-                );
-            }
-
-            // handle removed events
-            if removed_positions.contains(id) || removed_physics_bodies.contains(id) {
-                debug!("Removed PhysicsBody with id: {}", id);
-                remove_rigid_body::<N, P>(id, &mut physics);
-            }
-        }*/
-    }
-}
-
-/*
-
-// register reader id for the Position storage
-let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
-self.positions_reader_id = Some(position_storage.register_reader());
-
-// register reader id for the PhysicsBody storage
-let mut physics_body_storage: WriteStorage<PhysicsBody<N>> = SystemData::fetch(&res);
-self.physics_bodies_reader_id = Some(physics_body_storage.register_reader());
-*/
-/*
-impl<N, P> Default for SyncBodiesToPhysicsSystem<N, P>
-where
-    N: RealField,
-    P: Position<N>,
-{
-    fn default() -> Self {
-        Self {
-            positions_reader_id: None,
-            physics_bodies_reader_id: None,
-            n_marker: PhantomData,
-            p_marker: PhantomData,
+        for (mut body, position, _) in (&mut body_set, &positions, &modified_positions).join() {
+            //rigid_body.set_position(*position.isometry());
         }
     }
-}*/
-/*
-fn add_rigid_body<N, P>(
-    id: Index,
-    position: &P,
-    //physics: &mut Physics<N>,
-    //physics_body: &mut PhysicsBody<N>,
-) where
-    N: RealField,
-    P: Position<N>,
-{
-    // remove already existing bodies for this inserted component;
-    // this technically should never happen but we need to keep the list of body
-    // handles clean
-    if let Some(body_handle) = physics.body_handles.remove(&id) {
-        warn!("Removing orphaned body handle: {:?}", body_handle);
-        physics.world.remove_bodies(&[body_handle]);
-    }
-
-    // create a new RigidBody in the PhysicsWorld and store its
-    // handle for later usage
-    let handle = physics_body
-        .to_rigid_body_desc()
-        .position(*position.isometry())
-        .user_data(id)
-        .build(&mut physics.world)
-        .handle();
-
-    physics_body.handle = Some(handle);
-    physics.body_handles.insert(id, handle);
-
-    info!(
-        "Inserted rigid body to world with values: {:?}",
-        physics_body
-    );
-}
-
-fn update_rigid_body<N, P>(
-    id: Index,
-    position: &P,
-    physics: &mut Physics<N>,
-    physics_body: &mut PhysicsBody<N>,
-    modified_positions: &BitSet,
-    modified_physics_bodies: &BitSet,
-) where
-    N: RealField,
-    P: Position<N>,
-{
-    if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
-        // the Position was modified, update the position directly
-        if modified_positions.contains(id) {
-            rigid_body.set_position(*position.isometry());
-        }
-
-        trace!(
-            "Updated rigid body in world with values: {:?}",
-            physics_body
-        );
-    }
-}
-
-fn remove_rigid_body<N, P>(id: Index, physics: &mut Physics<N>)
-where
-    N: RealField,
-    P: Position<N>,
-{
-    if let Some(handle) = physics.body_handles.remove(&id) {
-        // remove body if it still exists in the PhysicsWorld
-        physics.world.remove_bodies(&[handle]);
-        info!("Removed rigid body from world with id: {}", id);
-    }
-}
-*/
-
-/// Iterated over the `ComponentEvent::Inserted`s of a given, tracked `Storage`
-/// and returns the results in a `BitSet`.
-fn iterate_component_events<T, D>(
-    tracked_storage: &Storage<T, D>,
-    reader_id: &mut ReaderId<ComponentEvent>,
-) -> (BitSet, BitSet, BitSet)
-    where
-        T: Component,
-        T::Storage: Tracked,
-        D: Deref<Target = MaskedStorage<T>>,
-{
-    let (mut inserted, mut modified, mut removed) = (BitSet::new(), BitSet::new(), BitSet::new());
-    for component_event in tracked_storage.channel().read(reader_id) {
-        match component_event {
-            ComponentEvent::Inserted(id) => {
-                debug!("Got Inserted event with id: {}", id);
-                inserted.add(*id);
-            }
-            ComponentEvent::Modified(id) => {
-                debug!("Got Modified event with id: {}", id);
-                modified.add(*id);
-            }
-            ComponentEvent::Removed(id) => {
-                debug!("Got Removed event with id: {}", id);
-                removed.add(*id);
-            }
-        }
-    }
-
-    (inserted, modified, removed)
 }
 
 /*

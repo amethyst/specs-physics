@@ -250,10 +250,9 @@ pub use ncollide2d as ncollide;
 pub use nphysics2d as nphysics;
 
 //pub mod builder;
-//pub mod events;
-//pub mod handle;
-//pub mod position;
-//pub mod systems;
+pub mod events;
+pub mod position;
+pub mod systems;
 pub mod world;
 
-//pub use self::position::{Position, SimplePosition};
+pub use self::position::{Position, SimplePosition};

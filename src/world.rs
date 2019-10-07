@@ -91,7 +91,15 @@ impl<'a, N: RealField> NBodySet<N> for BodySet<'a, N> {
         handle1: Self::Handle,
         handle2: Self::Handle,
     ) -> (Option<&mut Self::Body>, Option<&mut Self::Body>) {
-        unimplemented!()
+        let b1 = self.get_mut(handle1).map(|b| b as *mut dyn Body<N>);
+        let b2 = self.get_mut(handle2).map(|b| b as *mut dyn Body<N>);
+        unsafe {
+            use std::mem;
+            (
+                b1.map(|b| mem::transmute(b)),
+                b2.map(|b| mem::transmute(b))
+            )
+        }
     }
 
     fn contains(&self, handle: Self::Handle) -> bool {
@@ -118,6 +126,31 @@ impl<'a, N: RealField> NBodySet<N> for BodySet<'a, N> {
 pub type BodySetRes<N> = DefaultBodySet<N>;
 
 pub type ReadBodyStorage<'a, N> = BodySetStorage<'a, N, Fetch<'a, MaskedStorage<BodyComponent<N>>>>;
+
+impl<'a, N: RealField> SystemData<'a> for ReadBodyStorage<'a, N> {
+    fn setup(res: &mut World) {
+        res.entry::<MaskedStorage<BodyComponent<N>>>()
+            .or_insert_with(|| {
+                MaskedStorage::new(
+                    <<BodyComponent<N> as Component>::Storage as TryDefault>::unwrap_default(),
+                )
+            });
+        res.fetch_mut::<MetaTable<dyn AnyStorage>>()
+            .register(&*res.fetch::<MaskedStorage<BodyComponent<N>>>());
+    }
+
+    fn fetch(res: &'a World) -> Self {
+        BodySetStorage(Storage::new(res.fetch(), res.fetch()))
+    }
+
+    fn reads() -> Vec<ResourceId> {
+        vec![ResourceId::new::<EntitiesRes>(), ResourceId::new::<MaskedStorage<BodyComponent<N>>>()]
+    }
+
+    fn writes() -> Vec<ResourceId> {
+        vec![]
+    }
+}
 
 pub type WriteBodyStorage<'a, N> =
     BodySetStorage<'a, N, FetchMut<'a, MaskedStorage<BodyComponent<N>>>>;
@@ -164,15 +197,15 @@ where
     D: Deref<Target = MaskedStorage<BodyComponent<N>>>,
 {
     type Mask = &'a BitSet;
-    type Type = &'a BodyComponent<N>;
+    type Type = &'a dyn Body<N>;
     type Value = &'a <BodyComponent<N> as Component>::Storage;
 
     unsafe fn open(self) -> (Self::Mask, Self::Value) {
         Join::open(&self.0)
     }
 
-    unsafe fn get(v: &mut Self::Value, i: Index) -> &'a BodyComponent<N> {
-        v.get(i)
+    unsafe fn get(v: &mut Self::Value, i: Index) -> &'a dyn Body<N> {
+        v.get(i).0.as_ref()
     }
 }
 
@@ -182,16 +215,16 @@ where
     D: DerefMut<Target = MaskedStorage<BodyComponent<N>>>,
 {
     type Mask = &'a BitSet;
-    type Type = &'a mut BodyComponent<N>;
+    type Type = &'a mut dyn Body<N>;
     type Value = &'a mut <BodyComponent<N> as Component>::Storage;
 
     unsafe fn open(self) -> (Self::Mask, Self::Value) {
         Join::open(&mut self.0)
     }
 
-    unsafe fn get(v: &mut Self::Value, i: Index) -> &'a mut BodyComponent<N> {
+    unsafe fn get(v: &mut Self::Value, i: Index) -> &'a mut dyn Body<N> {
         let value: *mut Self::Value = v as *mut Self::Value;
-        (*value).get_mut(i)
+        (*value).get_mut(i).0.as_mut()
     }
 }
 

@@ -18,12 +18,12 @@ pub struct PhysicsStepperSystem<N: RealField> {
 impl<'a, N: RealField> System<'a> for PhysicsStepperSystem<N> {
     type SystemData = (
         Entities<'a>,
-        WriteExpect<'a, MechanicalWorldRes<N>>,
+        WriteExpect<'a, MechanicalWorldRes<'a, N>>,
         WriteExpect<'a, GeometricalWorldRes<N>>,
         WriteExpect<'a, BodySetRes<N>>,
         WriteExpect<'a, ColliderSetRes<N>>,
-        WriteExpect<'a, JointConstraintSetRes<N>>,
-        WriteExpect<'a, ForceGeneratorSetRes<N>>,
+        WriteExpect<'a, JointConstraintSetRes<'a, N>>,
+        WriteExpect<'a, ForceGeneratorSetRes<'a, N>>,
         Write<'a, ContactEvents>,
         Write<'a, ProximityEvents>,
     );
