@@ -38,8 +38,9 @@ fn main() {
         )
         .with(
             PhysicsColliderBuilder::<f32>::from(Shape::Cuboid {
-                half_extents: Vector3::new(2.0, 2.0, 1.0),
+                half_extents: Vector3::new(1.9, 2.0, 1.0),
             })
+            .margin(0.1)
             .build(),
         )
         .build();
@@ -49,13 +50,14 @@ fn main() {
     world
         .create_entity()
         .with(SimplePosition::<f32>(Isometry3::<f32>::translation(
-            3.0, 1.0, 1.0,
+            5.0, 1.0, 1.0,
         )))
         .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Static).build())
         .with(
             PhysicsColliderBuilder::<f32>::from(Shape::Cuboid {
-                half_extents: Vector3::new(2.0, 2.0, 1.0),
+                half_extents: Vector3::new(1.9, 2.0, 1.0),
             })
+            .margin(0.1)
             .build(),
         )
         .build();
