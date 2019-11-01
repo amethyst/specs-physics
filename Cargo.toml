@@ -43,25 +43,25 @@ approx = "0.3"
 [[example]]
 name = "basic"
 path = "examples/basic.rs"
-required-features = ["physics3d"]
+required-features = ["dim3"]
 
 [[example]]
 name = "hierarchy"
 path = "examples/hierarchy.rs"
-required-features = ["physics3d"]
+required-features = ["dim3"]
 
 [[example]]
 name = "positions"
 path = "examples/positions.rs"
-required-features = ["physics3d"]
+required-features = ["dim3"]
 
 [[example]]
 name = "collision"
 path = "examples/collision.rs"
-required-features = ["physics3d"]
+required-features = ["dim3"]
 
 [[example]]
 name = "events"
 path = "examples/events.rs"
-required-features = ["physics3d"]
+required-features = ["dim3"]
 
