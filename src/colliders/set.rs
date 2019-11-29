@@ -1,4 +1,5 @@
 use crate::{
+    colliders::ColliderComponent,
     nalgebra::RealField,
     ncollide::pipeline::CollisionObjectSet,
     nphysics::object::{Collider, ColliderRemovalData, ColliderSet as NColliderSet},
@@ -8,45 +9,19 @@ use specs::{
     shred::{Fetch, FetchMut, MetaTable, ResourceId},
     storage::{AnyStorage, ComponentEvent, MaskedStorage, TryDefault, UnprotectedStorage},
     world::EntitiesRes,
-    Component, DenseVecStorage, Entity, FlaggedStorage, Join, ReaderId, SystemData, World,
-    WorldExt, WriteStorage,
+    Component, Entity, Join, ReaderId, SystemData, World, WorldExt, WriteStorage,
 };
 
-use super::BodyHandleType;
+struct ColliderInsertionRes(Vec<Entity>);
 
-pub type ColliderHandleType = Entity;
+struct ColliderRemovalRes<N: RealField>(Vec<(Entity, ColliderRemovalData<N, Entity>)>);
 
-#[derive(Shrinkwrap)]
-#[shrinkwrap(mutable)]
-pub struct ColliderComponent<N: RealField>(pub Collider<N, BodyHandleType>);
+struct ColliderReaderRes(ReaderId<ComponentEvent>);
 
-impl<N: RealField> Component for ColliderComponent<N> {
-    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
-}
-
-#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd, Shrinkwrap)]
-#[shrinkwrap(mutable)]
-pub struct ColliderInsertionRes(pub Vec<ColliderHandleType>);
-
-#[derive(Shrinkwrap)]
-#[shrinkwrap(mutable)]
-pub struct ColliderRemovalRes<N: RealField>(
-    pub Vec<(ColliderHandleType, ColliderRemovalData<N, BodyHandleType>)>,
-);
-
-impl<N: RealField> Default for ColliderRemovalRes<N> {
-    fn default() -> Self {
-        Self(Vec::new())
-    }
-}
-
-#[derive(Debug, Shrinkwrap)]
-#[shrinkwrap(mutable)]
-pub struct ColliderReaderRes(pub ReaderId<ComponentEvent>);
-
+/// The `set` type needed by nphysics for colliders.
 pub struct ColliderSet<'f, N: RealField> {
+    pub storage: WriteStorage<'f, ColliderComponent<N>>,
     entities: Fetch<'f, EntitiesRes>,
-    storage: WriteStorage<'f, ColliderComponent<N>>,
     insertions: FetchMut<'f, ColliderInsertionRes>,
     removals: FetchMut<'f, ColliderRemovalRes<N>>,
 }
@@ -68,12 +43,14 @@ impl<'f, N: RealField> SystemData<'f> for ColliderSet<'f, N> {
         // Setup resources for insertion and removal buffers.
         world
             .entry::<ColliderInsertionRes>()
-            .or_insert_with(|| ColliderInsertionRes::default());
+            .or_insert_with(|| ColliderInsertionRes(Vec::default()));
         world
             .entry::<ColliderRemovalRes<N>>()
-            .or_insert_with(|| ColliderRemovalRes::<N>::default());
+            .or_insert_with(|| ColliderRemovalRes::<N>(Vec::default()));
 
         // Setup ComponentEvent reader resource.
+        // No worries about race condition here due to mut exclusive World reference.
+        // Entry cannot be used since mut reference isn't passed to closure.
         if !world.has_value::<ColliderReaderRes>() {
             let reader = world
                 .write_storage::<ColliderComponent<N>>()
@@ -89,7 +66,7 @@ impl<'f, N: RealField> SystemData<'f> for ColliderSet<'f, N> {
         let mut insertions = world.write_resource::<ColliderInsertionRes>();
         let mut removals = world.write_resource::<ColliderRemovalRes<N>>();
 
-        for event in storage.channel().read(&mut reader) {
+        for event in storage.channel().read(&mut reader.0) {
             match event {
                 ComponentEvent::Removed(index) => {
                     // Don't panic please! (I'm asking the computer)
@@ -103,12 +80,12 @@ impl<'f, N: RealField> SystemData<'f> for ColliderSet<'f, N> {
                         )
                         .removal_data()
                         {
-                            removals.push((entities.entity(*index), removal_data));
+                            removals.0.push((entities.entity(*index), removal_data));
                         }
                     }
                 }
                 ComponentEvent::Inserted(index) => {
-                    insertions.push(entities.entity(*index));
+                    insertions.0.push(entities.entity(*index));
                 }
                 _ => {}
             }
@@ -137,8 +114,8 @@ impl<'f, N: RealField> SystemData<'f> for ColliderSet<'f, N> {
 }
 
 impl<'f, N: RealField> CollisionObjectSet<N> for ColliderSet<'f, N> {
-    type CollisionObject = Collider<N, BodyHandleType>;
-    type CollisionObjectHandle = ColliderHandleType;
+    type CollisionObject = Collider<N, Entity>;
+    type CollisionObjectHandle = Entity;
 
     fn collision_object(
         &self,
@@ -154,14 +131,14 @@ impl<'f, N: RealField> CollisionObjectSet<N> for ColliderSet<'f, N> {
     }
 }
 
-impl<'f, N: RealField> NColliderSet<N, BodyHandleType> for ColliderSet<'f, N> {
-    type Handle = ColliderHandleType;
+impl<'f, N: RealField> NColliderSet<N, Entity> for ColliderSet<'f, N> {
+    type Handle = Entity;
 
-    fn get(&self, handle: Self::Handle) -> Option<&Collider<N, BodyHandleType>> {
+    fn get(&self, handle: Self::Handle) -> Option<&Collider<N, Entity>> {
         self.storage.get(handle).map(|x| &x.0)
     }
 
-    fn get_mut(&mut self, handle: Self::Handle) -> Option<&mut Collider<N, BodyHandleType>> {
+    fn get_mut(&mut self, handle: Self::Handle) -> Option<&mut Collider<N, Entity>> {
         self.storage.get_mut(handle).map(|x| &mut x.0)
     }
 
@@ -169,36 +146,31 @@ impl<'f, N: RealField> NColliderSet<N, BodyHandleType> for ColliderSet<'f, N> {
         self.storage.contains(handle)
     }
 
-    fn foreach(&self, mut f: impl FnMut(Self::Handle, &Collider<N, BodyHandleType>)) {
+    fn foreach(&self, mut f: impl FnMut(Self::Handle, &Collider<N, Entity>)) {
         for (handle, collider) in (&self.entities, &self.storage).join() {
             f(handle, &collider.0);
         }
     }
 
-    fn foreach_mut(&mut self, mut f: impl FnMut(Self::Handle, &mut Collider<N, BodyHandleType>)) {
+    fn foreach_mut(&mut self, mut f: impl FnMut(Self::Handle, &mut Collider<N, Entity>)) {
         for (handle, collider) in (&self.entities, &mut self.storage).join() {
             f(handle, &mut collider.0);
         }
     }
 
     fn pop_insertion_event(&mut self) -> Option<Self::Handle> {
-        self.insertions.pop()
+        self.insertions.0.pop()
     }
 
-    fn pop_removal_event(
-        &mut self,
-    ) -> Option<(Self::Handle, ColliderRemovalData<N, BodyHandleType>)> {
-        self.removals.pop()
+    fn pop_removal_event(&mut self) -> Option<(Self::Handle, ColliderRemovalData<N, Entity>)> {
+        self.removals.0.pop()
     }
 
-    fn remove(
-        &mut self,
-        to_remove: Self::Handle,
-    ) -> Option<&mut ColliderRemovalData<N, BodyHandleType>> {
+    fn remove(&mut self, to_remove: Self::Handle) -> Option<&mut ColliderRemovalData<N, Entity>> {
         let collider = self.storage.remove(to_remove)?;
         if let Some(removal_data) = collider.removal_data() {
-            self.removals.push((to_remove, removal_data));
-            self.removals.last_mut().map(|r| &mut r.1)
+            self.removals.0.push((to_remove, removal_data));
+            self.removals.0.last_mut().map(|r| &mut r.1)
         } else {
             None
         }

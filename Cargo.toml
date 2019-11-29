@@ -10,8 +10,7 @@ license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/specs-physics"
 description = "Integration with nphysics for the SPECS Parallel ECS."
-
-keywords = ["specs", "nphysics", "nphysics3d"]
+keywords = ["specs", "physics", "real-time"]
 
 [features]
 default = ["dim3", "nightly", "amethyst"]

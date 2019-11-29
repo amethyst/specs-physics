@@ -5,9 +5,8 @@ use specs::{
 use specs_physics::{
     ncollide::shape::{Ball, ShapeHandle},
     nphysics::object::{ColliderDesc, RigidBody, RigidBodyDesc},
-    systems::{PhysicsBatchSystem, PhysicsBundle},
-    world::MechanicalWorldRes,
-    BodyComponent, EntityBuilderExt, SimplePosition,
+    systems::PhysicsBatchSystem,
+    BodyComponent, EntityBuilderExt, MechanicalWorldRes, PhysicsBundle, SimplePosition,
 };
 
 fn main() {
@@ -22,7 +21,8 @@ fn main() {
     // we must be sure to construct our bundle with a value for its stepper
     // Refer to the PhysicsBundle documentation to see its various constructor
     // options
-    PhysicsBundle::<f32, SimplePosition<f32>>::stepper(60)
+    PhysicsBundle::<f32, SimplePosition<f32>>::default()
+        .with_fixed_stepper(60)
         .with_deps(&["my_physics_system"])
         .register(&mut world, &mut physics_builder);
 
@@ -72,7 +72,7 @@ impl<'s> System<'s> for MyRenderingSystem {
     );
 
     fn run(&mut self, (positions, mechanical_world): Self::SystemData) {
-        for pos in (&positions,).join() {
+        for (pos,) in (&positions,).join() {
             println!(
                 "Body Position (X: {:?}, Y: {:?}, Z: {:?}) @ {:?}s",
                 pos.0.translation.vector.x,

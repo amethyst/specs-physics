@@ -6,10 +6,7 @@ use amethyst::{
     },
     controls::{CursorHideSystemDesc, MouseFocusUpdateSystemDesc},
     core::transform::{Transform, TransformBundle},
-    input::{
-        is_close_requested, is_key_down, InputBundle, StringBindings,
-        VirtualKeyCode,
-    },
+    input::{is_close_requested, is_key_down, InputBundle, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
@@ -21,10 +18,7 @@ use amethyst::{
     utils::application_root_dir,
     Error,
 };
-use specs_physics::{
-    nphysics::math::Vector,
-    systems::PhysicsBundle,
-};
+use specs_physics::{nphysics::math::Vector, systems::PhysicsBundle};
 
 use crate::{
     prefab::CustomScenePrefab,
@@ -39,7 +33,8 @@ struct Loading {
     prefab: Option<Handle<Prefab<MyPrefabData>>>,
 }
 
-struct Example {
+struct Playing {
+    fixed_dispatcher: Dispatcher,
     scene: Handle<Prefab<MyPrefabData>>,
 }
 
@@ -68,16 +63,14 @@ impl SimpleState for Loading {
                 {
                     let _ = data.world.delete_entity(entity);
                 }
-                Trans::Switch(Box::new(Example {
-                    scene: self.prefab.as_ref().unwrap().clone(),
-                }))
+                Trans::Switch(Box::new(Playing::new(self.prefab.as_ref().unwrap().clone())))
             }
             Completion::Loading => Trans::None,
         }
     }
 }
 
-impl SimpleState for Example {
+impl SimpleState for Playing {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
@@ -97,6 +90,21 @@ impl SimpleState for Example {
         }
         Trans::None
     }
+
+    fn fixed_update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        self.fixed_dispatcher.dispatch(data.world);
+        Trans::None
+    }
+}
+
+impl Playing {
+    fn new(scene: Handle<Prefab<MyPrefabData>>) -> Box<Self> {
+        let fixed_dispatcher = DispatcherBuilder
+        Self {
+            fixed_dispatcher:
+            scene,
+        }
+    }
 }
 
 fn main() -> Result<(), Error> {
@@ -106,19 +114,17 @@ fn main() -> Result<(), Error> {
 
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples").join("amethyst").join("assets");
-
-    let display_config_path = assets_dir
-        .join("display.ron");
-
-    let input_config_path = assets_dir
-        .join("input_config.ron");
+    let display_config_path = assets_dir.join("display.ron");
+    let input_config_path = assets_dir.join("input_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(&input_config_path)?)?
+        .with_bundle(
+            InputBundle::<StringBindings>::new().with_bindings_from_file(&input_config_path)?,
+        )?
         .with_system_desc(CameraMovementSystemDesc::new(5.), "", &[])
         .with_system_desc(CameraRotationSystemDesc::new(0.25, 0.25), "", &[])
         .with_system_desc(CursorHideSystemDesc::default(), "", &[])

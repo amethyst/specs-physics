@@ -8,9 +8,7 @@ use specs_physics::{
         math::Vector,
         object::{ColliderDesc, Ground, RigidBody, RigidBodyDesc},
     },
-    systems::PhysicsBundle,
-    world::MechanicalWorldRes,
-    BodyComponent, EntityBuilderExt, SimplePosition,
+    BodyComponent, EntityBuilderExt, MechanicalWorldRes, PhysicsBundle, SimplePosition,
 };
 
 /*
@@ -25,6 +23,7 @@ fn main() {
     /*
      * 1: Specs Setup
      */
+    // ANCHOR: dispatcher
     // Initialise the Specs world
     // This will contain our Resources and Entities
     let mut world = World::new();
@@ -35,8 +34,7 @@ fn main() {
 
     // Attach the specs-physics systems to the dispatcher,
     // with our pre-physics-stepping systems as a dependency
-    PhysicsBundle::<f32, SimplePosition<f32>>::new(Vector::y() * -9.81)
-        .with_deps(&["my_physics_system"])
+    PhysicsBundle::<f32, SimplePosition<f32>>::new(Vector::y() * -9.81, &["my_physics_system"])
         .register(&mut world, &mut dispatcher_builder);
 
     // Build our dispatcher for use in the application loop
@@ -52,6 +50,7 @@ fn main() {
 
     // Sets up all resources for our dispatcher.
     dispatcher.setup(&mut world);
+    // ANCHOR_END: dispatcher
 
     /*
      * 2: Add the ground body
@@ -146,7 +145,7 @@ impl<'s> System<'s> for MyRenderingSystem {
     );
 
     fn run(&mut self, (positions, mechanical_world): Self::SystemData) {
-        for pos in (&positions,).join() {
+        for (pos,) in (&positions,).join() {
             println!(
                 "Body Position (X: {:?}, Y: {:?}, Z: {:?}) @ {:?}s",
                 pos.0.translation.vector.x,

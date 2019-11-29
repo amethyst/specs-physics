@@ -1,7 +1,4 @@
-use crate::{
-    nalgebra::RealField,
-    stepper::{Step, StepperRes},
-};
+use crate::{nalgebra::RealField, stepper::StepperRes};
 
 use specs::{
     AccessorCow, BatchAccessor, BatchController, BatchUncheckedWorld, Dispatcher, RunningTime,
@@ -10,6 +7,8 @@ use specs::{
 
 use std::{marker::PhantomData, ops::DerefMut};
 
+/// Provides a batch system which uses `StepperRes` to keep a contained
+/// dispatcher up to time
 pub struct PhysicsBatchSystem<'a, 'b, N: RealField> {
     accessor: BatchAccessor,
     dispatcher: Dispatcher<'a, 'b>,
@@ -17,7 +16,7 @@ pub struct PhysicsBatchSystem<'a, 'b, N: RealField> {
 }
 
 impl<'a, 'b, N: RealField> BatchController<'a, 'b> for PhysicsBatchSystem<'a, 'b, N> {
-    type BatchSystemData = (WriteExpect<'a, StepperRes>, WriteExpect<'a, Step>);
+    type BatchSystemData = WriteExpect<'a, StepperRes>;
 
     unsafe fn create(accessor: BatchAccessor, dispatcher: Dispatcher<'a, 'b>) -> Self {
         PhysicsBatchSystem {
@@ -32,8 +31,7 @@ impl<'a, 'b, 's, N: RealField> System<'s> for PhysicsBatchSystem<'a, 'b, N> {
     type SystemData = BatchUncheckedWorld<'s>;
 
     fn run(&mut self, data: Self::SystemData) {
-        for step in data.0.fetch_mut::<StepperRes>().deref_mut() {
-            data.0.fetch_mut::<Step>().update(step);
+        for _ in data.0.fetch_mut::<StepperRes>().deref_mut() {
             self.dispatcher.dispatch(data.0);
         }
     }
