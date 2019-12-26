@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use specs::{Read, Resources, System, SystemData, WriteExpect};
+use specs::{Read, System, SystemData, World, WriteExpect};
 
 use crate::{
     nalgebra::RealField,
@@ -57,7 +57,7 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncParametersToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 
@@ -79,10 +79,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use specs::{DispatcherBuilder, World};
+    use approx::assert_ulps_eq;
+    use specs::prelude::*;
 
     use crate::{
-        nalgebra::Vector3, parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics,
+        nalgebra::Vector3,
+        parameters::Gravity,
+        systems::SyncParametersToPhysicsSystem,
+        Physics,
     };
 
     #[test]
@@ -95,15 +99,14 @@ mod tests {
                 &[],
             )
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
 
-        world.add_resource(Gravity(Vector3::<f32>::new(1.0, 2.0, 3.0).into()));
-        dispatcher.dispatch(&mut world.res);
+        world.insert(Gravity(Vector3::<f32>::new(1.0, 2.0, 3.0)));
+        dispatcher.dispatch(&world);
 
         let physics = world.read_resource::<Physics<f32>>();
-        assert_eq!(physics.world.gravity().x, 1.0);
-        assert_eq!(physics.world.gravity().y, 2.0);
-        assert_eq!(physics.world.gravity().z, 3.0);
+        assert_ulps_eq!(physics.world.gravity().x, 1.0);
+        assert_ulps_eq!(physics.world.gravity().y, 2.0);
+        assert_ulps_eq!(physics.world.gravity().z, 3.0);
     }
-
 }

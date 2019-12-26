@@ -1,8 +1,16 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
+    storage::ComponentEvent,
+    world::Index,
+    Join,
+    ReadStorage,
+    ReaderId,
+    System,
+    SystemData,
+    World,
+    WriteExpect,
+    WriteStorage,
 };
 
 use crate::{
@@ -10,7 +18,8 @@ use crate::{
     colliders::PhysicsCollider,
     nalgebra::RealField,
     nphysics::object::{BodyPartHandle, ColliderDesc},
-    Physics, PhysicsParent,
+    Physics,
+    PhysicsParent,
 };
 
 use super::iterate_component_events;
@@ -93,11 +102,10 @@ where
         let event_iter = physics_colliders
             .channel()
             .read(self.physics_colliders_reader_id.as_mut().unwrap());
-        for _ in event_iter{
-        }
+        for _ in event_iter {}
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncCollidersToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 
@@ -252,11 +260,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use specs::{world::Builder, DispatcherBuilder, World};
+    use specs::prelude::*;
 
     use crate::{
-        colliders::Shape, nalgebra::Isometry3, systems::SyncCollidersToPhysicsSystem, Physics,
-        PhysicsColliderBuilder, SimplePosition,
+        colliders::Shape,
+        nalgebra::Isometry3,
+        systems::SyncCollidersToPhysicsSystem,
+        Physics,
+        PhysicsColliderBuilder,
+        SimplePosition,
     };
 
     #[test]
@@ -269,7 +281,7 @@ mod tests {
                 &[],
             )
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
 
         // create an Entity with the PhysicsCollider component and execute the
         // dispatcher
@@ -280,7 +292,7 @@ mod tests {
             )))
             .with(PhysicsColliderBuilder::<f32>::from(Shape::Ball { radius: 5.0 }).build())
             .build();
-        dispatcher.dispatch(&mut world.res);
+        dispatcher.dispatch(&world);
 
         // fetch the Physics instance and check for new colliders
         let physics = world.read_resource::<Physics<f32>>();

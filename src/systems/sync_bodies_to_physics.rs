@@ -1,8 +1,17 @@
 use std::marker::PhantomData;
 
 use specs::{
-    storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
+    storage::ComponentEvent,
+    world::Index,
+    BitSet,
+    Join,
+    ReadStorage,
+    ReaderId,
+    System,
+    SystemData,
+    World,
+    WriteExpect,
+    WriteStorage,
 };
 
 use crate::{
@@ -89,7 +98,7 @@ where
         }
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         info!("SyncBodiesToPhysicsSystem.setup");
         Self::SystemData::setup(res);
 
@@ -200,11 +209,15 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        nalgebra::Isometry3, nphysics::object::BodyStatus, systems::SyncBodiesToPhysicsSystem,
-        Physics, PhysicsBodyBuilder, SimplePosition,
+        nalgebra::Isometry3,
+        nphysics::object::BodyStatus,
+        systems::SyncBodiesToPhysicsSystem,
+        Physics,
+        PhysicsBodyBuilder,
+        SimplePosition,
     };
 
-    use specs::{world::Builder, DispatcherBuilder, World};
+    use specs::prelude::*;
 
     #[test]
     fn add_rigid_body() {
@@ -216,7 +229,7 @@ mod tests {
                 &[],
             )
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
 
         // create an Entity with the PhysicsBody component and execute the dispatcher
         world
@@ -226,7 +239,7 @@ mod tests {
             )))
             .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Dynamic).build())
             .build();
-        dispatcher.dispatch(&mut world.res);
+        dispatcher.dispatch(&world);
 
         // fetch the Physics instance and check for new bodies
         let physics = world.read_resource::<Physics<f32>>();
