@@ -46,7 +46,7 @@ fn main() {
     world
         .create_entity()
         .with(SimplePosition::<f32>(Isometry3::<f32>::translation(
-            3.0, 1.0, 1.0,
+            5.0, 1.0, 1.0,
         )))
         .with(PhysicsBodyBuilder::<f32>::from(BodyStatus::Static).build())
         .with(
