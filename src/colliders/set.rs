@@ -90,7 +90,7 @@ impl<'f, N: RealField> SystemData<'f> for ColliderSet<'f, N> {
                     if entities.is_alive(entity) {
                         insertions.0.push(entity);
                     } else {
-                        error!("Dropping collider insertion event for dead entity {}", entity);
+                        error!("Dropping collider insertion event for dead entity {:?}", entity);
                     }
                 }
                 _ => {}
