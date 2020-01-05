@@ -85,7 +85,13 @@ impl<'f, N: RealField> SystemData<'f> for ColliderSet<'f, N> {
                     }
                 }
                 ComponentEvent::Inserted(index) => {
-                    insertions.0.push(entities.entity(*index));
+                    let entity = entities.entity(*index);
+
+                    if entities.is_alive(entity) {
+                        insertions.0.push(entity);
+                    } else {
+                        error!("Dropping collider insertion event for dead entity {}", entity);
+                    }
                 }
                 _ => {}
             }
