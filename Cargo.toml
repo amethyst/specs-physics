@@ -16,7 +16,7 @@ keywords = ["specs", "nphysics", "nphysics3d"]
 [features]
 default = []
 
-amethyst = ["amethyst_core"]
+amethyst = ["amethyst_core", "amethyst_error"]
 
 [dependencies]
 log = "0.4.6"
@@ -27,6 +27,7 @@ nalgebra = "0.19.0"
 ncollide3d = "0.21.0"
 nphysics3d = "0.13.1"
 amethyst_core = { git = "https://github.com/amethyst/amethyst", optional = true }
+amethyst_error = { git = "https://github.com/amethyst/amethyst", optional = true }
 objekt = "0.1.2"
 
 [dev-dependencies]
