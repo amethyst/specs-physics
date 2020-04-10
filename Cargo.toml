@@ -20,12 +20,12 @@ amethyst = ["amethyst_core"]
 
 [dependencies]
 log = "0.4.6"
-specs = "0.15.0"
-specs-hierarchy = { git = "https://github.com/cedric-h/specs-hierarchy.git", branch = "update-specs" }
+specs = "0.16.0"
+specs-hierarchy = "0.6.0"
 shrev = "1.1.1"
-nalgebra = "0.18.0"
-ncollide3d = "0.19"
-nphysics3d = "0.11.1"
+nalgebra = "0.19.0"
+ncollide3d = "0.21.0"
+nphysics3d = "0.13.1"
 amethyst_core = { git = "https://github.com/amethyst/amethyst", optional = true }
 objekt = "0.1.2"
 
@@ -52,4 +52,3 @@ path = "examples/collision.rs"
 [[example]]
 name = "events"
 path = "examples/events.rs"
-

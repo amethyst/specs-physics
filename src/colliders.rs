@@ -5,6 +5,7 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 use crate::{
     nalgebra::{DMatrix, Isometry3, Point2, Point3, RealField, Unit, Vector3},
     ncollide::{
+        pipeline::CollisionGroups,
         shape::{
             Ball,
             Capsule,
@@ -19,11 +20,10 @@ use crate::{
             TriMesh,
             Triangle,
         },
-        world::CollisionGroups,
     },
     nphysics::{
         material::{BasicMaterial, MaterialHandle},
-        object::ColliderHandle,
+        object::DefaultColliderHandle,
     },
 };
 
@@ -138,16 +138,18 @@ impl<N: RealField> Shape<N> {
 #[derive(Clone)]
 pub struct PhysicsCollider<N: RealField> {
     /// The handle to the collider in the physics world.
-    pub(crate) handle: Option<ColliderHandle>,
+    pub(crate) handle: Option<DefaultColliderHandle>,
     /// The shape of this collider.
     pub shape: Shape<N>,
-    /// The position/rotation offset of the collider from the entity it is attached to.
+    /// The position/rotation offset of the collider from the entity it is
+    /// attached to.
     pub offset_from_parent: Isometry3<N>,
     pub density: N,
     /// The physics material of which this collider is composed.
     /// Defines properties like bounciness and others.
     pub material: MaterialHandle<N>,
-    /// Margin between the detection zone of what is "near" the collider and the actual collider.
+    /// Margin between the detection zone of what is "near" the collider and the
+    /// actual collider.
     pub margin: N,
     /// Collision groups this collider is part of.
     /// Defines with which other colliders this collider can interact.
@@ -156,8 +158,8 @@ pub struct PhysicsCollider<N: RealField> {
     pub linear_prediction: N,
     /// Prediction amount of the angular momentum.
     pub angular_prediction: N,
-    /// Whether this collider is a sensor and only emits events without interacting (true) or
-    /// if it is a regular collider (false).
+    /// Whether this collider is a sensor and only emits events without
+    /// interacting (true) or if it is a regular collider (false).
     pub sensor: bool,
 }
 
@@ -210,7 +212,7 @@ impl<N: RealField> PhysicsCollider<N> {
 /// use specs_physics::{
 ///     colliders::Shape,
 ///     nalgebra::{Isometry3, Vector3},
-///     ncollide::world::CollisionGroups,
+///     ncollide::pipeline::CollisionGroups,
 ///     nphysics::material::{BasicMaterial, MaterialHandle},
 ///     PhysicsColliderBuilder,
 /// };

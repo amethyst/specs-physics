@@ -144,17 +144,18 @@ fn add_rigid_body<N, P>(
     // handles clean
     if let Some(body_handle) = physics.body_handles.remove(&id) {
         warn!("Removing orphaned body handle: {:?}", body_handle);
-        physics.world.remove_bodies(&[body_handle]);
+        physics.bodies.remove(body_handle);
     }
 
     // create a new RigidBody in the PhysicsWorld and store its
     // handle for later usage
-    let handle = physics_body
-        .to_rigid_body_desc()
-        .position(*position.isometry())
-        .user_data(id)
-        .build(&mut physics.world)
-        .handle();
+    let handle = physics.bodies.insert(
+        physics_body
+            .to_rigid_body_desc()
+            .position(*position.isometry())
+            .user_data(id)
+            .build(),
+    );
 
     physics_body.handle = Some(handle);
     physics.body_handles.insert(id, handle);
@@ -176,7 +177,7 @@ fn update_rigid_body<N, P>(
     N: RealField,
     P: Position<N>,
 {
-    if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
+    if let Some(rigid_body) = physics.bodies.rigid_body_mut(physics_body.handle.unwrap()) {
         // the PhysicsBody was modified, update everything but the position
         if modified_physics_bodies.contains(id) {
             physics_body.apply_to_physics_world(rigid_body);
@@ -201,7 +202,7 @@ where
 {
     if let Some(handle) = physics.body_handles.remove(&id) {
         // remove body if it still exists in the PhysicsWorld
-        physics.world.remove_bodies(&[handle]);
+        physics.bodies.remove(handle);
         info!("Removed rigid body from world with id: {}", id);
     }
 }
@@ -244,6 +245,6 @@ mod tests {
         // fetch the Physics instance and check for new bodies
         let physics = world.read_resource::<Physics<f32>>();
         assert_eq!(physics.body_handles.len(), 1);
-        assert_eq!(physics.world.bodies().count(), 1);
+        assert_eq!(physics.bodies.iter().count(), 2);
     }
 }
