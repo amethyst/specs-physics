@@ -5,8 +5,8 @@ use specs::{world::Index, Entities, Entity, Read, System, SystemData, World, Wri
 use crate::{
     events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
     nalgebra::RealField,
-    ncollide::{events::ContactEvent as NContactEvent, world::CollisionObjectHandle},
-    nphysics::world::ColliderWorld,
+    ncollide::pipeline::{CollisionObjectSet, ContactEvent as NContactEvent},
+    nphysics::object::{DefaultColliderHandle, DefaultColliderSet},
     parameters::TimeStep,
     Physics,
 };
@@ -28,55 +28,73 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
     fn run(&mut self, data: Self::SystemData) {
         let (entities, time_step, mut contact_events, mut proximity_events, mut physics) = data;
 
+        // Convert physics from Write to &mut pointer so rustc can correctly reason
+        // about independence of &mut borrows to struct components
+        let physics: &mut Physics<N> = &mut *physics;
+
         // if a TimeStep resource exits, set the timestep for the nphysics integration
         // accordingly; this should not be required if the Systems are executed in a
         // fixed interval
         if let Some(time_step) = time_step {
             // only update timestep if it actually differs from the current nphysics World
             // one; keep in mind that changing the Resource will destabilize the simulation
-            if physics.world.timestep() != time_step.0 {
+            if physics.mechanical_world.timestep() != time_step.0 {
                 warn!(
                     "TimeStep and world.timestep() differ, changing worlds timestep from {} to: {:?}",
-                    physics.world.timestep(),
+                    physics.mechanical_world.timestep(),
                     time_step.0
                 );
-                physics.world.set_timestep(time_step.0);
+                physics.mechanical_world.set_timestep(time_step.0);
             }
         }
 
-        physics.world.step();
-
-        let collider_world = physics.world.collider_world();
+        physics.mechanical_world.step(
+            &mut physics.geometrical_world,
+            &mut physics.bodies,
+            &mut physics.colliders,
+            &mut physics.joint_constraints,
+            &mut physics.force_generators,
+        );
 
         // map occurred ncollide ContactEvents to a custom ContactEvent type; this
         // custom type contains data that is more relevant for Specs users than
         // CollisionObjectHandles, such as the Entities that took part in the collision
-        contact_events.iter_write(collider_world.contact_events().iter().map(|contact_event| {
-            debug!("Got ContactEvent: {:?}", contact_event);
-            // retrieve CollisionObjectHandles from ContactEvent and map the ContactEvent
-            // type to our own custom ContactType
-            let (handle1, handle2, contact_type) = match contact_event {
-                NContactEvent::Started(handle1, handle2) => {
-                    (*handle1, *handle2, ContactType::Started)
-                }
-                NContactEvent::Stopped(handle1, handle2) => {
-                    (*handle1, *handle2, ContactType::Stopped)
-                }
-            };
+        contact_events.iter_write(physics.geometrical_world.contact_events().iter().map(
+            |contact_event| {
+                debug!("Got ContactEvent: {:?}", contact_event);
+                // retrieve CollisionObjectHandles from ContactEvent and map the ContactEvent
+                // type to our own custom ContactType
+                let (handle1, handle2, contact_type) = match contact_event {
+                    NContactEvent::Started(handle1, handle2) => {
+                        (*handle1, *handle2, ContactType::Started)
+                    }
+                    NContactEvent::Stopped(handle1, handle2) => {
+                        (*handle1, *handle2, ContactType::Stopped)
+                    }
+                };
 
-            // create our own ContactEvent from the extracted data; mapping the
-            // CollisionObjectHandles to Entities is error prone but should work as intended
-            // as long as we're the only ones working directly with the nphysics World
-            ContactEvent {
-                collider1: entity_from_collision_object_handle(&entities, handle1, &collider_world),
-                collider2: entity_from_collision_object_handle(&entities, handle2, &collider_world),
-                contact_type,
-            }
-        }));
+                // create our own ContactEvent from the extracted data; mapping the
+                // CollisionObjectHandles to Entities is error prone but should work as intended
+                // as long as we're the only ones working directly with the nphysics World
+                ContactEvent {
+                    collider1: entity_from_collision_object_handle(
+                        &entities,
+                        handle1,
+                        &physics.colliders,
+                    ),
+                    collider2: entity_from_collision_object_handle(
+                        &entities,
+                        handle2,
+                        &physics.colliders,
+                    ),
+                    contact_type,
+                }
+            },
+        ));
 
         // map occurred ncollide ProximityEvents to a custom ProximityEvent type; see
         // ContactEvents for reasoning
-        proximity_events.iter_write(collider_world.proximity_events().iter().map(
+        proximity_events.iter_write(physics.geometrical_world.proximity_events().iter().map(
             |proximity_event| {
                 debug!("Got ProximityEvent: {:?}", proximity_event);
                 // retrieve CollisionObjectHandles and Proximity statuses from the ncollide
@@ -95,12 +113,12 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
                     collider1: entity_from_collision_object_handle(
                         &entities,
                         handle1,
-                        &collider_world,
+                        &physics.colliders,
                     ),
                     collider2: entity_from_collision_object_handle(
                         &entities,
                         handle2,
-                        &collider_world,
+                        &physics.colliders,
                     ),
                     prev_status,
                     new_status,
@@ -131,12 +149,12 @@ where
 
 fn entity_from_collision_object_handle<N: RealField>(
     entities: &Entities,
-    collision_object_handle: CollisionObjectHandle,
-    collider_world: &ColliderWorld<N>,
+    collision_object_handle: DefaultColliderHandle,
+    collider_set: &DefaultColliderSet<N>,
 ) -> Entity {
     entities.entity(
-        *collider_world
-            .collider(collision_object_handle)
+        *collider_set
+            .collision_object(collision_object_handle)
             .unwrap()
             .user_data()
             .unwrap()

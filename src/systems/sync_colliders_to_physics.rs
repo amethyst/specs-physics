@@ -151,34 +151,35 @@ fn add_collider<N, P>(
     // remove already existing colliders for this inserted event
     if let Some(handle) = physics.collider_handles.remove(&id) {
         warn!("Removing orphaned collider handle: {:?}", handle);
-        physics.world.remove_colliders(&[handle]);
+        physics.colliders.remove(handle);
     }
 
     // attempt to find an existing RigidBody for this Index; if one exists we'll
     // fetch its BodyPartHandle and use it as the Colliders parent in the
     // nphysics World
+    let ground_handle = BodyPartHandle(physics.ground, 0);
     let parent_part_handle = match physics.body_handles.get(&id) {
         Some(parent_handle) => physics
-            .world
+            .bodies
             .rigid_body(*parent_handle)
-            .map_or(BodyPartHandle::ground(), |body| body.part_handle()),
+            .map_or(ground_handle, |_| BodyPartHandle(*parent_handle, 0)),
         None => {
             // if BodyHandle was found for the current Entity/Index, check for a potential
             // parent Entity and repeat the first step
             if let Some(parent_entity) = parent_entity {
                 match physics.body_handles.get(&parent_entity.entity.id()) {
                     Some(parent_handle) => physics
-                        .world
+                        .bodies
                         .rigid_body(*parent_handle)
-                        .map_or(BodyPartHandle::ground(), |body| body.part_handle()),
+                        .map_or(ground_handle, |_| BodyPartHandle(*parent_handle, 0)),
                     None => {
                         // ultimately default to BodyPartHandle::ground()
-                        BodyPartHandle::ground()
+                        ground_handle
                     }
                 }
             } else {
                 // no parent Entity exists, default to BodyPartHandle::ground()
-                BodyPartHandle::ground()
+                ground_handle
             }
         }
     };
@@ -186,7 +187,7 @@ fn add_collider<N, P>(
     // translation based on parent handle; if we did not have a valid parent and
     // ended up defaulting to BodyPartHandle::ground(), we'll need to take the
     // Position into consideration
-    let translation = if parent_part_handle.is_ground() {
+    let translation = if parent_part_handle == ground_handle {
         // let scale = 1.0; may be added later
         let iso = &mut position.isometry().clone();
         iso.translation.vector +=
@@ -198,19 +199,19 @@ fn add_collider<N, P>(
     };
 
     // create the actual Collider in the nphysics World and fetch its handle
-    let handle = ColliderDesc::new(physics_collider.shape_handle())
-        .position(translation)
-        .density(physics_collider.density)
-        .material(physics_collider.material.clone())
-        .margin(physics_collider.margin)
-        .collision_groups(physics_collider.collision_groups)
-        .linear_prediction(physics_collider.linear_prediction)
-        .angular_prediction(physics_collider.angular_prediction)
-        .sensor(physics_collider.sensor)
-        .user_data(id)
-        .build_with_parent(parent_part_handle, &mut physics.world)
-        .unwrap()
-        .handle();
+    let handle = physics.colliders.insert(
+        ColliderDesc::new(physics_collider.shape_handle())
+            .position(translation)
+            .density(physics_collider.density)
+            .material(physics_collider.material.clone())
+            .margin(physics_collider.margin)
+            .collision_groups(physics_collider.collision_groups)
+            .linear_prediction(physics_collider.linear_prediction)
+            .angular_prediction(physics_collider.angular_prediction)
+            .sensor(physics_collider.sensor)
+            .user_data(id)
+            .build(parent_part_handle),
+    );
 
     physics_collider.handle = Some(handle);
     physics.collider_handles.insert(id, handle);
@@ -228,10 +229,10 @@ where
 {
     debug!("Modified PhysicsCollider with id: {}", id);
     let collider_handle = physics_collider.handle.unwrap();
-    let collider_world = physics.world.collider_world_mut();
+    let collider = physics.colliders.get_mut(collider_handle).unwrap();
 
     // update collision groups
-    collider_world.set_collision_groups(collider_handle, physics_collider.collision_groups);
+    collider.set_collision_groups(physics_collider.collision_groups);
 
     info!(
         "Updated collider in world with values: {:?}",
@@ -250,8 +251,8 @@ where
         // attempting to delete it as removing a collider that does not exist anymore
         // causes the nphysics World to panic; colliders are implicitly removed when a
         // parent body is removed so this is actually a valid scenario
-        if physics.world.collider(handle).is_some() {
-            physics.world.remove_colliders(&[handle]);
+        if physics.colliders.get(handle).is_some() {
+            physics.colliders.remove(handle);
         }
 
         info!("Removed collider from world with id: {}", id);
@@ -297,6 +298,6 @@ mod tests {
         // fetch the Physics instance and check for new colliders
         let physics = world.read_resource::<Physics<f32>>();
         assert_eq!(physics.collider_handles.len(), 1);
-        assert_eq!(physics.world.colliders().count(), 1);
+        assert_eq!(physics.colliders.iter().count(), 1);
     }
 }

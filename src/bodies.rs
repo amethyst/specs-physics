@@ -4,7 +4,7 @@ use crate::{
     nalgebra::{Isometry3, Matrix3, Point3, RealField},
     nphysics::{
         algebra::{Force3, ForceType, Velocity3},
-        object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc},
+        object::{Body, BodyPart, BodyStatus, DefaultBodyHandle, RigidBody, RigidBodyDesc},
     },
 };
 
@@ -73,7 +73,7 @@ impl Position<f32> for amethyst_core::Transform {
 /// both worlds.
 #[derive(Clone, Copy, Debug)]
 pub struct PhysicsBody<N: RealField> {
-    pub(crate) handle: Option<BodyHandle>,
+    pub(crate) handle: Option<DefaultBodyHandle>,
     pub gravity_enabled: bool,
     pub body_status: BodyStatus,
     pub velocity: Velocity3<N>,

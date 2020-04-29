@@ -114,7 +114,7 @@
 //! use specs_physics::{
 //!     colliders::Shape,
 //!     nalgebra::{Isometry3, Vector3},
-//!     ncollide::world::CollisionGroups,
+//!     ncollide::pipeline::CollisionGroups,
 //!     nphysics::material::{BasicMaterial, MaterialHandle},
 //!     PhysicsColliderBuilder,
 //! };
@@ -151,11 +151,11 @@
 //! `SyncBodiesToPhysicsSystem` as [Collider][] can depend on [RigidBody][].
 //!
 //! 3. `specs_physics::systems::SyncParametersToPhysicsSystem` - handles the
-//! modification of the [nphysics][] `World`s parameters.
+//! modification of the [nphysics][] `DefaultMechanicalWorld`s parameters.
 //!
 //! 4. `specs_physics::systems::PhysicsStepperSystem` - handles the progression
-//! of the [nphysics][] `World` and causes objects to actually move and
-//! change their position. This `System` is the backbone for collision
+//! of the [nphysics][] `DefaultMechanicalWorld` and causes objects to actually
+//! move and change their position. This `System` is the backbone for collision
 //! detection.
 //!
 //! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` -
@@ -215,9 +215,12 @@
 //! arguments like so:
 //!
 //! ```
+//! # #[cfg(feature = "amethyst")]
+//! # {
 //! use amethyst_core::Transform;
 //! use specs_physics::systems::SyncBodiesToPhysicsSystem;
 //! SyncBodiesToPhysicsSystem::<f32, Transform>::default();
+//! # }
 //! ```
 //!
 //! Alternatively to building your own `Dispatcher`, you can always fall back on
@@ -267,10 +270,18 @@ use self::{
     nalgebra::{RealField, Vector3},
     nphysics::{
         counters::Counters,
+        force_generator::DefaultForceGeneratorSet,
+        joint::DefaultJointConstraintSet,
         material::MaterialsCoefficientsTable,
-        object::{BodyHandle, ColliderHandle},
+        object::{
+            DefaultBodyHandle,
+            DefaultBodySet,
+            DefaultColliderHandle,
+            DefaultColliderSet,
+            Ground,
+        },
         solver::IntegrationParameters,
-        world::World,
+        world::{DefaultGeometricalWorld, DefaultMechanicalWorld},
     },
     systems::{
         PhysicsStepperSystem,
@@ -281,25 +292,31 @@ use self::{
     },
 };
 
+#[cfg(feature = "amethyst")]
+pub mod amethyst;
 pub mod bodies;
 pub mod colliders;
 pub mod events;
 pub mod parameters;
 pub mod systems;
-
 /// Resource holding the internal fields where physics computation occurs.
 /// Some inspection methods are exposed to allow debugging.
 pub struct Physics<N: RealField> {
     /// Core structure where physics computation and synchronization occurs.
-    /// Also contains ColliderWorld.
-    pub(crate) world: World<N>,
+    pub(crate) mechanical_world: DefaultMechanicalWorld<N>,
+    pub(crate) geometrical_world: DefaultGeometricalWorld<N>,
+    pub(crate) bodies: DefaultBodySet<N>,
+    pub(crate) colliders: DefaultColliderSet<N>,
+    pub(crate) joint_constraints: DefaultJointConstraintSet<N>,
+    pub(crate) force_generators: DefaultForceGeneratorSet<N>,
+    pub(crate) ground: DefaultBodyHandle,
 
     /// Hashmap of Entities to internal Physics bodies.
     /// Necessary for reacting to removed Components.
-    pub(crate) body_handles: HashMap<Index, BodyHandle>,
+    pub(crate) body_handles: HashMap<Index, DefaultBodyHandle>,
     /// Hashmap of Entities to internal Collider handles.
     /// Necessary for reacting to removed Components.
-    pub(crate) collider_handles: HashMap<Index, ColliderHandle>,
+    pub(crate) collider_handles: HashMap<Index, DefaultColliderHandle>,
 }
 
 // Some non-mutating methods for diagnostics and testing
@@ -312,45 +329,47 @@ impl<N: RealField> Physics<N> {
     /// Reports the internal value for the timestep.
     /// See also `TimeStep` for setting this value.
     pub fn timestep(&self) -> N {
-        self.world.timestep()
+        self.mechanical_world.timestep()
     }
 
     /// Reports the internal value for the gravity.
     /// See also `Gravity` for setting this value.
     pub fn gravity(&self) -> &Vector3<N> {
-        self.world.gravity()
-    }
-
-    /// Reports the internal value for prediction distance in collision
-    /// detection. This cannot change and will normally be `0.002m`
-    pub fn prediction(&self) -> N {
-        self.world.prediction()
+        &self.mechanical_world.gravity
     }
 
     /// Retrieves the performance statistics for the last simulated timestep.
     /// Profiling is disabled by default.
     /// See also `PhysicsProfilingEnabled` for enabling performance counters.
     pub fn performance_counters(&self) -> &Counters {
-        self.world.performance_counters()
+        &self.mechanical_world.counters
     }
 
     /// Retrieves the internal parameters for integration.
     /// See also `PhysicsIntegrationParameters` for setting these parameters.
     pub fn integration_parameters(&self) -> &IntegrationParameters<N> {
-        self.world.integration_parameters()
+        &self.mechanical_world.integration_parameters
     }
 
     /// Retrieves the internal lookup table for friction and restitution
     /// constants. Exposing this for modification is TODO.
     pub fn materials_coefficients_table(&self) -> &MaterialsCoefficientsTable<N> {
-        self.world.materials_coefficients_table()
+        &self.mechanical_world.material_coefficients
     }
 }
 
 impl<N: RealField> Default for Physics<N> {
     fn default() -> Self {
+        let mut bodies = DefaultBodySet::new();
+        let ground = bodies.insert(Ground::new());
         Self {
-            world: World::new(),
+            mechanical_world: DefaultMechanicalWorld::new(Vector3::zeros()),
+            geometrical_world: DefaultGeometricalWorld::new(),
+            bodies,
+            ground,
+            colliders: DefaultColliderSet::new(),
+            joint_constraints: DefaultJointConstraintSet::new(),
+            force_generators: DefaultForceGeneratorSet::new(),
             body_handles: HashMap::new(),
             collider_handles: HashMap::new(),
         }
@@ -427,8 +446,9 @@ where
     );
 
     // add PhysicsStepperSystem after all other Systems that write data to the
-    // nphysics World and has to depend on them; this System is used to progress the
-    // nphysics World for all existing objects
+    // nphysics DefaultMechanicalWorld and has to depend on them; this System is
+    // used to progress the nphysics DefaultMechanicalWorld for all existing
+    // objects
     dispatcher_builder.add(
         PhysicsStepperSystem::<N>::default(),
         "physics_stepper_system",
@@ -440,8 +460,8 @@ where
     );
 
     // add SyncBodiesFromPhysicsSystem last as it handles the
-    // synchronisation between nphysics World bodies and the Position
-    // components; this depends on the PhysicsStepperSystem
+    // synchronisation between nphysics DefaultMechanicalWorld bodies and the
+    // Position components; this depends on the PhysicsStepperSystem
     dispatcher_builder.add(
         SyncBodiesFromPhysicsSystem::<N, P>::default(),
         "sync_bodies_from_physics_system",

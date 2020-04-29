@@ -33,7 +33,7 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
                     physics.gravity(),
                     gravity.0
                 );
-                physics.world.set_gravity(gravity.0);
+                physics.mechanical_world.gravity = gravity.0;
             }
         }
 
@@ -41,17 +41,17 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
             if enable_profiling.0 != physics.performance_counters().enabled() {
                 if enable_profiling.0 {
                     info!("Physics performance counters enabled.");
-                    physics.world.enable_performance_counters();
+                    physics.mechanical_world.counters.enable();
                 } else {
                     info!("Physics performance counters disabled.");
-                    physics.world.disable_performance_counters();
+                    physics.mechanical_world.counters.disable();
                 }
             }
         }
 
         if let Some(params) = integration_params {
             if *params != *physics.integration_parameters() {
-                params.apply(physics.world.integration_parameters_mut());
+                params.apply(&mut physics.mechanical_world.integration_parameters);
                 info!("Integration parameters have been updated.");
             }
         }
@@ -105,8 +105,8 @@ mod tests {
         dispatcher.dispatch(&world);
 
         let physics = world.read_resource::<Physics<f32>>();
-        assert_ulps_eq!(physics.world.gravity().x, 1.0);
-        assert_ulps_eq!(physics.world.gravity().y, 2.0);
-        assert_ulps_eq!(physics.world.gravity().z, 3.0);
+        assert_ulps_eq!(physics.mechanical_world.gravity.x, 1.0);
+        assert_ulps_eq!(physics.mechanical_world.gravity.y, 2.0);
+        assert_ulps_eq!(physics.mechanical_world.gravity.z, 3.0);
     }
 }

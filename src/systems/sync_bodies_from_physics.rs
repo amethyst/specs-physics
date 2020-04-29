@@ -34,7 +34,7 @@ where
         for (physics_body, position) in (&mut physics_bodies, &mut positions).join() {
             // if a RigidBody exists in the nphysics World we fetch it and update the
             // Position component accordingly
-            if let Some(rigid_body) = physics.world.rigid_body(physics_body.handle.unwrap()) {
+            if let Some(rigid_body) = physics.bodies.rigid_body(physics_body.handle.unwrap()) {
                 position.set_isometry(rigid_body.position());
                 physics_body.update_from_physics_world(rigid_body);
             }
