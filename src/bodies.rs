@@ -1,7 +1,7 @@
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use crate::{
-    nalgebra::{Isometry3, Matrix3, Point3, RealField},
+    nalgebra::{Isometry3, Matrix3, Point3, RealField, Vector3},
     nphysics::{
         algebra::{Force3, ForceType, Velocity3},
         object::{Body, BodyPart, BodyStatus, DefaultBodyHandle, RigidBody, RigidBodyDesc},
@@ -66,6 +66,7 @@ pub struct PhysicsBody<N: RealField> {
     pub angular_inertia: Matrix3<N>,
     pub mass: N,
     pub local_center_of_mass: Point3<N>,
+    pub rotations_kinematic: Vector3<bool>,
     external_forces: Force3<N>,
 }
 
@@ -103,6 +104,7 @@ impl<N: RealField> PhysicsBody<N> {
         rigid_body.set_mass(self.mass);
         rigid_body.set_local_center_of_mass(self.local_center_of_mass);
         rigid_body.apply_force(0, &self.drain_external_force(), ForceType::Force, true);
+        rigid_body.set_rotations_kinematic(self.rotations_kinematic);
         self
     }
 
@@ -154,6 +156,7 @@ pub struct PhysicsBodyBuilder<N: RealField> {
     angular_inertia: Matrix3<N>,
     mass: N,
     local_center_of_mass: Point3<N>,
+    rotations_kinematic: Vector3<bool>,
 }
 
 impl<N: RealField> From<BodyStatus> for PhysicsBodyBuilder<N> {
@@ -167,6 +170,7 @@ impl<N: RealField> From<BodyStatus> for PhysicsBodyBuilder<N> {
             angular_inertia: Matrix3::zeros(),
             mass: N::from_f32(1.2).unwrap(),
             local_center_of_mass: Point3::origin(),
+            rotations_kinematic: Vector3::new(false, false, false),
         }
     }
 }
@@ -202,6 +206,16 @@ impl<N: RealField> PhysicsBodyBuilder<N> {
         self
     }
 
+    pub fn rotations_kinematic(mut self, rotations_kinematic: Vector3<bool>) -> Self {
+        self.rotations_kinematic = rotations_kinematic;
+        self
+    }
+
+    pub fn lock_rotations(mut self, lock_rotations: bool) -> Self {
+        self.rotations_kinematic = Vector3::new(lock_rotations, lock_rotations, lock_rotations);
+        self
+    }
+
     /// Builds the `PhysicsBody` from the values set in the `PhysicsBodyBuilder`
     /// instance.
     pub fn build(self) -> PhysicsBody<N> {
@@ -214,6 +228,7 @@ impl<N: RealField> PhysicsBodyBuilder<N> {
             mass: self.mass,
             local_center_of_mass: self.local_center_of_mass,
             external_forces: Force3::zero(),
+            rotations_kinematic: self.rotations_kinematic,
         }
     }
 }
