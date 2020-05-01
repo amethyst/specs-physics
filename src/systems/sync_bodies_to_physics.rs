@@ -57,6 +57,11 @@ where
                 self.physics_bodies_reader_id.as_mut().unwrap(),
             );
 
+        // handle removed events
+        for id in &removed_physics_bodies | &removed_positions {
+            remove_rigid_body::<N, P>(id, &mut physics);
+        }
+
         // iterate over PhysicsBody and Position components with an id/Index that
         // exists in either of the collected ComponentEvent BitSets
         for (position, mut physics_body, id) in (
@@ -88,12 +93,6 @@ where
                     &modified_positions,
                     &modified_physics_bodies,
                 );
-            }
-
-            // handle removed events
-            if removed_positions.contains(id) || removed_physics_bodies.contains(id) {
-                debug!("Removed PhysicsBody with id: {}", id);
-                remove_rigid_body::<N, P>(id, &mut physics);
             }
         }
     }
