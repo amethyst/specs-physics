@@ -48,6 +48,8 @@ Investigating:
 - [ ] Constraint-based Joints
 - [ ] Kinematics
 
+[todo]: https://github.com/rustsim/nphysics/issues/149
+
 ## License
 
 Distributed under the MIT License. See [LICENSE](https://github.com/bamling/specs-physics/blob/master/LICENSE) for more information.
