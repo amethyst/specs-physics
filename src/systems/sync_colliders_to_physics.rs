@@ -59,6 +59,11 @@ where
                 &physics_colliders,
                 self.physics_colliders_reader_id.as_mut().unwrap(),
             );
+        
+        // handle removed events
+        for id in &removed_physics_colliders {
+            remove_collider::<N, P>(id, &mut physics);
+        }
 
         // iterate over PhysicsCollider and Position components with an id/Index that
         // exists in either of the collected ComponentEvent BitSets
@@ -89,12 +94,6 @@ where
             if modified_physics_colliders.contains(id) {
                 debug!("Modified PhysicsCollider with id: {}", id);
                 update_collider::<N, P>(id, &mut physics, physics_collider.get_unchecked());
-            }
-
-            // handle removed events
-            if removed_physics_colliders.contains(id) {
-                debug!("Removed PhysicsCollider with id: {}", id);
-                remove_collider::<N, P>(id, &mut physics);
             }
         }
 
